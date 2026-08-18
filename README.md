@@ -4,7 +4,7 @@ Plataforma web de viajes compartidos, exclusiva para la comunidad de la Universi
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+##  Tecnologías Utilizadas
 
 - **Backend:** Python + Django (v4.2)
 - **Base de Datos:** MySQL (v8.0)
@@ -12,7 +12,7 @@ Plataforma web de viajes compartidos, exclusiva para la comunidad de la Universi
 
 ---
 
-## 📋 Requisitos Previos
+##  Requisitos Previos
 
 Asegúrate de tener instalado en tu sistema:
 - **Docker**
@@ -22,7 +22,7 @@ Asegúrate de tener instalado en tu sistema:
 
 ---
 
-## 🚀 Guía de Configuración e Inicio Rápido
+##  Guía de Configuración e Inicio Rápido
 
 Sigue estos pasos para levantar el entorno de desarrollo local:
 
@@ -57,7 +57,7 @@ Sigue los pasos en la terminal (te pedirá correo institucional de `@ucol.mx`, n
 
 ---
 
-## 📂 Estructura del Proyecto
+##  Estructura del Proyecto
 
 - `raitcol/`: Configuración global del proyecto Django (`settings.py`, `urls.py`).
 - `users/`: Gestión de usuarios, autenticación y perfiles con validación de correos institucionales de la Universidad de Colima (`@ucol.mx`).
@@ -65,7 +65,7 @@ Sigue los pasos en la terminal (te pedirá correo institucional de `@ucol.mx`, n
 
 ---
 
-## 💡 Lógica de Asientos en Viajes
+##  Lógica de Asientos en Viajes
 
 El sistema implementa un comportamiento automatizado integrado en el modelo `Reservation`:
 - **Crear una Reserva:** Al registrarse una reservación activa, se descuenta automáticamente un asiento disponible (`available_seats_i`) del viaje (`Journey`).
