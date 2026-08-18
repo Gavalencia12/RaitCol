@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Databases (si usan SQLite local fuera de Docker)
+*.sqlite3
+*.db
+
+# Environments
+.env
+.venv
+venv/
+ENV/
+env/
+
+# Docker
+.docker-logs/
+
+# IDEs y Editores
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
