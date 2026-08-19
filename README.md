@@ -6,9 +6,9 @@ Plataforma web de viajes compartidos, exclusiva para la comunidad de la Universi
 
 ##  Tecnologías Utilizadas
 
-- **Backend:** Python + Django (v4.2)
-- **Base de Datos:** MySQL (v8.0)
-- **Contenedores:** Docker + Docker Compose
+- **Backend:** Python + Django (v4.2).
+- **Base de Datos:** MySQL (v8.0).
+- **Contenedores:** Docker + Docker Compose.
 
 ---
 
