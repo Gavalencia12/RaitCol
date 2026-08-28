@@ -8,6 +8,12 @@ from django.views.decorators.http import require_http_methods
 
 # Create your views here.
 
+def login_page(request):
+    return render(request, 'users/login.html')
+
+def register_view(request):
+    return render(request, 'users/register.html')
+    
 @csrf_exempt
 @require_http_methods(["POST"])
 def login_view(request):
@@ -82,8 +88,3 @@ def status_view(request):
         return JsonResponse({
             'is_authenticated': False
         }, status=200)
-def login_page(request):
-    return render(request, 'users/login.html')
-
-def register_view(request):
-    return render(request, 'users/register.html')
