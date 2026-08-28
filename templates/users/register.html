@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<!--Registro General de usuario -->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniRide</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <div class="wrapper">
+    <form action="index.html">
+      <h2>Registro</h2>
+      <div class="input-field">
+        <input type="text" id="firtsname"  required>
+        <label>Nombre Completo</label>
+      </div>
+      <div class="input-field">
+        <input type="text" id="email" required>
+        <label for="email">Correo universitario</label>
+      </div>
+      <div class="input-field">
+        <input type="text" id="username" required>
+        <label>Nombre de usuario</label>
+      </div>
+      <div class="input-field">
+        <input type="text" id="lastname"  required>
+        <label>Apellido </label>
+      </div>
+      <div class="input-field">
+        <input type="text" id="ncuenta"  required>
+        <label>Numero de cuenta univieristaria </label>
+      </div>
+      
+      <div class="input-field">
+        <input type="password" id="password" required>
+        <label>Contraseña</label>
+        <i id="pass-toggle-btn" class="fa-solid fa-eye"></i>
+      </div>
+     
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</body>
+</html>
