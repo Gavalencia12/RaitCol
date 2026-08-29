@@ -1,6 +1,10 @@
+import random
+import string
+from datetime import timedelta
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 def validate_ucol_email(value):
     if not value.endswith("@ucol.mx"):
@@ -23,3 +27,25 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.no_cuenta_v})"
+
+#Definicion de la tabla para el modelo de verificacion de correo
+class EmailVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='verification', db_column='user_id')
+    code = models.CharField(max_length=6, db_column='code_v')
+    created_at = models.DateTimeField(auto_now_add=True, db_column='created_at_t')
+
+    class Meta:
+        db_table = 'email_verification'
+
+    def is_expired(self):
+        # Expiración en 15 minutos
+        return timezone.now() > self.created_at + timedelta(minutes=15)
+
+    def generate_code(self):
+        self.code = ''.join(random.choices(string.digits, k=6))
+        self.created_at = timezone.now()  # Actualiza la fecha para reiniciar el temporizador de expiración
+        self.save()
+
+    def __str__(self):
+        return f"Código {self.code} para {self.user.email}"
+

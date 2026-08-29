@@ -136,3 +136,80 @@ a:hover {
   color: black;
   cursor: pointer;
 }
+
+/* Registro y Verificación */
+.register-wrapper {
+  width: 500px;
+  max-width: 95%;
+  transition: all 0.3s ease-in-out;
+}
+
+.register-subtitle {
+  color: #f3f4f6;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.register-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 15px;
+}
+
+.error-message {
+  color: #ef4444;
+  font-weight: 500;
+  font-size: 14px;
+  margin: 15px 0;
+  text-align: center;
+  background: rgba(239, 68, 68, 0.15);
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.success-message {
+  color: #22c55e;
+  font-weight: 500;
+  font-size: 14px;
+  margin: 15px 0;
+  text-align: center;
+  background: rgba(34, 197, 94, 0.15);
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.code-inputs-wrapper {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 25px 0;
+}
+
+.code-input {
+  width: 55px;
+  height: 60px;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.code-input:focus {
+  border-color: #fff !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.timer-text {
+  color: #d1d5db;
+  font-size: 14px;
+  margin-top: 10px;
+}
+

@@ -2,45 +2,89 @@
 <!DOCTYPE html>
 <!--Registro General de usuario -->
 <html>
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UniRide</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
+
 <body>
-  <div class="wrapper">
-    <form action="index.html">
+  <div class="wrapper register-wrapper">
+    <form id="registerForm" data-register-url="{% url 'register_api' %}" data-csrf="{{ csrf_token }}">
       <h2>Registro</h2>
-      <div class="input-field">
-        <input type="text" id="firtsname"  required>
-        <label>Nombre Completo</label>
+      <p class="register-subtitle">Crea tu cuenta institucional</p>
+
+      <div id="register-error-message" class="error-message" style="display: none;"></div>
+
+      <div class="register-grid">
+        <div class="input-field">
+          <input type="text" id="first_name" required>
+          <label>Nombre</label>
+        </div>
+        <div class="input-field">
+          <input type="text" id="last_name" required>
+          <label>Apellido</label>
+        </div>
+        <div class="input-field">
+          <input type="text" id="username" required>
+          <label>Usuario</label>
+        </div>
+        <div class="input-field">
+          <input type="text" id="no_cuenta_v" required pattern="\d+"
+            title="El número de cuenta solo debe contener dígitos">
+          <label>Nº Cuenta</label>
+        </div>
       </div>
+
       <div class="input-field">
-        <input type="text" id="email" required>
-        <label for="email">Correo universitario</label>
+        <input type="email" id="email" required>
+        <label>Correo institucional (@ucol.mx)</label>
       </div>
-      <div class="input-field">
-        <input type="text" id="username" required>
-        <label>Nombre de usuario</label>
-      </div>
-      <div class="input-field">
-        <input type="text" id="lastname"  required>
-        <label>Apellido </label>
-      </div>
-      <div class="input-field">
-        <input type="text" id="ncuenta"  required>
-        <label>Numero de cuenta univieristaria </label>
-      </div>
-      
+
       <div class="input-field">
         <input type="password" id="password" required>
         <label>Contraseña</label>
-        <i id="pass-toggle-btn" class="fa-solid fa-eye"></i>
       </div>
-     
-      <button type="submit">Entrar</button>
+
+      <button type="submit">Registrarse</button>
+
+      <div class="register">
+        <p><a href="{% url 'login_page' %}">¿Ya tienes una cuenta? Inicia sesión</a></p>
+      </div>
+    </form>
+
+    <!-- Formulario de Verificación -->
+    <form id="verificationForm" data-verify-url="{% url 'verify_code_api' %}"
+      data-resend-url="{% url 'resend_code_api' %}" data-home-url="{% url 'home' %}" data-csrf="{{ csrf_token }}"
+      style="display: none;">
+      <h2>Verificación</h2>
+      <p class="register-subtitle">Hemos enviado un código a <br><strong id="sent-email-placeholder"
+          style="color: #fff;"></strong></p>
+
+      <div id="verify-error-message" class="error-message" style="display: none;"></div>
+      <div id="verify-success-message" class="success-message" style="display: none;"></div>
+
+      <div class="code-inputs-wrapper">
+        <input type="text" class="code-input" maxlength="1" required pattern="\d" inputmode="numeric">
+        <input type="text" class="code-input" maxlength="1" required pattern="\d" inputmode="numeric">
+        <input type="text" class="code-input" maxlength="1" required pattern="\d" inputmode="numeric">
+        <input type="text" class="code-input" maxlength="1" required pattern="\d" inputmode="numeric">
+        <input type="text" class="code-input" maxlength="1" required pattern="\d" inputmode="numeric">
+        <input type="text" class="code-input" maxlength="1" required pattern="\d" inputmode="numeric">
+      </div>
+
+      <button type="submit">Verificar Código</button>
+
+      <div class="register">
+        <p>¿No recibiste el código? <a href="#" id="resend-link">Reenviar código</a></p>
+        <p class="timer-text" style="display: none;">Reenviar en <span id="timer-sec">60</span>s</p>
+      </div>
     </form>
   </div>
+
+  <script src="{% static 'js/register.js' %}"></script>
 </body>
+
 </html>
