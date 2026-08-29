@@ -16,6 +16,7 @@ env/
 
 # Docker
 .docker-logs/
+.docker-compose.yml
 
 # IDEs y Editores
 .vscode/
