@@ -2,6 +2,12 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('login/', views.login_view, name='login'),
+    # Pages
+    path('login/', views.login_page, name='login_page'),
     path('register/', views.register_view, name='register'),
+    
+    # APIs
+    path('uniride/auth/login/', views.login_view, name='login'),
+    path('uniride/auth/logout/', views.logout_view, name='logout'),
+    path('uniride/auth/status/', views.status_view, name='status'),
 ]
