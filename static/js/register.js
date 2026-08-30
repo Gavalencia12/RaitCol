@@ -79,7 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function checkAndSubmitCode() {
     const code = getVerificationCode();
     if (code.length === 6) {
-      verificationForm.dispatchEvent(new Event('submit'));
+      if (typeof verificationForm.requestSubmit === 'function') {
+        verificationForm.requestSubmit();
+      } else {
+        verificationForm.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
     }
   }
 
