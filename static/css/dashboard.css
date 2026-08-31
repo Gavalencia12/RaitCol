@@ -88,3 +88,164 @@ body::before {
   color: #4b5563;
   font-size: 16px;
 }
+
+/* Grid de 3 Columnas Responsive */
+.rides-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  margin-top: 30px;
+}
+/* Tarjeta de Viaje */
+.ride-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+.ride-card:hover {
+  transform: translateY(-4px);
+}
+
+
+/* Secciones de la Tarjeta */
+.ride-header {
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+.location {
+    
+     font-size: 22px;
+}
+
+.route-icon {
+    color: #16a34a;
+}
+
+.ride-body {
+    padding: 16px;
+    flex-grow: 1;
+}
+
+.driver-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.driver-name {
+    font-size: 20px;
+    color: black;
+}
+
+.driver-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.vehicle-details {
+    font-size: 14px;
+    color: #16a34a;
+}
+.ride-footer {
+    padding: 16px;
+    background-color: #f9fafb;
+    border-top: 1px solid #f3f4f6;
+    display: inline-block;
+    justify-content: space-between;
+    align-items: center;
+}
+.ride-stats {
+    display: flex;
+    flex-direction: column;
+}
+/* Contenedor Vacío (Ocupa las 3 columnas) */
+.no-rides {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 48px 24px;
+    background-color: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+}
+
+.error-icon {
+    font-size: 40px;
+    color: #9ca3af;
+    margin-bottom: 16px;
+}
+button {
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 16px;
+  border: 2px solid transparent;
+  transition: 0.3s ease;
+}
+
+button:hover {
+  color: #fff;
+  border-color: #fff;
+  background: black;
+
+}
+/* Estilo base para todas las etiquetas */
+  .badge {
+    display: inline-block;
+    padding: 0.25em 0.6em;
+    font-size: 0.75rem;
+    font-weight: 700;
+    
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+    font-family: sans-serif;
+  }
+
+  /* Verde: Asientos libres */
+  .badge-success {
+    color: #fff;
+    background-color: #28a745;
+  }
+
+  /* Gris: Costo alternativo */
+  .badge-secondary {
+    color: #fff;
+    background-color: #6c757d;
+  }
+
+  /* Azul: Costo principal */
+  .badge-info {
+    color: #fff;
+    background-color: #17a2b8;
+  }
+ .btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #16a34a;
+  --bs-btn-border-color: #16a34a;
+  --bs-btn-hover-color: black;
+  --bs-btn-hover-bg: #16a34a;
+  --bs-btn-hover-border-color: black;
+  --bs-btn-focus-shadow-rgb: 73, 85, 242;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #212cc0;
+  --bs-btn-active-border-color: #1f29b4;
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #2937f0;
+  --bs-btn-disabled-border-color: #2937f0;
+}
+
