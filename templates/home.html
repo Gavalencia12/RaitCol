@@ -40,17 +40,18 @@
         <div class="ride-card">
         <!-- Encabezado: Ruta -->
           <div class="ride-header">
-              <span class="location">{{ viaje.id_route_journey_i.id_address_origin_i.name_address_v }}</span>
+              <span class="location">{{ viaje.id_route_journey_i.id_address_origin_i.name_address_v }}</span><br><br><br>
               <i class="fas fa-arrow-right route-icon"></i>
               <span class="location">{{ viaje.id_route_journey_i.id_address_destiny_i.name_address_v}}</span>
           </div>
           <!-- Cuerpo: Vehículo y Conductor -->
           <div class="ride-body">
               <div class="driver-info">  
-                
-                <i class="fas fa-user driver-name"></i>Emanuell Medina
+                <i class="fas fa-user driver-name "></i>{{ viaje.id_user_car_journey_i.id_user_car_i}}
               </div>
-                <i class="fas fa-car vehicle-details"></i>{{ viaje.id_user_car_journey_i }}<br>
+                <i class="fas fa-car vehicle-details"></i>{{ viaje.id_user_car_journey_i}}<br>
+                <i class="fas fa-palette vehicle-details"></i>{{ viaje.id_user_car_journey_i.color_car_v }}
+                <i class="fas fa-closed-captioning vehicle-details"></i>{{ viaje.id_user_car_journey_i.plates_car_v  }}<br>
           </div>
           <!-- Pie: Precio, Asientos y Acción -->
           <div class="ride-footer" >
