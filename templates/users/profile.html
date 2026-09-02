@@ -3,134 +3,257 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniRide - Mi Perfil</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
-    <!-- Iconos de FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniRide - Mi Perfil</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+  <!-- Iconos de FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
 
-    <!-- Navbar Global -->
-    {% include 'components/navbar.html' %}
+  <!-- Navbar Global -->
+  {% include 'components/navbar.html' %}
 
-    <div class="profile-container">
-        <a href="{% url 'home' %}" class="back-link">
-            <i class="fa-solid fa-arrow-left"></i> Volver al Inicio
-        </a>
+  <div class="profile-container">
+    <a href="{% url 'home' %}" class="back-link">
+      <i class="fa-solid fa-arrow-left"></i> Volver al Inicio
+    </a>
 
-        <div class="profile-card">
-            <div class="profile-card-header">
-                <a href="{% url 'home' %}" class="back-header-btn" title="Volver al Inicio">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </a>
-                <div class="profile-avatar-wrapper">
-                    <i class="fa-solid fa-user profile-avatar-icon"></i>
-                </div>
-                <h2 class="profile-header-name">{{ request.user.first_name }} {{ request.user.last_name }}</h2>
-                <span class="profile-header-badge">
-                    <i class="fa-solid fa-graduation-cap"></i> Usuario UCOL
-                </span>
-            </div>
-
-            <div class="profile-card-body">
-                <form method="POST" action="{% url 'profile' %}" class="profile-form">
-                    {% csrf_token %}
-
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="first_name">
-                                <i class="fa-solid fa-user"></i> Nombre
-                            </label>
-                            <div class="input-wrapper">
-                                <i class="fa-solid fa-pen"></i>
-                                <input type="text" id="first_name" name="first_name" class="form-control"
-                                    value="{{ request.user.first_name }}" required placeholder="Tu nombre">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="last_name">
-                                <i class="fa-solid fa-user"></i> Apellidos
-                            </label>
-                            <div class="input-wrapper">
-                                <i class="fa-solid fa-pen"></i>
-                                <input type="text" id="last_name" name="last_name" class="form-control"
-                                    value="{{ request.user.last_name }}" required placeholder="Tus apellidos">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="username">
-                                <i class="fa-solid fa-at"></i> Nombre de Usuario
-                            </label>
-                            <div class="input-wrapper">
-                                <i class="fa-solid fa-pen"></i>
-                                <input type="text" id="username" name="username" class="form-control"
-                                    value="{{ request.user.username }}" placeholder="Tu nombre de usuario">
-                            </div>
-                            <span class="form-hint">Tu identificador público en la plataforma.</span>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="email">
-                                <i class="fa-solid fa-envelope"></i> Correo Institucional
-                            </label>
-                            <div class="input-wrapper">
-                                <i class="fa-solid fa-lock"></i>
-                                <input type="email" id="email" class="form-control" value="{{ request.user.email }}"
-                                    disabled>
-                            </div>
-                            <span class="form-hint">Dato institucional verificado. No modificable.</span>
-                        </div>
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="no_cuenta">
-                                <i class="fa-solid fa-user"></i> Número de Cuenta
-                            </label>
-                            <div class="input-wrapper">
-                                <i class="fa-solid fa-lock"></i>
-                                <input type="text" id="no_cuenta" class="form-control"
-                                    value="{{ request.user.no_cuenta_v }}" disabled>
-                            </div>
-                            <span class="form-hint">Número de cuenta de alumno / trabajador.</span>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="credential_udc_img">
-                                <i class="fa-solid fa-id-card"></i> Credencial UDEC
-                            </label>
-                            <div class="input-wrapper">
-                                <i class="fa-solid fa-lock"></i>
-                                <input type="file" id="credential_udc_img" class="form-control"
-                                    name="credential_udc_img" value="{{ request.user.credential_udc_img }}" required>
-                            </div>
-                            <span class="form-hint">Credencial de alumno / trabajador.</span>
-                        </div>
-                    </div>
-
-                    <div class="profile-actions">
-                        <button type="submit" class="btn-submit">
-                            <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
-                        </button>
-                        <a href="#" class="btn-secondary-action">
-                            <i class="fa-solid fa-car"></i> Agregar Vehículo / Modo Conductor
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <div class="segmented-control d-none" id="segmentedControl">
+      <button type="button" class="segmented-btn active" id="tabPersonal">
+        <i class="fa-solid fa-user"></i> Datos Personales
+      </button>
+      <button type="button" class="segmented-btn" id="tabVehicles">
+        <i class="fa-solid fa-car"></i> Modo Conductor
+      </button>
     </div>
 
-    <script src="{% static 'js/dashboard.js' %}"></script>
+    <div class="views-wrapper">
+      <div class="profile-view-section active" id="viewPersonal">
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <div class="profile-avatar-wrapper">
+              <i class="fa-solid fa-user profile-avatar-icon"></i>
+            </div>
+            <h2 class="profile-header-name">{{ request.user.first_name }} {{ request.user.last_name }}</h2>
+            <span class="profile-header-badge">
+              <i class="fa-solid fa-graduation-cap"></i> Usuario UCOL
+            </span>
+          </div>
+
+          <div class="profile-card-body">
+            <form method="POST" action="{% url 'profile' %}" class="profile-form">
+              {% csrf_token %}
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="first_name">
+                    <i class="fa-solid fa-user"></i> Nombre
+                  </label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-pen"></i>
+                    <input type="text" id="first_name" name="first_name" class="form-control"
+                      value="{{ request.user.first_name }}" required placeholder="Tu nombre">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="last_name">
+                    <i class="fa-solid fa-user"></i> Apellidos
+                  </label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-pen"></i>
+                    <input type="text" id="last_name" name="last_name" class="form-control"
+                      value="{{ request.user.last_name }}" required placeholder="Tus apellidos">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="username">
+                    <i class="fa-solid fa-at"></i> Nombre de Usuario
+                  </label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-pen"></i>
+                    <input type="text" id="username" name="username" class="form-control"
+                      value="{{ request.user.username }}" placeholder="Tu nombre de usuario">
+                  </div>
+                  <span class="form-hint">Tu identificador público en la plataforma.</span>
+                </div>
+
+                <div class="form-group">
+                  <label for="email">
+                    <i class="fa-solid fa-envelope"></i> Correo Institucional
+                  </label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="email" id="email" class="form-control" value="{{ request.user.email }}" disabled>
+                  </div>
+                  <span class="form-hint">Dato institucional verificado. No modificable.</span>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="no_cuenta">
+                    <i class="fa-solid fa-id-card"></i> Número de Cuenta
+                  </label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="text" id="no_cuenta" class="form-control" value="{{ request.user.no_cuenta_v }}"
+                      disabled>
+                  </div>
+                  <span class="form-hint">Número de cuenta de alumno / trabajador.</span>
+                </div>
+
+                <div class="form-group">
+                  <label for="credential_udc_img">
+                    <i class="fa-solid fa-id-card"></i> Credencial UDEC
+                  </label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="file" id="credential_udc_img" class="form-control" name="credential_udc_img"
+                      value="{{ request.user.credential_udc_img }}" required>
+                  </div>
+                  <span class="form-hint">Credencial de alumno / trabajador.</span>
+                </div>
+              </div>
+
+              <div class="profile-actions">
+                <button type="submit" class="btn-submit">
+                  <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
+                </button>
+              </div>
+            </form>
+
+            <!-- Tarjeta de invitación -->
+            <div class="driver-invite-card">
+              <div class="driver-invite-content">
+                <div class="driver-invite-icon">
+                  <i class="fa-solid fa-car-side"></i>
+                </div>
+                <div class="driver-invite-text">
+                  <h4>¿Quieres hacerte Conductor?</h4>
+                  <p>Registra tu automóvil para ofrecer viajes a otros estudiantes y compartir gastos.</p>
+                </div>
+              </div>
+              <button type="button" class="btn-driver-action" id="btnInviteToDriver">
+                <i class="fa-solid fa-car"></i> Registrar mi Vehículo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-view-section slide-right" id="viewVehicles">
+        <div class="profile-card">
+          <div class="profile-card-body">
+            <h3 class="section-header-title">
+              <i class="fa-solid fa-car-side"></i> Modo Conductor - Mis Vehículos
+            </h3>
+            <p class="section-subtitle">Gestiona tus automóviles registrados para ofrecer viajes en UniRide.</p>
+
+            <div class="vehicles-grid">
+              <div class="vehicle-card">
+                <div class="vehicle-card-top">
+                  <div class="vehicle-icon-badge">
+                    <i class="fa-solid fa-car"></i>
+                  </div>
+                  <span class="vehicle-plate-tag">FGR-123</span>
+                </div>
+                <h4 class="vehicle-name">Nissan Versa (2022)</h4>
+                <div class="vehicle-details-list">
+                  <div class="vehicle-detail-item">
+                    <i class="fa-solid fa-palette"></i> Color: Gris Metálico
+                  </div>
+                  <div class="vehicle-detail-item">
+                    <i class="fa-solid fa-users"></i> Capacidad: 4 pasajeros
+                  </div>
+                </div>
+              </div>
+
+              <div class="add-vehicle-card" id="btnAddVehicle">
+                <i class="fa-solid fa-circle-plus"></i>
+                <span>Registrar Nuevo Vehículo</span>
+              </div>
+            </div>
+
+            <form class="profile-form" id="formAddVehicle" style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
+              <h4 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 14px 0;">
+                <i class="fa-solid fa-plus" style="color: #16a34a;"></i> Registrar Datos del Auto
+              </h4>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="mark_car_v"><i class="fa-solid fa-car"></i> Marca</label>
+                  <input type="text" id="mark_car_v" class="form-control" placeholder="Ej. Nissan, Toyota">
+                </div>
+                <div class="form-group">
+                  <label for="model_car_v"><i class="fa-solid fa-car-side"></i> Modelo</label>
+                  <input type="text" id="model_car_v" class="form-control" placeholder="Ej. Versa, Corolla">
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="year_car_i"><i class="fa-solid fa-calendar"></i> Año</label>
+                  <input type="number" id="year_car_i" class="form-control" placeholder="Ej. 2022">
+                </div>
+                <div class="form-group">
+                  <label for="color_car_v"><i class="fa-solid fa-palette"></i> Color</label>
+                  <input type="text" id="color_car_v" class="form-control" placeholder="Ej. Gris, Blanco">
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="plates_car_v"><i class="fa-solid fa-closed-captioning"></i> Placas</label>
+                  <input type="text" id="plates_car_v" class="form-control" placeholder="Ej. FGR-123">
+                </div>
+                <div class="form-group">
+                  <label for="seating_car_i"><i class="fa-solid fa-users"></i> Asientos Disponibles</label>
+                  <input type="number" id="seating_car_i" class="form-control" placeholder="Ej. 4">
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="licence_user_v">
+                    <i class="fa-solid fa-id-card"></i> Licencia de Conducir
+                  </label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="file" id="licence_user_v" class="form-control"
+                      value="{{ request.user.licence_user_v }}" disabled>
+                  </div>
+                  <span class="form-hint">Imagen de la licencia de conducir.</span>
+                </div>
+              </div>
+
+              <div class="profile-actions">
+                <button type="submit" class="btn-submit">
+                  <i class="fa-solid fa-car"></i> Guardar Vehículo
+                </button>
+                <button type="button" class="btn-secondary-action" id="btnSwitchToPersonal">
+                  <i class="fa-solid fa-user"></i> Volver a Datos Personales
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="{% static 'js/dashboard.js' %}"></script>
+  <script src="{% static 'js/profile.js' %}"></script>
 </body>
 
 </html>
