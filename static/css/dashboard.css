@@ -118,10 +118,12 @@ body::before {
     align-items: center;
     gap: 8px;
     font-weight: 600;
+    
 }
 .location {
     
      font-size: 22px;
+     overflow-wrap: break-word;
 }
 
 .route-icon {
@@ -142,6 +144,9 @@ body::before {
 .driver-name {
     font-size: 20px;
     color: black;
+     
+  place-content: center; /* Centra en ambos ejes a la vez */
+  height: 8vh;
 }
 
 .driver-img {
