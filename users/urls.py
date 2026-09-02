@@ -5,7 +5,9 @@ urlpatterns = [
     # Pages
     path('login/', views.login_page, name='login_page'),
     path('register/', views.register_view, name='register'),
-    
+    path('profile/', views.profile_view, name='profile'),
+    path('change_password/', views.change_pass_view, name='change_password'),
+
     # APIs
     path('uniride/auth/login/', views.login_view, name='login'),
     path('uniride/auth/logout/', views.logout_view, name='logout'),

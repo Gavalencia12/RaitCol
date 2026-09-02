@@ -14,49 +14,37 @@
 
 <body>
 
-  <nav class="navbar">
-    <div class="navbar-brand">
-      <i class="fa-solid fa-car-side"></i> UniRide
-    </div>
-    <div class="navbar-menu">
-      <span class="user-info">
-        <i class="fa-solid fa-user"></i> {{ request.user.email }}
-      </span>
-      <button class="logout-btn" id="logoutBtn" data-logout-url="{% url 'logout' %}"
-        data-login-url="{% url 'login_page' %}" data-csrf="{{ csrf_token }}">
-        <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
-      </button>
-    </div>
-  </nav>
+  <!-- Navbar Global -->
+  {% include 'components/navbar.html' %}
 
-<div class="main-container">
+  <div class="main-container">
     <div class="welcome-header">
       <h1>{{ title }}</h1>
       <p>{{ description }}</p>
       <div class="rides-grid">
-      <!-- Contenedor de tarjetas -->
-      <!-- bucle  -->
+        <!-- Contenedor de tarjetas -->
+        <!-- bucle  -->
         {% for viaje in viajes %}
         <div class="ride-card">
-        <!-- Encabezado: Ruta -->
+          <!-- Encabezado: Ruta -->
           <div class="ride-header">
-              <span class="location">{{ viaje.id_route_journey_i.id_address_origin_i.name_address_v }}</span>
-              <i class="fas fa-arrow-right route-icon"></i>
-              <span class="location">{{ viaje.id_route_journey_i.id_address_destiny_i.name_address_v}}</span>
+            <span class="location">{{ viaje.id_route_journey_i.id_address_origin_i.name_address_v }}</span>
+            <i class="fas fa-arrow-right route-icon"></i>
+            <span class="location">{{ viaje.id_route_journey_i.id_address_destiny_i.name_address_v}}</span>
           </div>
           <!-- Cuerpo: Vehículo y Conductor -->
           <div class="ride-body">
-              <div class="driver-info">  
-                
-                <i class="fas fa-user driver-name"></i>Emanuell Medina
-              </div>
-                <i class="fas fa-car vehicle-details"></i>{{ viaje.id_user_car_journey_i }}<br>
+            <div class="driver-info">
+
+              <i class="fas fa-user driver-name"></i>Emanuell Medina
+            </div>
+            <i class="fas fa-car vehicle-details"></i>{{ viaje.id_user_car_journey_i }}<br>
           </div>
           <!-- Pie: Precio, Asientos y Acción -->
-          <div class="ride-footer" >
+          <div class="ride-footer">
             <div class="ride-stats">
               <p>
-                <span class="badge badge-success">{{ viaje.available_seats_i }} Lugares libres</span> 
+                <span class="badge badge-success">{{ viaje.available_seats_i }} Lugares libres</span>
                 <span class="badge badge-secondary">${{ viaje.cost_journey_d }}</span>
               </p>
             </div>
@@ -64,17 +52,17 @@
           <button>
             <i class="fas fa-sign-in-alt"></i> Unirse
           </button>
-        </div>  
+        </div>
         <!-- bucle  Empty-->
-         {% empty %}
+        {% empty %}
         <!-- Estado Vacío -->
-            <div class="no-rides">
-                <i class="fas fa-search error-icon"></i>
-                <h3>No hay viajes disponibles</h3>
-                <p>Prueba seleccionando otras fechas u otros destinos.</p>
-            </div>    
-            <!-- bucle  Fin -->  
-             {% endfor %} 
+        <div class="no-rides">
+          <i class="fas fa-search error-icon"></i>
+          <h3>No hay viajes disponibles</h3>
+          <p>Prueba seleccionando otras fechas u otros destinos.</p>
+        </div>
+        <!-- bucle  Fin -->
+        {% endfor %}
       </div>
     </div>
   </div>
