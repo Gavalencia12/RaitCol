@@ -1,4 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Lógica del menú desplegable de usuario
+  const userDropdown = document.getElementById('userDropdown');
+  const userDropdownToggle = document.getElementById('userDropdownToggle');
+
+  if (userDropdown && userDropdownToggle) {
+    userDropdownToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isActive = userDropdown.classList.contains('active');
+      userDropdown.classList.toggle('active');
+      userDropdownToggle.setAttribute('aria-expanded', !isActive);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!userDropdown.contains(e.target)) {
+        userDropdown.classList.remove('active');
+        userDropdownToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  // Lógica para cerrar sesión
   const logoutBtn = document.getElementById('logoutBtn');
   if (!logoutBtn) return;
 

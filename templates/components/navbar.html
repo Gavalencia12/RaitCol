@@ -1,0 +1,37 @@
+{% load static %}
+<nav class="navbar">
+  <a href="{% url 'home' %}" class="navbar-brand">
+    <i class="fa-solid fa-car-side"></i> UniRide
+  </a>
+  <div class="navbar-menu">
+    <div class="user-dropdown" id="userDropdown">
+      <button class="user-dropdown-toggle" id="userDropdownToggle" type="button" aria-expanded="false">
+        <i class="fa-solid fa-circle-user avatar-icon"></i>
+        <span class="user-name">{{ request.user.username|default:request.user.first_name }}</span>
+        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+      </button>
+      <div class="dropdown-menu" id="dropdownMenu">
+        <div class="dropdown-header">
+          <p class="dropdown-user-name">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+          <p class="dropdown-user-email">{{ request.user.email }}</p>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a href="{% url 'profile' %}" class="dropdown-item">
+          <i class="fa-solid fa-id-card"></i> Mi Perfil
+        </a>
+        <a href="{% url 'profile' %}" class="dropdown-item">
+          <i class="fa-solid fa-car"></i> Cambiar Rol
+        </a>
+        <a href="{% url 'change_password' %}" class="dropdown-item">
+          <i class="fa-solid fa-key"></i> Cambiar Contraseña
+        </a>
+
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item logout-dropdown-item" id="logoutBtn" data-logout-url="{% url 'logout' %}"
+          data-login-url="{% url 'login_page' %}" data-csrf="{{ csrf_token }}">
+          <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>

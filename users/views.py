@@ -1,6 +1,6 @@
 import json
 import logging
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -20,6 +20,16 @@ def login_page(request):
 
 def register_view(request):
     return render(request, 'users/register.html')
+
+def profile_view(request):
+    if not request.user.is_authenticated:
+        return redirect('login_page')
+    return render(request, 'users/profile.html')
+
+def change_pass_view(request):
+    if not request.user.is_authenticated:
+        return redirect('login_page')
+    return render(request, 'users/change_password.html')
     
 @csrf_exempt
 @require_http_methods(["POST"])
