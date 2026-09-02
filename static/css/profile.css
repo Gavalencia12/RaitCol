@@ -1,7 +1,7 @@
 /* Estilos de la vista de Perfil de Usuario */
 .profile-container {
   max-width: 720px;
-  margin: 40px auto;
+  margin: 10px auto;
   padding: 0 20px;
 }
 
@@ -12,6 +12,47 @@
   border: 1px solid #e5e7eb;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Botón de regresar al inicio */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.back-link:hover {
+  color: #15803d;
+  transform: translateX(-4px);
+}
+
+.back-header-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 16px;
+  transition: background 0.2s, transform 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.back-header-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateX(-3px);
 }
 
 .profile-card-header {

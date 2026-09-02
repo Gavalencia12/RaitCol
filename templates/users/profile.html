@@ -19,9 +19,15 @@
     {% include 'components/navbar.html' %}
 
     <div class="profile-container">
+        <a href="{% url 'home' %}" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Volver al Inicio
+        </a>
 
         <div class="profile-card">
             <div class="profile-card-header">
+                <a href="{% url 'home' %}" class="back-header-btn" title="Volver al Inicio">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
                 <div class="profile-avatar-wrapper">
                     <i class="fa-solid fa-user profile-avatar-icon"></i>
                 </div>
@@ -88,7 +94,7 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="no_cuenta">
-                                <i class="fa-solid fa-id-card"></i> Número de Cuenta
+                                <i class="fa-solid fa-user"></i> Número de Cuenta
                             </label>
                             <div class="input-wrapper">
                                 <i class="fa-solid fa-lock"></i>
@@ -96,6 +102,18 @@
                                     value="{{ request.user.no_cuenta_v }}" disabled>
                             </div>
                             <span class="form-hint">Número de cuenta de alumno / trabajador.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="credential_udc_img">
+                                <i class="fa-solid fa-id-card"></i> Credencial UDEC
+                            </label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="file" id="credential_udc_img" class="form-control"
+                                    name="credential_udc_img" value="{{ request.user.credential_udc_img }}" required>
+                            </div>
+                            <span class="form-hint">Credencial de alumno / trabajador.</span>
                         </div>
                     </div>
 
