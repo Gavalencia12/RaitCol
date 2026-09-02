@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (response.ok && data.success) {
         window.location.href = homeUrl;
+      } else if (data.inactive) {
+        window.location.href = `/register/?email=${encodeURIComponent(data.email)}`;
       } else {
         errorMessage.textContent = data.message || 'Error al iniciar sesión';
         errorMessage.style.display = 'block';
