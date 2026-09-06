@@ -6,7 +6,11 @@
   <div class="navbar-menu">
     <div class="user-dropdown" id="userDropdown">
       <button class="user-dropdown-toggle" id="userDropdownToggle" type="button" aria-expanded="false">
-        <i class="fa-solid fa-circle-user avatar-icon"></i>
+        {% if request.user.get_credential_display %}
+          <img src="{{ request.user.get_credential_display }}" alt="Avatar" class="navbar-avatar-img">
+        {% else %}
+          <i class="fa-solid fa-circle-user avatar-icon"></i>
+        {% endif %}
         <span class="user-name">{{ request.user.username|default:request.user.first_name }}</span>
         <i class="fa-solid fa-chevron-down arrow-icon"></i>
       </button>

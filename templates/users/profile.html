@@ -23,7 +23,9 @@
       <i class="fa-solid fa-arrow-left"></i> Volver al Inicio
     </a>
 
-    <div class="segmented-control d-none" id="segmentedControl">
+    {% include 'components/messages.html' %}
+
+    <div class="segmented-control {% if not is_conductor %}d-none{% endif %}" id="segmentedControl">
       <button type="button" class="segmented-btn active" id="tabPersonal">
         <i class="fa-solid fa-user"></i> Datos Personales
       </button>
@@ -36,17 +38,28 @@
       <div class="profile-view-section active" id="viewPersonal">
         <div class="profile-card">
           <div class="profile-card-header">
-            <div class="profile-avatar-wrapper">
-              <i class="fa-solid fa-user profile-avatar-icon"></i>
+            <div class="profile-avatar-wrapper" id="avatarWrapper">
+              {% if request.user.get_credential_display %}
+              <img src="{{ request.user.get_credential_display }}" alt="Foto de perfil" class="profile-avatar-img"
+                id="profileHeaderAvatar">
+              <i class="fa-solid fa-user profile-avatar-icon d-none" id="profileHeaderIcon"></i>
+              {% else %}
+              <img src="" alt="Foto de perfil" class="profile-avatar-img d-none" id="profileHeaderAvatar">
+              <i class="fa-solid fa-user profile-avatar-icon" id="profileHeaderIcon"></i>
+              {% endif %}
             </div>
             <h2 class="profile-header-name">{{ request.user.first_name }} {{ request.user.last_name }}</h2>
             <span class="profile-header-badge">
-              <i class="fa-solid fa-graduation-cap"></i> Usuario UCOL
+              {% if is_conductor %}
+              <i class="fa-solid fa-car"></i> Conductor UCOL
+              {% else %}
+              <i class="fa-solid fa-graduation-cap"></i> Pasajero UCOL
+              {% endif %}
             </span>
           </div>
 
           <div class="profile-card-body">
-            <form method="POST" action="{% url 'profile' %}" class="profile-form">
+            <form method="POST" action="{% url 'profile' %}" enctype="multipart/form-data" class="profile-form">
               {% csrf_token %}
 
               <div class="form-grid">
@@ -79,9 +92,8 @@
                     <i class="fa-solid fa-at"></i> Nombre de Usuario
                   </label>
                   <div class="input-wrapper">
-                    <i class="fa-solid fa-pen"></i>
-                    <input type="text" id="username" name="username" class="form-control"
-                      value="{{ request.user.username }}" placeholder="Tu nombre de usuario">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="text" id="username" class="form-control" value="{{ request.user.username }}" disabled>
                   </div>
                   <span class="form-hint">Tu identificador público en la plataforma.</span>
                 </div>
@@ -113,14 +125,47 @@
 
                 <div class="form-group">
                   <label for="credential_udc_img">
-                    <i class="fa-solid fa-id-card"></i> Credencial UDEC
+                    <i class="fa-solid fa-id-card"></i> Credencial UDEC (Foto)
                   </label>
                   <div class="input-wrapper">
-                    <i class="fa-solid fa-lock"></i>
-                    <input type="file" id="credential_udc_img" class="form-control" name="credential_udc_img"
-                      value="{{ request.user.credential_udc_img }}" required>
+                    <i class="fa-solid fa-file-image"></i>
+                    <input type="file" id="credential_udc_img" name="credential_udc_img" class="form-control"
+                      accept="image/*">
+                    <input type="hidden" id="credential_udc_base64" name="credential_udc_base64"
+                      value="{{ request.user.credential_udc_base64|default:'' }}">
                   </div>
-                  <span class="form-hint">Credencial de alumno / trabajador.</span>
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <div id="credentialActionBar"
+                    class="{% if not request.user.get_credential_display %}d-none{% endif %}" style="margin-top: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                      <span class="credential-status-badge" id="credentialStatusBadge">
+                        {% if request.user.get_credential_display %}
+                        <i class="fa-solid fa-circle-check"></i> Credencial Guardada
+                        {% else %}
+                        <i class="fa-solid fa-file-image"></i> Credencial Seleccionada
+                        {% endif %}
+                      </span>
+                      <button type="button" class="btn-doc-preview" id="btnToggleCredentialCard">
+                        <i class="fa-solid fa-eye"></i> <span id="lblToggleCredential">Ver Credencial</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="credential-preview-card" id="credentialPreviewCardContainer"
+                    style="display: none; margin-top: 12px;">
+                    <div class="credential-preview-header">
+                      <span class="credential-card-title"><i class="fa-solid fa-id-card"></i> Credencial Institucional
+                        UDEC</span>
+                    </div>
+                    <div class="credential-img-wrapper">
+                      <img id="credentialPreviewImg" src="{{ request.user.get_credential_display|default:'' }}"
+                        alt="Credencial UDEC">
+                    </div>
+                  </div>
+
+                  <span class="form-hint {% if request.user.get_credential_display %}d-none{% endif %}" id="credentialHint">Sube la foto de tu credencial de alumno / trabajador.</span>
                 </div>
               </div>
 
@@ -131,6 +176,7 @@
               </div>
             </form>
 
+            {% if not is_conductor %}
             <!-- Tarjeta de invitación -->
             <div class="driver-invite-card">
               <div class="driver-invite-content">
@@ -146,6 +192,7 @@
                 <i class="fa-solid fa-car"></i> Registrar mi Vehículo
               </button>
             </div>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -159,96 +206,229 @@
             <p class="section-subtitle">Gestiona tus automóviles registrados para ofrecer viajes en UniRide.</p>
 
             <div class="vehicles-grid">
-              <div class="vehicle-card">
+              {% for car_item in cars %}
+              <div class="vehicle-card {% if car and car.id_car_i == car_item.id_car_i %}selected-car{% endif %}">
                 <div class="vehicle-card-top">
                   <div class="vehicle-icon-badge">
                     <i class="fa-solid fa-car"></i>
                   </div>
-                  <span class="vehicle-plate-tag">FGR-123</span>
+                  <span class="vehicle-plate-tag">{{ car_item.plates_car_v }}</span>
                 </div>
-                <h4 class="vehicle-name">Nissan Versa (2022)</h4>
+                <h4 class="vehicle-name">{{ car_item.mark_car_v }} {{ car_item.model_car_v }} ({{ car_item.year_car_i }})</h4>
                 <div class="vehicle-details-list">
                   <div class="vehicle-detail-item">
-                    <i class="fa-solid fa-palette"></i> Color: Gris Metálico
+                    <i class="fa-solid fa-tag"></i> Tipo: {{ car_item.type_car_v }}
                   </div>
                   <div class="vehicle-detail-item">
-                    <i class="fa-solid fa-users"></i> Capacidad: 4 pasajeros
+                    <i class="fa-solid fa-palette"></i> Color: {{ car_item.color_car_v }}
+                  </div>
+                  <div class="vehicle-detail-item">
+                    <i class="fa-solid fa-users"></i> Capacidad: {{ car_item.seating_car_i }} pasajeros
+                  </div>
+                  <div class="vehicle-detail-item">
+                    <i class="fa-solid fa-id-card"></i> Licencia:
+                    {% if car_item.get_licence_display %}
+                    <button type="button" class="btn-doc-preview btn-toggle-card-licence"
+                      data-target="licenceCard{{ car_item.id_car_i }}" style="margin-left: 6px;">
+                      <i class="fa-solid fa-eye"></i> <span>Ver Licencia</span>
+                    </button>
+                    {% else %}
+                    <span class="text-muted">No adjunta</span>
+                    {% endif %}
                   </div>
                 </div>
-              </div>
 
-              <div class="add-vehicle-card" id="btnAddVehicle">
+                <div class="vehicle-card-actions"
+                  style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between;">
+                  <button type="button" class="btn-doc-preview btn-edit-car" data-id="{{ car_item.id_car_i }}"
+                    data-type="{{ car_item.type_car_v }}" data-mark="{{ car_item.mark_car_v }}"
+                    data-model="{{ car_item.model_car_v }}" data-year="{{ car_item.year_car_i }}"
+                    data-color="{{ car_item.color_car_v }}" data-plates="{{ car_item.plates_car_v }}"
+                    data-seating="{{ car_item.seating_car_i }}"
+                    data-licence="{{ car_item.get_licence_display|default:'' }}" style="font-size: 13px;">
+                    <i class="fa-solid fa-pen-to-square"></i> Editar Datos
+                  </button>
+                </div>
+
+                {% if car_item.get_licence_display %}
+                <div class="credential-preview-card" id="licenceCard{{ car_item.id_car_i }}"
+                  style="display: none; margin-top: 10px;">
+                  <div class="credential-preview-header">
+                    <span class="credential-card-title"><i class="fa-solid fa-id-card"></i> Licencia de Conducir
+                      Registrada</span>
+                  </div>
+                  <div class="credential-img-wrapper">
+                    <img src="{{ car_item.get_licence_display }}" alt="Licencia de Conducir">
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+
+              <button type="button" class="add-vehicle-card" id="btnAddVehicle">
                 <i class="fa-solid fa-circle-plus"></i>
                 <span>Registrar Nuevo Vehículo</span>
-              </div>
+              </button>
             </div>
 
-            <form class="profile-form" id="formAddVehicle" style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
-              <h4 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 14px 0;">
-                <i class="fa-solid fa-plus" style="color: #16a34a;"></i> Registrar Datos del Auto
-              </h4>
+            <form method="POST" action="{% url 'register_car' %}" enctype="multipart/form-data"
+              class="profile-form car-form-container {% if not show_car_form %}d-none{% endif %}" id="formAddVehicle">
+              {% csrf_token %}
+              <input type="hidden" id="car_id" name="car_id" value="{{ car.id_car_i|default:'' }}">
+
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <h4 id="formAddVehicleHeader" style="font-size: 16px; font-weight: 700; color: #111827; margin: 0;">
+                  <i class="fa-solid fa-plus" style="color: #16a34a;"></i> {{ car_form_title }}
+                </h4>
+              </div>
 
               <div class="form-grid">
+                <div class="form-group">
+                  <label for="type_car_v"><i class="fa-solid fa-car"></i> Tipo de Vehículo</label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-pen"></i>
+                    <input type="text" id="type_car_v" name="type_car_v" class="form-control"
+                      value="{{ car.type_car_v|default:'' }}" required placeholder="Ej. Sedán, SUV, Hatchback">
+                  </div>
+                </div>
                 <div class="form-group">
                   <label for="mark_car_v"><i class="fa-solid fa-car"></i> Marca</label>
-                  <input type="text" id="mark_car_v" class="form-control" placeholder="Ej. Nissan, Toyota">
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-pen"></i>
+                    <input type="text" id="mark_car_v" name="mark_car_v" class="form-control"
+                      value="{{ car.mark_car_v|default:'' }}" required placeholder="Ej. Nissan, Toyota">
+                  </div>
                 </div>
+              </div>
+
+              <div class="form-grid">
                 <div class="form-group">
                   <label for="model_car_v"><i class="fa-solid fa-car-side"></i> Modelo</label>
-                  <input type="text" id="model_car_v" class="form-control" placeholder="Ej. Versa, Corolla">
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-pen"></i>
+                    <input type="text" id="model_car_v" name="model_car_v" class="form-control"
+                      value="{{ car.model_car_v|default:'' }}" required placeholder="Ej. Versa, Corolla">
+                  </div>
                 </div>
-              </div>
-
-              <div class="form-grid">
                 <div class="form-group">
                   <label for="year_car_i"><i class="fa-solid fa-calendar"></i> Año</label>
-                  <input type="number" id="year_car_i" class="form-control" placeholder="Ej. 2022">
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-pen"></i>
+                    <input type="number" id="year_car_i" name="year_car_i" class="form-control"
+                      value="{{ car.year_car_i|default:'' }}" required placeholder="Ej. 2022">
+                  </div>
                 </div>
+              </div>
+
+              <div class="form-grid">
                 <div class="form-group">
                   <label for="color_car_v"><i class="fa-solid fa-palette"></i> Color</label>
-                  <input type="text" id="color_car_v" class="form-control" placeholder="Ej. Gris, Blanco">
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-pen"></i>
+                    <input type="text" id="color_car_v" name="color_car_v" class="form-control"
+                      value="{{ car.color_car_v|default:'' }}" required placeholder="Ej. Gris, Blanco">
+                  </div>
                 </div>
-              </div>
-
-              <div class="form-grid">
                 <div class="form-group">
                   <label for="plates_car_v"><i class="fa-solid fa-closed-captioning"></i> Placas</label>
-                  <input type="text" id="plates_car_v" class="form-control" placeholder="Ej. FGR-123">
-                </div>
-                <div class="form-group">
-                  <label for="seating_car_i"><i class="fa-solid fa-users"></i> Asientos Disponibles</label>
-                  <input type="number" id="seating_car_i" class="form-control" placeholder="Ej. 4">
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-pen"></i>
+                    <input type="text" id="plates_car_v" name="plates_car_v" class="form-control"
+                      value="{{ car.plates_car_v|default:'' }}" required placeholder="Ej. FGR-123">
+                  </div>
                 </div>
               </div>
 
               <div class="form-grid">
                 <div class="form-group">
-                  <label for="licence_user_v">
-                    <i class="fa-solid fa-id-card"></i> Licencia de Conducir
-                  </label>
+                  <label for="seating_car_i"><i class="fa-solid fa-users"></i> Asientos Disponibles</label>
                   <div class="input-wrapper">
-                    <i class="fa-solid fa-lock"></i>
-                    <input type="file" id="licence_user_v" class="form-control"
-                      value="{{ request.user.licence_user_v }}" disabled>
+                    <i class="fa-solid fa-pen"></i>
+                    <input type="number" id="seating_car_i" name="seating_car_i" class="form-control"
+                      value="{{ car.seating_car_i|default:'' }}" required placeholder="Ej. 4">
                   </div>
-                  <span class="form-hint">Imagen de la licencia de conducir.</span>
+                </div>
+                <div class="form-group">
+                  <label for="lic_user_car_v"><i class="fa-solid fa-id-card"></i> Licencia de Conducir (Foto)</label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-file-image"></i>
+                    <input type="file" id="lic_user_car_v" name="lic_user_car_v" class="form-control" accept="image/*"
+                      {% if not car or not car.get_licence_display %}required{% endif %}>
+                    <input type="hidden" id="lic_user_car_base64" name="lic_user_car_base64"
+                      value="{{ car.lic_user_car_base64|default:'' }}">
+                  </div>
+
+                  <div id="licenceActionBar" class="{% if not car or not car.get_licence_display %}d-none{% endif %}"
+                    style="margin-top: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                      <span class="credential-status-badge" id="licenceStatusBadge">
+                        {% if car and car.get_licence_display %}
+                        <i class="fa-solid fa-circle-check"></i> Licencia Guardada
+                        {% else %}
+                        <i class="fa-solid fa-file-image"></i> Licencia Seleccionada
+                        {% endif %}
+                      </span>
+                      <button type="button" class="btn-doc-preview" id="btnToggleLicenceCard">
+                        <i class="fa-solid fa-eye"></i> <span id="lblToggleLicence">Ver Licencia</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <span class="form-hint {% if car and car.get_licence_display %}d-none{% endif %}" id="licenceHint">Sube la foto de tu licencia de conducir.</span>
+                </div>
+
+                <!-- Vista previa desplegable abajo en la misma página (Formato grande full-width) -->
+                <div class="form-group" style="grid-column: 1 / -1; margin-top: 4px;">
+                  <div class="credential-preview-card" id="licencePreviewCardContainer"
+                    style="display: none; margin-top: 8px;">
+                    <div class="credential-preview-header">
+                      <span class="credential-card-title"><i class="fa-solid fa-id-card"></i> Licencia de
+                        Conducir</span>
+                    </div>
+                    <div class="credential-img-wrapper">
+                      <img id="licencePreviewImg" src="{{ car.get_licence_display|default:'' }}"
+                        alt="Licencia de Conducir">
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div class="profile-actions">
                 <button type="submit" class="btn-submit">
-                  <i class="fa-solid fa-car"></i> Guardar Vehículo
+                  <i class="fa-solid fa-car"></i> {{ car_btn_label }}
                 </button>
-                <button type="button" class="btn-secondary-action" id="btnSwitchToPersonal">
-                  <i class="fa-solid fa-user"></i> Volver a Datos Personales
+                <button type="button" class="btn-secondary-action" id="btnCancelCarForm">
+                  <i class="fa-solid fa-xmark"></i> Cancelar
                 </button>
               </div>
             </form>
+
+            <div class="vehicles-footer-actions"
+              style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #f3f4f6; display: flex; justify-content: flex-end;">
+              <button type="button" class="btn-secondary-action" id="btnSwitchToPersonal">
+                <i class="fa-solid fa-user"></i> Volver a Datos Personales
+              </button>
+            </div>
 
           </div>
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Modal para ver la credencial en tamaño completo -->
+  <div id="credentialModal" class="credential-modal" style="display: none;">
+    <div class="credential-modal-card">
+      <div class="credential-modal-header">
+        <span class="credential-modal-title"><i class="fa-solid fa-id-card"></i> Credencial Institucional UDEC</span>
+        <button type="button" class="credential-modal-close" id="closeCredentialModal"
+          aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="credential-modal-body">
+        <img class="credential-modal-content" id="imgFullCredential" alt="Credencial Completa">
+      </div>
     </div>
   </div>
 

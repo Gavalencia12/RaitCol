@@ -16,6 +16,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let registeredEmail = '';
   let countdownInterval = null;
+  let credentialBase64 = null;
+
+  const credentialFileInput = document.getElementById('credential_udc_file');
+  const registerCredentialPreviewContainer = document.getElementById('registerCredentialPreviewContainer');
+  const registerCredentialPreviewImg = document.getElementById('registerCredentialPreviewImg');
+
+  if (credentialFileInput) {
+    credentialFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          credentialBase64 = event.target.result;
+          if (registerCredentialPreviewImg && registerCredentialPreviewContainer) {
+            registerCredentialPreviewImg.src = credentialBase64;
+            registerCredentialPreviewContainer.style.display = 'block';
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        credentialBase64 = null;
+        if (registerCredentialPreviewContainer) {
+          registerCredentialPreviewContainer.style.display = 'none';
+        }
+      }
+    });
+  }
 
   // Verificar si hay un correo en los parámetros de la URL para ir directo a la verificación
   const urlParams = new URLSearchParams(window.location.search);
@@ -141,7 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
           username,
           no_cuenta_v,
           email,
-          password
+          password,
+          credential_udc_base64: credentialBase64
         })
       });
 
