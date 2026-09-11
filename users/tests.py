@@ -260,3 +260,63 @@ class UserTestCase(TestCase):
         verification.refresh_from_db()
         # Code should have changed
         self.assertNotEqual(verification.code, old_code)
+
+    def test_profile_view_get_unauthenticated(self):
+        response = self.client.get(reverse('profile'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response.url)
+
+    def test_profile_view_get_authenticated(self):
+        self.client.login(username=self.email, password=self.password)
+        response = self.client.get(reverse('profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'users/profile.html')
+        self.assertEqual(response.context['form'].instance.first_name, 'Gael')
+
+    def test_profile_view_post_update_success(self):
+        self.client.login(username=self.email, password=self.password)
+        response = self.client.post(reverse('profile'), data={
+            'first_name': 'Gael Updated',
+            'last_name': 'Valencia Updated'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('profile'))
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, 'Gael Updated')
+        self.assertEqual(self.user.last_name, 'Valencia Updated')
+
+    def test_register_user_with_credential_base64(self):
+        dummy_base64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        response = self.client.post(
+            reverse('register_api'),
+            data={
+                'first_name': 'Carlos',
+                'last_name': 'Gomez',
+                'username': 'carlosg',
+                'email': 'carlosg@ucol.mx',
+                'no_cuenta_v': '20205566',
+                'password': 'StrongPassword123!',
+                'credential_udc_base64': dummy_base64
+            },
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()['success'], True)
+        
+        user = User.objects.get(email='carlosg@ucol.mx')
+        self.assertEqual(user.credential_udc_base64, dummy_base64)
+        self.assertEqual(user.get_credential_display(), dummy_base64)
+
+    def test_profile_view_post_update_credential_base64(self):
+        self.client.login(username=self.email, password=self.password)
+        dummy_base64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP..."
+        response = self.client.post(reverse('profile'), data={
+            'first_name': 'Gael',
+            'last_name': 'Valencia',
+            'credential_udc_base64': dummy_base64
+        })
+        self.assertEqual(response.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.credential_udc_base64, dummy_base64)
+        self.assertEqual(self.user.get_credential_display(), dummy_base64)
+

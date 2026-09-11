@@ -27,13 +27,21 @@ class Car(models.Model):
     color_car_v = models.CharField(max_length=50, db_column='color_car_v')
     seating_car_i = models.IntegerField(db_column='seating_car_i')
     plates_car_v = models.CharField(max_length=50, db_column='plates_car_v')
-    lic_user_car_v = models.CharField(max_length=50, db_column='lic_user_car_v')
+    lic_user_car_v = models.FileField(upload_to='licenses/', max_length=255, null=True, blank=True, db_column='lic_user_car_v')
+    lic_user_car_base64 = models.TextField(null=True, blank=True, db_column='lic_user_car_base64')
     date_create_t = models.DateTimeField(auto_now_add=True, db_column='date_create_t')
     date_update_t = models.DateTimeField(auto_now=True, db_column='date_update_t')
     is_active_b = models.BooleanField(default=True, db_column='is_active_b')
     
     class Meta:
         db_table = 'car'
+
+    def get_licence_display(self):
+        if self.lic_user_car_base64:
+            return self.lic_user_car_base64
+        if self.lic_user_car_v:
+            return self.lic_user_car_v.url
+        return None
     
     def __str__(self):
         return f"{self.mark_car_v} {self.model_car_v} ({self.plates_car_v})"

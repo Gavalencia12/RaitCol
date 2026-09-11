@@ -16,6 +16,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, validators=[validate_ucol_email], db_column='email_user_v')
     is_active = models.BooleanField(default=True, db_column='is_active_b')
     no_cuenta_v = models.CharField(max_length=10, unique=True, db_column='no_cuenta_v')
+    credential_udc_img = models.FileField(upload_to='credentials/', null=True, blank=True, db_column='credential_udc_img')
+    credential_udc_base64 = models.TextField(null=True, blank=True, db_column='credential_udc_base64')
     date_create_t = models.DateTimeField(auto_now_add=True, db_column='date_create_t')
     date_update_t = models.DateTimeField(auto_now=True, db_column='date_update_t')
 
@@ -24,6 +26,13 @@ class User(AbstractUser):
 
     class Meta:
         db_table = 'user'
+
+    def get_credential_display(self):
+        if self.credential_udc_base64:
+            return self.credential_udc_base64
+        if self.credential_udc_img:
+            return self.credential_udc_img.url
+        return None
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.no_cuenta_v})"

@@ -74,6 +74,19 @@ body::before {
   font-size: 18px;
 }
 
+.navbar-avatar-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 2px;
+  border: 1.5px solid #86efac;
+  vertical-align: middle;
+  overflow: hidden;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
 .user-dropdown-toggle .arrow-icon {
   font-size: 12px;
   transition: transform 0.2s ease;
