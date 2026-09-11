@@ -621,4 +621,22 @@
     border: 1px solid #86efac;
 }
 
+/* Estilos para el change_password
+Estilo para todos los inputs dentro del formulario */
+form p input, form p textarea, form p select {
+    background-color: #f3f6f4;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    width: 100%;
+    
+}
 
+/*Estilos para el change_password 
+Estilo para las etiquetas (labels) */
+form p label {
+    font-weight: bold;
+    color: #374151;
+    display: block;
+    margin-bottom: 0.25rem;
+}

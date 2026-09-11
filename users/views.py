@@ -9,6 +9,12 @@ from django.core.mail import send_mail
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from .models import User, EmailVerification
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +31,32 @@ def profile_view(request):
     if not request.user.is_authenticated:
         return redirect('login_page')
     return render(request, 'users/profile.html')
-
+@login_required 
 def change_pass_view(request):
-    if not request.user.is_authenticated:
-        return redirect('login_page')
-    return render(request, 'users/change_password.html')
+    if request.method == 'POST':
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user) # Mantiene la sesión abierta
+             # Envío de correo de notificación de seguridad
+            send_mail(
+                subject='Notificación de Seguridad - Cambio de Contraseña en UniRide',
+                message=f'Hola {user.first_name},\n\nTe notificamos que la contraseña de tu cuenta en RaitCol ha sido actualizada exitosamente.\nSi no realizaste este cambio, por favor ponte en contacto inmediatamente con soporte.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            # Agrega esta respuesta para JavaScript
+            return JsonResponse({'success': True, 'message': '¡Tu contraseña ha sido actualizada con éxito y te hemos enviado un correo de confirmación!'})
+        else:
+            # Si el formulario no es válido, devuelve los errores en formato JSON
+            return JsonResponse({'success': False, 'errors': form.errors.as_text()}, status=400)
+            
+    else:
+        form = PasswordChangeForm(user=request.user)
+    
+    # ESTA LÍNEA ES CLAVE: Si falla el POST o es un GET, vuelve a pintar el formulario
+    return render(request, 'users/change_password.html', {'form': form})
     
 @csrf_exempt
 @require_http_methods(["POST"])
