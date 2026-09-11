@@ -38,8 +38,7 @@ def register_view(request):
 def profile_view(request):
     if not request.user.is_authenticated:
         return redirect('login_page')
-    return render(request, 'users/profile.html')
-@login_required 
+        
     cars = Car.objects.filter(id_user_car_i=request.user, is_active_b=True)
     is_conductor = request.user.groups.filter(name='Conductor').exists() or cars.exists()
 
