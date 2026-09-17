@@ -139,6 +139,7 @@ EMAIL_USE_TLS = str(os.getenv('EMAIL_USE_TLS', 'True')).lower() in ('true', '1',
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'raitcol41@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'cpow ylrh drcm oafr')
 DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER', 'raitcol41@gmail.com')
+EMAIL_TIMEOUT = 10
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [

@@ -386,7 +386,7 @@ def resend_code_api(request):
         send_mail(
             subject='Nuevo código de verificación - UniRide',
             message=f'Hola {user.first_name},\n\nTu nuevo código de verificación es: {verification.code}\n\nEste código expirará en 15 minutos.',
-            from_email=None,
+            from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             fail_silently=False,
         )
