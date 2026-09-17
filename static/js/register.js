@@ -179,11 +179,17 @@ document.addEventListener('DOMContentLoaded', () => {
         registeredEmail = email;
         sentEmailPlaceholder.textContent = email;
 
+        if (data.debug_code) {
+          const autoFill = String(data.debug_code);
+          if (autoFill.length === 6) {
+            codeInputs.forEach((input, idx) => input.value = autoFill[idx]);
+          }
+        }
+
         registerForm.style.display = 'none';
         verificationForm.style.display = 'block';
 
         codeInputs[0].focus();
-
         startResendTimer();
       } else {
         registerError.textContent = data.message || 'Ocurrió un error en el registro.';
@@ -282,10 +288,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response.ok && data.success) {
         verifySuccess.textContent = data.message || 'Se ha reenviado un nuevo código a tu correo.';
         verifySuccess.style.display = 'block';
-        startResendTimer();
 
-        codeInputs.forEach(input => input.value = '');
-        codeInputs[0].focus();
+        if (data.debug_code) {
+          const autoFill = String(data.debug_code);
+          if (autoFill.length === 6) {
+            codeInputs.forEach((input, idx) => input.value = autoFill[idx]);
+          }
+        } else {
+          codeInputs.forEach(input => input.value = '');
+          codeInputs[0].focus();
+        }
+
+        startResendTimer();
       } else {
         verifyError.textContent = data.message || 'No se pudo reenviar el código.';
         verifyError.style.display = 'block';
