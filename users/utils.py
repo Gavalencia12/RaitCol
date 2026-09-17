@@ -24,30 +24,31 @@ def send_custom_email(subject, message, recipient_list, from_email=None):
 
     # Opción 1: Brevo API HTTP (Puerto HTTPS 443)
     if brevo_key:
-        try:
-            url = "https://api.brevo.com/v3/smtp/email"
-            payload = {
-                "sender": {"name": "UniRide", "email": from_email},
-                "to": [{"email": r} for r in recipient_list],
-                "subject": subject,
-                "textContent": message
-            }
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode('utf-8'),
-                headers={
-                    "accept": "application/json",
-                    "api-key": brevo_key,
-                    "content-type": "application/json"
-                },
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                if resp.status in (200, 201, 202):
-                    logger.info("Correo enviado exitosamente vía Brevo API HTTP")
-                    return True
-        except Exception as e:
-            logger.error(f"Error al enviar vía Brevo API: {e}")
+        for header_name in ["api-key", "x-mailin-api-key"]:
+            try:
+                url = "https://api.brevo.com/v3/smtp/email"
+                payload = {
+                    "sender": {"name": "UniRide", "email": from_email},
+                    "to": [{"email": r} for r in recipient_list],
+                    "subject": subject,
+                    "textContent": message
+                }
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode('utf-8'),
+                    headers={
+                        "accept": "application/json",
+                        header_name: brevo_key.strip(),
+                        "content-type": "application/json"
+                    },
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    if resp.status in (200, 201, 202):
+                        logger.info(f"Correo enviado exitosamente vía Brevo API HTTP ({header_name})")
+                        return True
+            except Exception as e:
+                logger.error(f"Error al enviar vía Brevo API ({header_name}): {e}")
 
     # Opción 2: Resend API HTTP
     if resend_key:
