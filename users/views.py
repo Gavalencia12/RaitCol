@@ -272,7 +272,7 @@ def register_user_api(request):
         send_mail(
             subject='Verifica tu cuenta en UniRide',
             message=f'Hola {first_name},\n\nTu código de verificación para registrarte en UniRide es: {verification.code}\n\nEste código expirará en 15 minutos.',
-            from_email=None,
+            from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             fail_silently=False,
         )
