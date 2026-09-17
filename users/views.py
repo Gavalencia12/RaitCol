@@ -15,9 +15,9 @@ from django.contrib import messages
 from .models import User, EmailVerification
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
-from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from .utils import send_custom_email
 from django.contrib import messages
 from .forms import UserProfileForm
 from rides.models import Car
@@ -99,12 +99,11 @@ def change_pass_view(request):
             user = form.save()
             update_session_auth_hash(request, user) # Mantiene la sesión abierta
              # Envío de correo de notificación de seguridad
-            send_mail(
+            send_custom_email(
                 subject='Notificación de Seguridad - Cambio de Contraseña en UniRide',
                 message=f'Hola {user.first_name},\n\nTe notificamos que la contraseña de tu cuenta en RaitCol ha sido actualizada exitosamente.\nSi no realizaste este cambio, por favor ponte en contacto inmediatamente con soporte.',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
-                fail_silently=False,
             )
             # Agrega esta respuesta para JavaScript
             return JsonResponse({'success': True, 'message': '¡Tu contraseña ha sido actualizada con éxito y te hemos enviado un correo de confirmación!'})
@@ -269,12 +268,11 @@ def register_user_api(request):
 
     # Enviar correo
     try:
-        send_mail(
+        send_custom_email(
             subject='Verifica tu cuenta en UniRide',
             message=f'Hola {first_name},\n\nTu código de verificación para registrarte en UniRide es: {verification.code}\n\nEste código expirará en 15 minutos.',
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
-            fail_silently=False,
         )
     except Exception as e:
         logger.error(f"Error al enviar correo de verificación: {e}")
@@ -383,12 +381,11 @@ def resend_code_api(request):
 
     # Enviar correo
     try:
-        send_mail(
+        send_custom_email(
             subject='Nuevo código de verificación - UniRide',
             message=f'Hola {user.first_name},\n\nTu nuevo código de verificación es: {verification.code}\n\nEste código expirará en 15 minutos.',
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
-            fail_silently=False,
         )
     except Exception as e:
         logger.error(f"Error al reenviar correo de verificación: {e}")
