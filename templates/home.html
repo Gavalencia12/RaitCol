@@ -8,6 +8,7 @@
   <title>UniRide - Inicio</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/profile.css' %}">
   <!-- FontAwesome para iconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -21,6 +22,86 @@
     <div class="welcome-header">
       <h1>{{ title }}</h1>
       <p>{{ description }}</p>
+
+          <!-- Botón para Conductor -->
+           <button type="submit" class="btn-submit" id="myBtn">
+            <i class="fas fa-car"></i>Publicar viaje
+          </button>
+          
+      
+      
+          <!-- The Modal -->
+          <div id="myModal" class="modal">
+            <!-- Modal content -->
+            <div class="modal-content">
+              <div class="modal-header">
+                 <span class="close">&times;</span>
+                  <h2 >Publicar mi ViajeSSS</h2>        
+              </div>
+            </br>
+              <form method="POST" action="{% url 'home' %}" id="ViajeForm" >
+                {% csrf_token %}
+                
+                <!-- Origen input-->
+                <div class="form-grid">
+                  <div class="form-group">
+                      <label for="origen">¿Desde dónde sales?</label>
+                      <input class="form-control" id="origen" type="text" placeholder="Ej. Walmart..." required/>
+                  </div>
+                  <!-- Destino input-->
+                  <div class="form-group">
+                      <label for="destino">¿A qué Universidad vas?</label>
+                      <input class="form-control" id="destino" type="text" placeholder="Ej. FIE.." required/>
+                  </div>
+                </div>
+                <!-- Fecha input-->
+                 <div class="form-grid">
+                    <div class="form-group">
+                          <label for="fecha_pro">Fecha</label>                      
+                          <input class="form-control" id="fecha_pro" type="date"  placeholder="dd---- aaaa" required />
+                    </div>
+                    <!-- Horario input-->
+                    <div class="form-group">
+                          <label for="horario">Horario</label>
+                          <input class="form-control" id="horario" type="time"  placeholder="--:--"  required/>
+                    </div>
+                  </div>
+                <div class="form-grid">
+                  <!-- Lugares Disponibles input-->
+                  <div class="form-group">
+                        <label for="asientos">Lugares Disponibles</label>                      
+                        <input class="form-control" id="asientos" type="number" min="1" max="4" placeholder="1 lugar"  required />
+                  </div>
+                  <!-- Precio por persona input-->
+                  <div class="form-group">
+                        <label for="precio">Precio por Persona (MNX)</label>                      
+                        <input class="form-control" id="precio" type="number" min="0" max="100"  placeholder="$40"  required />
+                  </div>
+                </div>
+                <!-- Message input-->
+                <div class="form-group">
+                      <label for="message">Message</label>                      
+                      <textarea class="form-control" id="message" type="text" placeholder="Enter your message here..." style="height: 4rem" ></textarea>
+                </div>
+              </br>
+                <!-- Submit Button-->
+                <div class="d-grid">
+                      <button class="btn-submit" id="submitButton2" type="submit">
+                         <i class="fa-solid fa-paper-plane"></i>Publicar viaje
+                      </button>
+                </div>      
+              </form>
+              <!-- Estado alternativo: El usuario no tiene vehículos registrados -->
+            <div class="alert alert-warning">
+                <h3>Requiere registro de vehículo</h3>
+                <p>Lo sentimos, no puedes crear un viaje porque no tienes ningún vehículo activo en tu cuenta.</p>
+                <a href="{% url 'profile' %}" class="btn">
+                    Registrar un Vehículo ahora
+                </a>
+            </div>
+            </div>
+          </div>
+     
       <div class="rides-grid">
         <!-- Contenedor de tarjetas -->
         <!-- bucle  -->
@@ -65,10 +146,15 @@
         <!-- bucle  Fin -->
         {% endfor %}
       </div>
+      
     </div>
+    
   </div>
-
+  
+     
+        </div>
   <script src="{% static 'js/dashboard.js' %}"></script>
+  <script></script>
 </body>
 
 </html>
