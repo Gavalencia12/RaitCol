@@ -13,22 +13,22 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 try:
     import pymysql
     pymysql.install_as_MySQLdb()
 except ImportError:
     pass
 
+# Cargar variables de entorno desde el archivo .env
 try:
     from dotenv import load_dotenv
-    load_dotenv(Path(__file__).resolve().parent.parent / '.env')
+    load_dotenv(BASE_DIR / '.env')
 except ImportError:
     pass
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Cargar variables de entorno desde el archivo .env
 env_file = BASE_DIR / '.env'
 if env_file.exists():
     with open(env_file, 'r', encoding='utf-8') as f:
