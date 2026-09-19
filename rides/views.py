@@ -55,9 +55,16 @@ def home(request):
             viaje.role_btn_text = 'Ver Detalle / Reservar'
             viaje.role_icon = 'fas fa-ticket'
 
+    user_cars = Car.objects.filter(id_user_car_i=request.user, is_active_b=True)
+    has_car = user_cars.exists()
+    is_driver = request.user.groups.filter(name='Conductor').exists() or has_car
+
     context = {
         'viajes': viajes_qs,
-        'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', '')
+        'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', ''),
+        'has_car': has_car,
+        'is_driver': is_driver,
+        'user_cars': user_cars,
     }
     return render(request, "home.html", context)
 

@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   <link rel="stylesheet" href="{% static 'css/live_ride.css' %}">
-
+  <link rel="stylesheet" href="{% static 'css/profile.css' %}">
   <!-- FontAwesome para iconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -26,10 +26,93 @@
 
   <main class="main-container">
     <div class="welcome-header">
-      <h1>{{ title }}</h1>
-      <p>{{ description }}</p>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <h1>{{ title|default:"¡Bienvenido a UniRide!" }}</h1>
+          <p>{{ description|default:"Encuentra o publica tu viaje universitario de forma segura." }}</p>
+        </div>
+        <!-- Botón para Conductor -->
+        <button type="button" class="btn-submit" id="myBtn" style="width: auto; padding: 10px 20px;">
+          <i class="fas fa-car"></i> Publicar viaje
+        </button>
+      </div>
 
-      <div class="rides-grid">
+      <!-- The Modal -->
+      <div id="myModal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+          <div class="modal-header">
+            <span class="close">&times;</span>
+            <h2>Publicar mi Viaje</h2>
+          </div>
+          <br>
+          {% if has_car %}
+          <form method="POST" action="{% url 'home' %}" id="ViajeForm">
+            {% csrf_token %}
+
+            <!-- Origen input-->
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="origen">¿Desde dónde sales?</label>
+                <input class="form-control" id="origen" name="origen" type="text" placeholder="Ej. Walmart..." required/>
+              </div>
+              <!-- Destino input-->
+              <div class="form-group">
+                <label for="destino">¿A qué Universidad vas?</label>
+                <input class="form-control" id="destino" name="destino" type="text" placeholder="Ej. FIE.." required/>
+              </div>
+            </div>
+            <!-- Fecha input-->
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="fecha_pro">Fecha</label>                      
+                <input class="form-control" id="fecha_pro" name="fecha" type="date" required />
+              </div>
+              <!-- Horario input-->
+              <div class="form-group">
+                <label for="horario">Horario</label>
+                <input class="form-control" id="horario" name="horario" type="time" required/>
+              </div>
+            </div>
+            <div class="form-grid">
+              <!-- Lugares Disponibles input-->
+              <div class="form-group">
+                <label for="asientos">Lugares Disponibles</label>                      
+                <input class="form-control" id="asientos" name="asientos" type="number" min="1" max="4" placeholder="1 lugar" required />
+              </div>
+              <!-- Precio por persona input-->
+              <div class="form-group">
+                <label for="precio">Precio por Persona (MXN)</label>                      
+                <input class="form-control" id="precio" name="precio" type="number" min="0" max="100" placeholder="$40" required />
+              </div>
+            </div>
+            <!-- Message input-->
+            <div class="form-group">
+              <label for="message">Mensaje / Notas del viaje</label>                      
+              <textarea class="form-control" id="message" name="message" placeholder="Describe detalles adicionales de tu viaje..." style="height: 4rem"></textarea>
+            </div>
+            <br>
+            <!-- Submit Button-->
+            <div class="d-grid">
+              <button class="btn-submit" id="submitButton2" type="submit">
+                <i class="fa-solid fa-paper-plane"></i> Publicar viaje
+              </button>
+            </div>      
+          </form>
+          {% else %}
+          <!-- Estado alternativo: El usuario no tiene vehículos registrados -->
+          <div class="alert alert-warning" style="text-align: center; padding: 20px;">
+            <h3 style="margin-bottom: 10px;"><i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Requiere registro de vehículo</h3>
+            <p style="margin-bottom: 16px;">Lo sentimos, no puedes crear un viaje porque no tienes ningún vehículo activo registrado en tu cuenta.</p>
+            <a href="{% url 'profile' %}" class="btn-submit" style="display: inline-block; width: auto; padding: 10px 20px; text-decoration: none;">
+              <i class="fas fa-car"></i> Registrar un Vehículo ahora
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="rides-grid" style="margin-top: 24px;">
         {% for viaje in viajes %}
         <article class="ride-card">
           <div class="ride-header-route">
@@ -41,19 +124,14 @@
           <div class="ride-body-details">
             <div class="driver-info-row">
               <i class="fas fa-id-card driver-icon" style="color: #00b865;"></i>
-              <strong style="color: #1e293b;">{{ viaje.id_user_car_journey_i.id_user_car_i.first_name }} {{
-                viaje.id_user_car_journey_i.id_user_car_i.last_name }}</strong>
+              <strong style="color: #1e293b;">{{ viaje.id_user_car_journey_i.id_user_car_i.first_name }} {{ viaje.id_user_car_journey_i.id_user_car_i.last_name }}</strong>
             </div>
 
             <div class="vehicle-info-row">
-              <span class="vehicle-tag"><i class="fas fa-car-side"></i> {{ viaje.id_user_car_journey_i.mark_car_v }} {{
-                viaje.id_user_car_journey_i.model_car_v }}</span>
-              <span class="color-tag"><i class="fas fa-palette"></i> {{ viaje.id_user_car_journey_i.color_car_v
-                }}</span>
-              <span class="plate-tag"><i class="fas fa-closed-captioning"></i> {{
-                viaje.id_user_car_journey_i.plates_car_v }}</span>
+              <span class="vehicle-tag"><i class="fas fa-car-side"></i> {{ viaje.id_user_car_journey_i.mark_car_v }} {{ viaje.id_user_car_journey_i.model_car_v }}</span>
+              <span class="color-tag"><i class="fas fa-palette"></i> {{ viaje.id_user_car_journey_i.color_car_v }}</span>
+              <span class="plate-tag"><i class="fas fa-closed-captioning"></i> {{ viaje.id_user_car_journey_i.plates_car_v }}</span>
             </div>
-
           </div>
 
           <div class="ride-footer-actions">
@@ -82,10 +160,8 @@
           <div style="font-size: 48px; color: #10b981; margin-bottom: 16px;">
             <i class="fas fa-route"></i>
           </div>
-          <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">No hay viajes activos en
-            este momento</h3>
-          <p style="font-size: 14px; color: #6b7280; max-width: 480px; margin: 0 auto;">Los viajes registrados y activos
-            en la base de datos aparecerán aquí automáticamente.</p>
+          <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">No hay viajes activos en este momento</h3>
+          <p style="font-size: 14px; color: #6b7280; max-width: 480px; margin: 0 auto;">Los viajes registrados y activos en la base de datos aparecerán aquí automáticamente.</p>
         </article>
         {% endfor %}
       </div>
