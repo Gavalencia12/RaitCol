@@ -14,7 +14,7 @@ def send_custom_email(subject, message, recipient_list, from_email=None):
     o fallback a Django SMTP send_mail.
     """
     if from_email is None:
-        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'raitcol41@gmail.com')
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', '') or os.getenv('EMAIL_HOST_USER', '')
 
     if isinstance(recipient_list, str):
         recipient_list = [recipient_list]
