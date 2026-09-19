@@ -95,11 +95,11 @@ WSGI_APPLICATION = 'raitcol.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'raitcol_db',
-        'USER': 'raitcol_user',
-        'PASSWORD': 'raitcol_pass',
-        'HOST': 'db',
-        'PORT': '3306',
+        'NAME': os.getenv('DB_NAME', 'raitcol'),
+        'USER': os.getenv('DB_USER', 'root'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DB_PORT', '3306'),
     }
 }
 
