@@ -180,7 +180,7 @@
 
       <div class="rides-grid" style="margin-top: 24px;">
         {% for viaje in viajes %}
-        <article class="ride-card">
+        <article class="ride-card" data-cost="{{ viaje.cost_journey_d }}" data-seats="{{ viaje.available_seats_i }}">
           <div class="ride-header-route">
             <div class="route-origin">{{ viaje.id_route_journey_i.id_address_origin_i.name_address_v }}</div>
             <i class="fas fa-arrow-right route-arrow-icon"></i>

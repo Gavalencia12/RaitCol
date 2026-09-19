@@ -19,7 +19,7 @@ function startGlobalFeedPolling() {
         if (resp.ok) {
           const data = await resp.json();
           const role = data.isDriver ? 'driver' : (data.isPassenger ? 'passenger' : 'visitor');
-          updateFeedCardRoleUI(rideId, role, data.availableSeats);
+          updateFeedCardRoleUI(rideId, role, data.availableSeats, data.cost);
         }
       } catch (e) { }
     });
@@ -271,20 +271,48 @@ function closeLiveRideModal() {
   document.body.style.overflow = '';
 }
 
-function updateFeedCardRoleUI(rideId, role, availableSeats) {
+function updateFeedCardRoleUI(rideId, role, availableSeats, cost) {
   const btn = document.querySelector(`button[data-ride-id="${rideId}"]`);
   if (!btn) return;
 
   const card = btn.closest('.ride-card');
   if (!card) return;
 
+  const rideCost = (cost !== undefined && cost !== null) ? cost : (card.dataset.cost || currentRideData.cost || '0');
+  const rideSeats = (availableSeats !== undefined && availableSeats !== null) ? availableSeats : (card.dataset.seats || currentRideData.availableSeats || 0);
+
   const badgesContainer = card.querySelector('.ride-badges');
-  const cfg = FEED_ROLE_CONFIGS[role];
-  if (cfg) {
-    btn.dataset.isPassenger = cfg.isPassenger;
-    btn.className = cfg.btnClass;
-    btn.innerHTML = cfg.btnHTML;
-    if (badgesContainer) badgesContainer.innerHTML = cfg.badgeHTML;
+
+  if (role === 'driver') {
+    btn.dataset.isPassenger = 'false';
+    btn.className = 'btn-join-ride btn-role-driver';
+    btn.innerHTML = '<i class="fas fa-sliders"></i> Gestionar mi Viaje';
+    if (badgesContainer) {
+      badgesContainer.innerHTML = `
+        <span class="badge badge-role-driver"><i class="fas fa-crown"></i> Tu Viaje</span>
+        <span class="badge badge-secondary">$${rideCost}</span>
+      `;
+    }
+  } else if (role === 'passenger') {
+    btn.dataset.isPassenger = 'true';
+    btn.className = 'btn-join-ride btn-role-passenger';
+    btn.innerHTML = '<i class="fas fa-location-dot"></i> Rastrear en Vivo';
+    if (badgesContainer) {
+      badgesContainer.innerHTML = `
+        <span class="badge badge-primary" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;"><i class="fas fa-check-circle"></i> Reserva Confirmada</span>
+        <span class="badge badge-secondary">$${rideCost}</span>
+      `;
+    }
+  } else {
+    btn.dataset.isPassenger = 'false';
+    btn.className = 'btn-join-ride btn-role-visitor';
+    btn.innerHTML = '<i class="fas fa-ticket"></i> Ver Detalle / Reservar';
+    if (badgesContainer) {
+      badgesContainer.innerHTML = `
+        <span class="badge badge-success">${rideSeats} Lugares libres</span>
+        <span class="badge badge-secondary">$${rideCost}</span>
+      `;
+    }
   }
 }
 
