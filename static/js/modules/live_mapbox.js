@@ -227,8 +227,8 @@ function addCustomMapboxMarkers(map) {
   `;
   destinationMarkerInstance = new mapboxgl.Marker(elDest).setLngLat([destLng, destLat]).addTo(map);
 
-  const driverLat = originLat;
-  const driverLng = originLng;
+  const driverLat = parseCoord(currentRideData.driverLat, originLat);
+  const driverLng = parseCoord(currentRideData.driverLng, originLng);
 
   const elCar = document.createElement('div');
   elCar.className = 'custom-map-pin car-pin';

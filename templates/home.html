@@ -49,17 +49,31 @@
           {% if has_car %}
           <form method="POST" action="{% url 'home' %}" id="ViajeForm">
             {% csrf_token %}
+            <input type="hidden" id="origen_lat" name="origen_lat" value="">
+            <input type="hidden" id="origen_lng" name="origen_lng" value="">
+            <input type="hidden" id="destino_lat" name="destino_lat" value="">
+            <input type="hidden" id="destino_lng" name="destino_lng" value="">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 13px; font-weight: 700; color: #475569;"><i class="fas fa-map-location-dot" style="color: #00b865;"></i> Vista previa de la ruta</span>
+              <button type="button" id="btnDetectGPS" style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; border-radius:8px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                <i class="fas fa-crosshairs"></i> Detectar mi GPS
+              </button>
+            </div>
+
+            <!-- Contenedor del Mapa interactivo para publicar viaje -->
+            <div id="createRideMapContainer" style="width: 100%; height: 200px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #cbd5e1; background: #f8fafc; overflow: hidden; position: relative;"></div>
 
             <!-- Origen input-->
             <div class="form-grid">
               <div class="form-group">
                 <label for="origen">¿Desde dónde sales?</label>
-                <input class="form-control" id="origen" name="origen" type="text" placeholder="Ej. Walmart..." required/>
+                <input class="form-control" id="origen" name="origen" type="text" placeholder="Ej. Calle Jazmín #1011..." required/>
               </div>
               <!-- Destino input-->
               <div class="form-group">
                 <label for="destino">¿A qué Universidad vas?</label>
-                <input class="form-control" id="destino" name="destino" type="text" placeholder="Ej. FIE.." required/>
+                <input class="form-control" id="destino" name="destino" type="text" placeholder="Ej. FIE Campus Naranjo..." required/>
               </div>
             </div>
             <!-- Fecha input-->
