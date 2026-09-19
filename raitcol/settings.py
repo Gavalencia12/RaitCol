@@ -158,11 +158,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
-EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'True').lower() in ('true', '1', 't')
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() in ('true', '1', 't')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+
+_env_ssl = os.getenv('EMAIL_USE_SSL')
+_env_tls = os.getenv('EMAIL_USE_TLS')
+
+if _env_ssl is not None:
+    EMAIL_USE_SSL = _env_ssl.lower() in ('true', '1', 't')
+else:
+    EMAIL_USE_SSL = (EMAIL_PORT == 465)
+
+if _env_tls is not None:
+    EMAIL_USE_TLS = _env_tls.lower() in ('true', '1', 't')
+else:
+    EMAIL_USE_TLS = (EMAIL_PORT == 587)
+
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'raitcol41@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', os.getenv('EMAIL_HOST_USER', ''))
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'raitcol41@gmail.com')
 EMAIL_TIMEOUT = 10
 
 STATIC_URL = 'static/'
