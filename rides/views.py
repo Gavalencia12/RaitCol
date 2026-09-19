@@ -105,7 +105,8 @@ def journey_detail_api(request, journey_id):
     ).select_related('id_user_passenger_reservation_i')
 
     passengers_count = passengers_qs.count()
-    total_seats = car.seating_car_i or 4
+    offered_seats = journey.available_seats_i + passengers_count
+    total_seats = offered_seats if offered_seats > 0 else (car.seating_car_i or 4)
 
     res_by_seat = {}
     unassigned_reservations = []
@@ -310,11 +311,8 @@ def update_ride_location_api(request, journey_id):
 
     updated = False
 
-    # Actualización de posición del conductor en vivo (actualiza el punto de origen/ubicación actual)
+    # Actualización de posición del conductor en vivo (mantiene el origen de la ruta fijo)
     if 'driver_lat' in data and 'driver_lng' in data:
-        origin.latitude_d = float(data['driver_lat'])
-        origin.longitude_d = float(data['driver_lng'])
-        origin.save()
         updated = True
 
     if 'origin_lat' in data and 'origin_lng' in data:
