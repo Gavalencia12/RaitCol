@@ -1,9 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
   initLiveModalControls();
+  startGlobalFeedPolling();
   window.addEventListener('resize', () => {
     liveMapInstance?.resize?.();
   });
 });
+
+function startGlobalFeedPolling() {
+  setInterval(() => {
+    const rideBtns = document.querySelectorAll('button[data-ride-id]');
+    const processedIds = new Set();
+    rideBtns.forEach(async (btn) => {
+      const rideId = btn.dataset.rideId;
+      if (!rideId || processedIds.has(rideId)) return;
+      processedIds.add(rideId);
+      try {
+        const resp = await fetch(`/api/journey/${rideId}/`);
+        if (resp.ok) {
+          const data = await resp.json();
+          const role = data.isDriver ? 'driver' : (data.isPassenger ? 'passenger' : 'visitor');
+          updateFeedCardRoleUI(rideId, role, data.availableSeats);
+        }
+      } catch (e) { }
+    });
+  }, 4000);
+}
 
 function switchModalRoleView(role = 'visitor') {
   const config = MODAL_ROLE_CONFIGS[role] || MODAL_ROLE_CONFIGS.visitor;
@@ -221,6 +242,7 @@ function openLiveRideModal(rideData = {}) {
 
   if (currentRideData.isDriver && currentRideData.id) {
     startDriverGpsWatch(currentRideData.id);
+    if (typeof startDriverPolling === 'function') startDriverPolling(currentRideData.id);
   }
 
   if (currentRideData.isPassenger && !currentRideData.isDriver) {
@@ -242,6 +264,7 @@ function closeLiveRideModal() {
   if (!backdrop) return;
 
   stopDriverGpsWatch();
+  if (typeof stopDriverPolling === 'function') stopDriverPolling();
   stopPassengerPolling();
 
   backdrop.classList.remove('active');

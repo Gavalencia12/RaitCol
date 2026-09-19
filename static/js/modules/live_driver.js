@@ -71,3 +71,36 @@ function stopDriverGpsWatch() {
   }
 }
 
+let driverPollIntervalId = null;
+
+function startDriverPolling(rideId) {
+  stopDriverPolling();
+  if (!rideId) return;
+
+  driverPollIntervalId = setInterval(async () => {
+    try {
+      const resp = await fetch(`/api/journey/${rideId}/`);
+      if (resp.ok) {
+        const freshData = await resp.json();
+        if (freshData.seats) {
+          currentRideData.seats = freshData.seats;
+          renderSeatsGrid(currentRideData.seats, 'driver');
+          renderDriverPassengersList(currentRideData.seats);
+        }
+        if (freshData.availableSeats !== undefined) {
+          currentRideData.availableSeats = freshData.availableSeats;
+          updateFeedCardRoleUI(currentRideData.id, 'driver', freshData.availableSeats);
+        }
+      }
+    } catch (e) {
+      console.warn('Sondeo automático de conductor:', e);
+    }
+  }, 3000);
+}
+
+function stopDriverPolling() {
+  if (driverPollIntervalId !== null) {
+    clearInterval(driverPollIntervalId);
+    driverPollIntervalId = null;
+  }
+}
