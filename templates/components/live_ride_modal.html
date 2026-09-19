@@ -1,0 +1,199 @@
+<div class="live-ride-modal-backdrop" id="liveRideModalBackdrop" role="dialog" aria-modal="true">
+  <div class="live-ride-modal-window">
+
+    <!-- Encabezado del Modal -->
+    <header class="live-ride-header">
+      <div class="live-ride-header-left">
+        <div class="driver-avatar-circle" id="liveModalDriverAvatar">--</div>
+        <div class="driver-title-info">
+          <h3 id="liveModalDriverName">Conductor</h3>
+          <p id="liveModalRouteTitle">
+            <span>Origen</span>
+            <i class="fas fa-arrow-right"></i>
+            <span>Destino</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="live-ride-header-right">
+        <div id="modalHeaderRoleBadge"
+          style="background: #f1f5f9; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #1e293b; border: 1px solid #e2e8f0;">
+          <i class="fas fa-user"></i> <span id="modalHeaderRoleText">Detalle del Viaje</span>
+        </div>
+
+        <button class="close-modal-btn" id="btnCloseLiveModal" type="button" aria-label="Cerrar ventana">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Cuerpo del Modal: Mapa a la izquierda + Panel a la derecha -->
+    <div class="live-ride-body">
+
+      <!-- Contenedor del Mapa Mapbox GL JS -->
+      <div class="live-ride-map-container">
+        <div id="mapbox-live-map"></div>
+
+        <!-- Overlays Flotantes del Mapa -->
+        <div class="map-badge-live" id="mapLiveBadge">
+          <span class="live-dot-pulse"></span>
+          <span id="mapLiveBadgeText">En vivo</span>
+        </div>
+
+        <div class="map-badge-compass">N</div>
+
+        <div class="map-zoom-controls">
+          <button class="map-zoom-btn" id="btnCenterOnOrigin" type="button" title="Centrar en Origen del Viaje"><i
+              class="fas fa-location-crosshairs"></i></button>
+          <button class="map-zoom-btn" id="mapZoomIn" type="button" title="Acercar">+</button>
+          <button class="map-zoom-btn" id="mapZoomOut" type="button" title="Alejar">-</button>
+        </div>
+      </div>
+
+      <!-- Panel Lateral - Bottom Sheet en Celular -->
+      <aside class="live-ride-sidebar">
+        <div class="sidebar-drag-handle"></div>
+        <h4 class="sidebar-section-title" id="sidebarTitle">Detalles del Viaje</h4>
+
+        <!-- VISTA DATOS DEL VIAJE -->
+        <div id="panelVisitorRole" class="role-panel-block" style="display: none;">
+          <div class="visitor-price-card"
+            style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 14px; padding: 16px; margin-bottom: 16px; text-align: center;">
+            <span
+              style="font-size: 13px; color: #166534; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Costo
+              por lugar</span>
+            <div style="font-size: 32px; font-weight: 800; color: #00b865; margin: 4px 0;" id="visitorCostDisplay">$0.00
+            </div>
+            <div style="font-size: 13px; color: #475569;" id="visitorSeatsDisplay"><i class="fas fa-chair"
+                style="color: #00b865;"></i> 0 asientos libres disponibles</div>
+          </div>
+
+          <div class="seats-status-section"
+            style="margin-bottom: 16px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;">
+            <h5
+              style="font-size: 13px; font-weight: 700; color: #1e293b; margin: 0 0 10px 0; display: flex; align-items: center; justify-content: space-between;">
+              <span><i class="fas fa-chair" style="color: #00b865;"></i> Asientos del Vehículo</span>
+              <span id="seatsHeaderSubtitle" style="font-size: 11px; color: #64748b; font-weight: 600;">Selecciona tu
+                asiento</span>
+            </h5>
+            <div class="seats-grid-list" id="seatsGridContainer"
+              style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+            </div>
+          </div>
+
+          <button class="btn-resume-trip btn-action-reserve" id="btnReserveSeatAction" type="button"
+            style="background: linear-gradient(135deg, #00b865 0%, #10b981 100%); font-weight: 700; width: 100%;">
+            <i class="fas fa-ticket"></i> Reservar 1 Asiento
+          </button>
+        </div>
+
+        <!-- VISTA PASAJERO CONFIRMADO -->
+        <div id="panelPassengerRole" class="role-panel-block" style="display: none;">
+          <div class="eta-card">
+            <div class="eta-minutes-display" id="liveEtaMinutes">0 <span>min</span></div>
+            <div class="eta-label">Tiempo estimado de llegada</div>
+          </div>
+
+          <div class="trip-progress-container">
+            <div class="trip-progress-labels">
+              <span>Inicio</span>
+              <span id="liveDistanceProgress">Vehículo en ruta</span>
+              <span>Destino</span>
+            </div>
+            <div class="trip-progress-bar-bg">
+              <div class="trip-progress-bar-fill" id="liveProgressBarFill" style="width: 40%;"></div>
+            </div>
+          </div>
+
+          <button class="btn-cancel-reservation" id="btnCancelReservationAction" type="button"
+            style="width: 100%; margin-top: 12px; padding: 10px; background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">
+            <i class="fas fa-ban"></i> Cancelar mi Reserva
+          </button>
+        </div>
+
+        <div id="panelDriverRole" class="role-panel-block" style="display: none;">
+          <div class="driver-dashboard-box"
+            style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <span
+                style="font-size: 13px; font-weight: 700; color: #14532d; display: flex; align-items: center; gap: 6px;">
+                <span class="live-dot-pulse" style="width: 10px; height: 10px; background: #00b865;"></span>
+                Transmitiendo GPS en vivo
+              </span>
+              <span class="badge"
+                style="background: #00b865; color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px;">Automático</span>
+            </div>
+            <p style="font-size: 12px; color: #166534; margin: 0;">Tu ubicación actual se comparte automáticamente con
+              tus pasajeros mientras tienes esta ventana abierta.</p>
+          </div>
+
+          <div class="driver-passengers-section"
+            style="margin-bottom: 16px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;">
+            <h5
+              style="font-size: 13px; font-weight: 700; color: #1e293b; margin: 0 0 10px 0; display: flex; align-items: center; justify-content: space-between;">
+              <span><i class="fas fa-users" style="color: #0284c7;"></i> Pasajeros en tu Vehículo</span>
+              <span id="driverSeatsSubtitle" style="font-size: 11px; color: #0284c7; font-weight: 600;">Ocupación
+                actual</span>
+            </h5>
+            <div class="driver-seats-list" id="driverSeatsContainer"
+              style="display: flex; flex-direction: column; gap: 8px;">
+            </div>
+          </div>
+
+          <button class="btn-end-journey" type="button" onclick="alert('Funcionalidad para finalizar viaje')"
+            style="width: 100%; padding: 11px; background: #ef4444; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">
+            <i class="fas fa-flag-checkered"></i> Finalizar este Viaje
+          </button>
+        </div>
+
+        <template id="seatCardTemplate">
+          <div class="seat-card-item">
+            <div class="seat-card-header">
+              <strong class="seat-num-title"><i class="seat-icon fas fa-chair"></i> <span
+                  class="seat-num-text"></span></strong>
+              <span class="seat-badge"></span>
+            </div>
+            <span class="seat-passenger-name"></span>
+          </div>
+        </template>
+
+
+
+        <div class="waypoints-timeline" id="liveWaypointsTimeline" style="margin-top: 16px;">
+          <div class="timeline-step">
+            <div class="timeline-icon-check"><i class="fas fa-location-dot"></i></div>
+            <div class="timeline-step-info">
+              <h4 id="liveTimelineOriginName">Origen</h4>
+              <p id="liveTimelineOriginSub">Punto de salida</p>
+            </div>
+          </div>
+
+          <div class="timeline-step">
+            <div class="timeline-icon-check" style="background: #ef4444;"><i class="fas fa-flag-checkered"></i></div>
+            <div class="timeline-step-info">
+              <h4 id="liveTimelineDestName">Destino</h4>
+              <p id="liveTimelineDestSub">Punto de llegada</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ficha del Conductor -->
+        <div class="driver-card-panel">
+          <div class="driver-card-header">
+            <div class="driver-card-avatar" id="driverCardInitials">--</div>
+            <div class="driver-card-details">
+              <h4 id="driverCardName">Conductor</h4>
+              <!--<p><i class="fas fa-star" style="color: #f59e0b;"></i> 4.8 • Conductor verificado</p>-->
+              <p id="driverCardVehicle" style="margin-top: 4px; font-size: 12px; color: #475569; font-weight: 500;">
+                <i class="fas fa-car" style="color: #00b865;"></i> <span id="liveModalCarText">Vehículo no
+                  especificado</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+  </div>
+</div>

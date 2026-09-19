@@ -1,0 +1,903 @@
+:root {
+  /* --- Marca / Primarios --- */
+  --uniride-green: #00b865;
+  --uniride-green-dark: #009652;
+  --uniride-mint-bg: #eaf7f0;
+  --uniride-mint-light: #f4fbf7;
+  --color-primary: #00b865;
+  --color-primary-dark: #009652;
+  --color-primary-light: #10b981;
+  --color-primary-bg: #f0fdf4;
+  --color-primary-border: #bbf7d0;
+
+  /* --- Rol Conductor (Tu Viaje) --- */
+  --color-driver-primary: #0284c7;
+  --color-driver-dark: #0369a1;
+  --color-driver-bg: #e0f2fe;
+  --color-driver-text: #0284c7;
+  --color-driver-border: #bae6fd;
+  --color-driver-gradient: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+
+  /* --- Rol Pasajero (Reserva Confirmada) --- */
+  --color-passenger-primary: #00b865;
+  --color-passenger-dark: #15803d;
+  --color-passenger-bg: #dcfce7;
+  --color-passenger-text: #15803d;
+  --color-passenger-border: #bbf7d0;
+  --color-passenger-gradient: linear-gradient(135deg, #00b865 0%, #15803d 100%);
+
+  /* --- Rol Buscador / Visitante --- */
+  --color-visitor-bg: #f1f5f9;
+  --color-visitor-text: #475569;
+  --color-visitor-border: #e2e8f0;
+
+  /* --- Asientos del Vehículo --- */
+  --seat-taken-bg: #f1f5f9;
+  --seat-taken-border: #cbd5e1;
+  --seat-taken-text: #475569;
+  --seat-taken-badge-bg: #e0f2fe;
+  --seat-taken-badge-fg: #0369a1;
+
+  --seat-free-bg: #ffffff;
+  --seat-free-border: #cbd5e1;
+  --seat-free-text: #1e293b;
+  --seat-free-badge-bg: #dcfce7;
+  --seat-free-badge-fg: #15803d;
+
+  --seat-selected-bg: #f0fdf4;
+  --seat-selected-border: #00b865;
+  --seat-selected-glow: rgba(0, 184, 101, 0.25);
+
+  /* --- Superficies y Textos Globales --- */
+  --uniride-dark: #1e293b;
+  --uniride-gray-text: #64748b;
+  --uniride-light-gray: #f8fafc;
+  --uniride-border: #e2e8f0;
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-modal-overlay: rgba(15, 23, 42, 0.65);
+  --bg-muted: #f8fafc;
+
+  --text-main: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+
+  /* --- Alertas y Estado --- */
+  --color-danger: #ef4444;
+  --color-danger-bg: #fff1f2;
+  --color-danger-border: #fecdd3;
+  --color-danger-text: #e11d48;
+
+  /* --- Radios y Sombras --- */
+  --uniride-radius-lg: 20px;
+  --uniride-radius-md: 14px;
+  --uniride-radius-sm: 8px;
+  --uniride-shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+  --uniride-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.live-ride-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s ease;
+}
+
+.live-ride-modal-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Ventana Principal del Modal */
+.live-ride-modal-window {
+  width: 100%;
+  max-width: 1100px;
+  height: 90vh;
+  max-height: 750px;
+  background: #ffffff;
+  border-radius: var(--uniride-radius-lg);
+  box-shadow: var(--uniride-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.live-ride-modal-backdrop.active .live-ride-modal-window {
+  transform: scale(1) translateY(0);
+}
+
+/* Header del Modal */
+.live-ride-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--uniride-border);
+  background: #ffffff;
+  z-index: 10;
+}
+
+.live-ride-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.driver-avatar-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: var(--uniride-green);
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #bbf7d0;
+  flex-shrink: 0;
+}
+
+.driver-title-info h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--uniride-dark);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.driver-title-info p {
+  font-size: 13px;
+  color: var(--uniride-gray-text);
+  margin: 2px 0 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-ride-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.role-toggle-pill {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 30px;
+  border: 1px solid #e2e8f0;
+}
+
+.role-toggle-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--uniride-gray-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.role-toggle-btn.active {
+  background: #ffffff;
+  color: var(--uniride-dark);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.close-modal-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: var(--uniride-gray-text);
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.close-modal-btn:hover {
+  background: #f1f5f9;
+  color: var(--uniride-dark);
+}
+
+.live-ride-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.live-ride-map-container {
+  flex: 1.6;
+  position: relative;
+  background: #e5e7eb;
+}
+
+#mapbox-live-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* Map Overlays (Badges flotantes sobre el mapa) */
+.map-badge-live {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--uniride-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+.live-dot-pulse {
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: pulse-red 1.6s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.map-badge-compass {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--uniride-green);
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+.map-zoom-controls {
+  position: absolute;
+  bottom: 24px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  z-index: 5;
+}
+
+.map-zoom-btn {
+  border: none;
+  background: transparent;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--uniride-dark);
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-zoom-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Sección Lateral "TU VIAJE" (Derecha 35%) */
+.live-ride-sidebar {
+  flex: 1;
+  min-width: 340px;
+  max-width: 390px;
+  background: #ffffff;
+  border-left: 1px solid var(--uniride-border);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.sidebar-section-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--uniride-green);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* Tarjeta ETA (Tiempo estimado) */
+.eta-card {
+  background: var(--uniride-mint-bg);
+  border: 1px solid #c6f6d5;
+  border-radius: var(--uniride-radius-md);
+  padding: 20px;
+  text-align: center;
+}
+
+.eta-minutes-display {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--uniride-green-dark);
+  line-height: 1;
+}
+
+.eta-minutes-display span {
+  font-size: 20px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.eta-label {
+  font-size: 13px;
+  color: var(--uniride-gray-text);
+  margin-top: 6px;
+}
+
+/* Barra de Progreso del Viaje */
+.trip-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trip-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--uniride-gray-text);
+}
+
+.trip-progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.trip-progress-bar-fill {
+  height: 100%;
+  background: var(--uniride-green);
+  border-radius: 10px;
+  width: 65%;
+  transition: width 0.5s ease;
+}
+
+/* Timeline de Paradas / Waypoints */
+.waypoints-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.timeline-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  position: relative;
+}
+
+.timeline-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 26px;
+  bottom: -16px;
+  width: 2px;
+  background: #cbd5e1;
+}
+
+.timeline-icon-check {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--uniride-green);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.timeline-step-info h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--uniride-dark);
+  margin: 0;
+}
+
+.timeline-step-info p {
+  font-size: 12px;
+  color: var(--uniride-gray-text);
+  margin: 2px 0 0 0;
+}
+
+/* Ficha del Conductor */
+.driver-card-panel {
+  background: var(--uniride-light-gray);
+  border: 1px solid var(--uniride-border);
+  border-radius: var(--uniride-radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.driver-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.driver-card-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: var(--uniride-green);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.driver-card-details h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--uniride-dark);
+  margin: 0;
+}
+
+.driver-card-details p {
+  font-size: 12px;
+  color: var(--uniride-gray-text);
+  margin: 2px 0 0 0;
+}
+
+.driver-action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn-driver-contact {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--uniride-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-driver-contact:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.btn-resume-trip {
+  background: #f1f5f9;
+  color: var(--uniride-dark);
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  border-radius: var(--uniride-radius-sm);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  margin-top: auto;
+}
+
+.btn-resume-trip:hover {
+  background: var(--uniride-green);
+  color: #ffffff;
+  border-color: var(--uniride-green);
+}
+
+/* Indicador visual de la tarjeta deslizable (Bottom Sheet Drag Handle) */
+.sidebar-drag-handle {
+  display: none;
+  width: 40px;
+  height: 5px;
+  background: #cbd5e1;
+  border-radius: 10px;
+  margin: 0 auto 10px auto;
+  flex-shrink: 0;
+}
+
+/*Uso movil*/
+@media (max-width: 768px) {
+  .sidebar-drag-handle {
+    display: block;
+  }
+
+  .live-ride-modal-backdrop {
+    padding: 0;
+    margin: 0;
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .live-ride-modal-window {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .live-ride-header {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .driver-avatar-circle {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+
+  .driver-title-info h3 {
+    font-size: 14px;
+  }
+
+  .driver-title-info p {
+    font-size: 11px;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .role-toggle-pill {
+    padding: 2px;
+  }
+
+  .role-toggle-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+
+  .close-modal-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .live-ride-body {
+    flex-direction: column;
+    height: calc(100dvh - 58px);
+  }
+
+  .live-ride-map-container {
+    flex: 1.2;
+    height: 58%;
+    min-height: 50vh;
+    position: relative;
+  }
+
+  /* Bottom Sheet deslizable en Celulares */
+  .live-ride-sidebar {
+    flex: none;
+    max-width: 100%;
+    min-width: 100%;
+    height: 42%;
+    max-height: 42%;
+    border-left: none;
+    border-top: 1px solid var(--uniride-border);
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+    padding: 14px 18px 24px 18px;
+    gap: 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 20;
+    background: #ffffff;
+  }
+
+  /* Controles del mapa flotantes touch-friendly */
+  .map-zoom-controls {
+    bottom: 16px;
+    right: 14px;
+    gap: 6px;
+  }
+
+  .map-zoom-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    border-radius: 8px;
+  }
+
+  .map-badge-live {
+    top: 12px;
+    left: 12px;
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
+  .map-badge-compass {
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .eta-card {
+    padding: 14px;
+  }
+
+  .eta-minutes-display {
+    font-size: 32px;
+  }
+
+  .driver-card-panel {
+    padding: 12px;
+  }
+
+  .btn-driver-contact {
+    min-height: 42px;
+    font-size: 13px;
+  }
+
+  .btn-resume-trip {
+    min-height: 44px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .role-toggle-pill {
+    display: none;
+  }
+
+  .driver-title-info p {
+    max-width: 140px;
+  }
+}
+
+/* Badges e Insignias de Rol */
+.badge-role-driver {
+  background: var(--color-driver-bg) !important;
+  color: var(--color-driver-text) !important;
+  border: 1px solid var(--color-driver-border) !important;
+}
+
+.badge-role-passenger {
+  background: var(--color-passenger-bg) !important;
+  color: var(--color-passenger-text) !important;
+  border: 1px solid var(--color-passenger-border) !important;
+}
+
+.badge-role-visitor {
+  background: var(--color-visitor-bg) !important;
+  color: var(--color-visitor-text) !important;
+  border: 1px solid var(--color-visitor-border) !important;
+}
+
+/* Estilos de Botones por Rol en las Tarjetas del Feed */
+.btn-role-driver {
+  background: var(--color-driver-gradient) !important;
+  color: var(--text-inverse) !important;
+  box-shadow: 0 4px 12px rgba(3, 105, 161, 0.25) !important;
+}
+
+.btn-role-driver:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+}
+
+.btn-role-passenger {
+  background: var(--color-passenger-gradient) !important;
+  color: var(--text-inverse) !important;
+  box-shadow: 0 4px 12px rgba(0, 184, 101, 0.25) !important;
+}
+
+.btn-role-passenger:hover {
+  background: linear-gradient(135deg, #009652 0%, #166534 100%) !important;
+}
+
+.btn-role-visitor {
+  background: var(--bg-surface) !important;
+  color: var(--text-main) !important;
+  border: 1.5px solid var(--seat-free-border) !important;
+}
+
+.btn-role-visitor:hover {
+  background: var(--bg-app) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Tarjetas y Contenedores del Modal */
+.visitor-price-card {
+  background: var(--color-primary-bg);
+  border: 1.5px solid var(--color-primary-border);
+  border-radius: var(--uniride-radius-md);
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.visitor-price-card .cost-display {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin: 4px 0;
+}
+
+.driver-dashboard-box {
+  background: var(--color-primary-bg);
+  border: 1.5px solid var(--color-primary-border);
+  border-radius: var(--uniride-radius-md);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.btn-cancel-reservation {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel-reservation:hover {
+  background: #ffe4e6;
+}
+
+.seats-status-section {
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--uniride-radius-md);
+}
+
+/* --- Estilos Estructurados de Asientos --- */
+.seat-card-item {
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: all 0.2s ease;
+  border: 1.5px solid var(--seat-free-border);
+  background: var(--bg-surface);
+}
+
+.seat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.seat-num-title {
+  color: var(--text-main);
+}
+
+.seat-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.seat-passenger-name {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.seat-card-item.is-taken {
+  background: var(--seat-taken-bg);
+  border-color: var(--seat-taken-border);
+  opacity: 0.9;
+}
+
+.seat-card-item.is-taken .seat-badge {
+  background: var(--seat-taken-badge-bg);
+  color: var(--seat-taken-badge-fg);
+}
+
+.seat-card-item.is-me {
+  background: var(--seat-taken-bg);
+  border-color: var(--color-primary-border);
+}
+
+.seat-card-item.is-me .seat-badge {
+  background: var(--seat-free-badge-bg);
+  color: var(--seat-free-badge-fg);
+}
+
+.seat-card-item.is-selectable {
+  cursor: pointer;
+}
+
+.seat-card-item.is-selected {
+  border-color: var(--seat-selected-border);
+  background: var(--seat-selected-bg);
+  box-shadow: 0 0 0 2px var(--seat-selected-glow);
+}

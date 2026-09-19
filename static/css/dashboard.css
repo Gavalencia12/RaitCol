@@ -224,165 +224,256 @@ body::before {
 /* Grid de 3 Columnas Responsive */
 .rides-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
   margin-top: 30px;
 }
-/* Tarjeta de Viaje */
+
 .ride-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
-  transition: transform 0.2s;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
 }
+
 .ride-card:hover {
   transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
 }
 
-
-/* Secciones de la Tarjeta */
-.ride-header {
-    padding: 16px;
-    border-bottom: 1px solid #f3f4f6;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-    
-}
-.location {
-    
-     font-size: 22px;
-     overflow-wrap: break-word;
+/* Encabezado: Origen -> Destino */
+.ride-header-route {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.route-icon {
-    color: #16a34a;
+.route-origin {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1e293b;
 }
 
-.ride-body {
-    padding: 16px;
-    flex-grow: 1;
+.route-arrow-icon {
+  color: #00b865;
+  font-size: 16px;
+  transform: rotate(90deg);
 }
 
-.driver-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-.driver-name {
-    font-size: 20px;
-    color: black;
-     
-  place-content: center; /* Centra en ambos ejes a la vez */
-  height: 8vh;
+@media (min-width: 480px) {
+  .ride-header-route {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .route-arrow-icon {
+    transform: rotate(0deg);
+  }
 }
 
-.driver-img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
+.route-destination {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
 }
 
-.vehicle-details {
-    font-size: 14px;
-    color: #16a34a;
+/* Cuerpo: Detalles del conductor y auto */
+.ride-body-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
 }
-.ride-footer {
-    padding: 16px;
-    background-color: #f9fafb;
-    border-top: 1px solid #f3f4f6;
-    display: inline-block;
-    justify-content: space-between;
-    align-items: center;
+
+.driver-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #334155;
 }
-.ride-stats {
-    display: flex;
-    flex-direction: column;
+
+.driver-icon {
+  font-size: 14px;
+  color: #64748b;
 }
-/* Contenedor Vacío (Ocupa las 3 columnas) */
+
+.vehicle-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.vehicle-tag,
+.color-tag,
+.plate-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.vehicle-tag i {
+  color: #00b865;
+}
+
+.color-tag i {
+  color: #10b981;
+}
+
+.plate-tag i {
+  color: #64748b;
+}
+
+/* Pie: Badges y Botón */
+.ride-footer-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.ride-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+}
+
+.badge-success {
+  background-color: #00b865;
+  color: #ffffff;
+}
+
+.badge-secondary {
+  background-color: #64748b;
+  color: #ffffff;
+}
+
+.card-buttons-group {
+  width: 100%;
+}
+
+.btn-join-ride {
+  width: 100%;
+  background: #ffffff;
+  color: #1e293b;
+  border: 1.5px solid #cbd5e1;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-join-ride:hover {
+  background: #00b865;
+  color: #ffffff;
+  border-color: #00b865;
+  box-shadow: 0 4px 12px rgba(0, 184, 101, 0.25);
+}
+
+/* Estado Vacío */
 .no-rides {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 48px 24px;
-    background-color: #f9fafb;
-    border: 2px dashed #d1d5db;
-    border-radius: 12px;
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 48px 24px;
+  background-color: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 16px;
 }
 
 .error-icon {
-    font-size: 40px;
-    color: #9ca3af;
-    margin-bottom: 16px;
-}
-button {
-  background: #fff;
-  color: #000;
-  font-weight: 600;
-  border: none;
-  padding: 12px 20px;
-  cursor: pointer;
-  border-radius: 3px;
-  font-size: 16px;
-  border: 2px solid transparent;
-  transition: 0.3s ease;
+  font-size: 40px;
+  color: #94a3b8;
+  margin-bottom: 16px;
 }
 
-button:hover {
-  color: #fff;
-  border-color: #fff;
-  background: black;
 
-}
-/* Estilo base para todas las etiquetas */
-  .badge {
+@media (max-width: 640px) {
+  .navbar {
+    padding: 10px 16px;
+  }
+
+  .navbar-brand {
+    font-size: 18px;
+  }
+
+  .user-name {
     display: inline-block;
-    padding: 0.25em 0.6em;
-    font-size: 0.75rem;
-    font-weight: 700;
-    
-    text-align: center;
+    max-width: 100px;
     white-space: nowrap;
-    vertical-align: baseline;
-    border-radius: 0.25rem;
-    font-family: sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  /* Verde: Asientos libres */
-  .badge-success {
-    color: #fff;
-    background-color: #28a745;
+  .main-container {
+    margin: 16px auto;
+    padding: 0 12px;
   }
 
-  /* Gris: Costo alternativo */
-  .badge-secondary {
-    color: #fff;
-    background-color: #6c757d;
+  .welcome-header {
+    margin-bottom: 20px;
   }
 
-  /* Azul: Costo principal */
-  .badge-info {
-    color: #fff;
-    background-color: #17a2b8;
+  .welcome-header h1 {
+    font-size: 22px;
   }
- .btn-primary {
-  --bs-btn-color: #fff;
-  --bs-btn-bg: #16a34a;
-  --bs-btn-border-color: #16a34a;
-  --bs-btn-hover-color: black;
-  --bs-btn-hover-bg: #16a34a;
-  --bs-btn-hover-border-color: black;
-  --bs-btn-focus-shadow-rgb: 73, 85, 242;
-  --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #212cc0;
-  --bs-btn-active-border-color: #1f29b4;
-  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
-  --bs-btn-disabled-color: #fff;
-  --bs-btn-disabled-bg: #2937f0;
-  --bs-btn-disabled-border-color: #2937f0;
+
+  .welcome-header p {
+    font-size: 14px;
+  }
+
+  .rides-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .ride-card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .route-origin,
+  .route-destination {
+    font-size: 15px;
+  }
+
+  .btn-join-ride {
+    min-height: 44px;
+    font-size: 14px;
+  }
 }
-

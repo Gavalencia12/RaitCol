@@ -1,74 +1,184 @@
 {% load static %}
+{{ mapbox_access_token|json_script:"mapbox-token-data" }}
 <!DOCTYPE html>
+
 <html lang="es">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UniRide - Inicio</title>
+
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/live_ride.css' %}">
+  <link rel="stylesheet" href="{% static 'css/profile.css' %}">
   <!-- FontAwesome para iconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
 
-  <!-- Navbar Global -->
+  <!-- Navbar Global UniRide -->
   {% include 'components/navbar.html' %}
 
-  <div class="main-container">
+  <main class="main-container">
     <div class="welcome-header">
-      <h1>{{ title }}</h1>
-      <p>{{ description }}</p>
-      <div class="rides-grid">
-        <!-- Contenedor de tarjetas -->
-        <!-- bucle  -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <h1>{{ title|default:"¡Bienvenido a UniRide!" }}</h1>
+          <p>{{ description|default:"Encuentra o publica tu viaje universitario de forma segura." }}</p>
+        </div>
+        <!-- Botón para Conductor -->
+        <button type="button" class="btn-submit" id="myBtn" style="width: auto; padding: 10px 20px;">
+          <i class="fas fa-car"></i> Publicar viaje
+        </button>
+      </div>
+
+      <!-- The Modal -->
+      <div id="myModal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+          <div class="modal-header">
+            <span class="close">&times;</span>
+            <h2>Publicar mi Viaje</h2>
+          </div>
+          <br>
+          {% if has_car %}
+          <form method="POST" action="{% url 'home' %}" id="ViajeForm">
+            {% csrf_token %}
+
+            <!-- Origen input-->
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="origen">¿Desde dónde sales?</label>
+                <input class="form-control" id="origen" name="origen" type="text" placeholder="Ej. Walmart..." required/>
+              </div>
+              <!-- Destino input-->
+              <div class="form-group">
+                <label for="destino">¿A qué Universidad vas?</label>
+                <input class="form-control" id="destino" name="destino" type="text" placeholder="Ej. FIE.." required/>
+              </div>
+            </div>
+            <!-- Fecha input-->
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="fecha_pro">Fecha</label>                      
+                <input class="form-control" id="fecha_pro" name="fecha" type="date" required />
+              </div>
+              <!-- Horario input-->
+              <div class="form-group">
+                <label for="horario">Horario</label>
+                <input class="form-control" id="horario" name="horario" type="time" required/>
+              </div>
+            </div>
+            <div class="form-grid">
+              <!-- Lugares Disponibles input-->
+              <div class="form-group">
+                <label for="asientos">Lugares Disponibles</label>                      
+                <input class="form-control" id="asientos" name="asientos" type="number" min="1" max="4" placeholder="1 lugar" required />
+              </div>
+              <!-- Precio por persona input-->
+              <div class="form-group">
+                <label for="precio">Precio por Persona (MXN)</label>                      
+                <input class="form-control" id="precio" name="precio" type="number" min="0" max="100" placeholder="$40" required />
+              </div>
+            </div>
+            <!-- Message input-->
+            <div class="form-group">
+              <label for="message">Mensaje / Notas del viaje</label>                      
+              <textarea class="form-control" id="message" name="message" placeholder="Describe detalles adicionales de tu viaje..." style="height: 4rem"></textarea>
+            </div>
+            <br>
+            <!-- Submit Button-->
+            <div class="d-grid">
+              <button class="btn-submit" id="submitButton2" type="submit">
+                <i class="fa-solid fa-paper-plane"></i> Publicar viaje
+              </button>
+            </div>      
+          </form>
+          {% else %}
+          <!-- Estado alternativo: El usuario no tiene vehículos registrados -->
+          <div class="alert alert-warning" style="text-align: center; padding: 20px;">
+            <h3 style="margin-bottom: 10px;"><i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Requiere registro de vehículo</h3>
+            <p style="margin-bottom: 16px;">Lo sentimos, no puedes crear un viaje porque no tienes ningún vehículo activo registrado en tu cuenta.</p>
+            <a href="{% url 'profile' %}" class="btn-submit" style="display: inline-block; width: auto; padding: 10px 20px; text-decoration: none;">
+              <i class="fas fa-car"></i> Registrar un Vehículo ahora
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="rides-grid" style="margin-top: 24px;">
         {% for viaje in viajes %}
-        <div class="ride-card">
-          <!-- Encabezado: Ruta -->
-          <div class="ride-header">
-            <span class="location">{{ viaje.id_route_journey_i.id_address_origin_i.name_address_v }}</span><br><br><br>
-            <i class="fas fa-arrow-right route-icon"></i>
-            <span class="location">{{ viaje.id_route_journey_i.id_address_destiny_i.name_address_v}}</span>
+        <article class="ride-card">
+          <div class="ride-header-route">
+            <div class="route-origin">{{ viaje.id_route_journey_i.id_address_origin_i.name_address_v }}</div>
+            <i class="fas fa-arrow-right route-arrow-icon"></i>
+            <div class="route-destination">{{ viaje.id_route_journey_i.id_address_destiny_i.name_address_v }}</div>
           </div>
-          <!-- Cuerpo: Vehículo y Conductor -->
-          <div class="ride-body">
-            <div class="driver-info">
-              <i class="fas fa-user driver-name "></i>{{ viaje.id_user_car_journey_i.id_user_car_i}}
+
+          <div class="ride-body-details">
+            <div class="driver-info-row">
+              <i class="fas fa-id-card driver-icon" style="color: #00b865;"></i>
+              <strong style="color: #1e293b;">{{ viaje.id_user_car_journey_i.id_user_car_i.first_name }} {{ viaje.id_user_car_journey_i.id_user_car_i.last_name }}</strong>
             </div>
-            <i class="fas fa-car vehicle-details"></i>{{ viaje.id_user_car_journey_i}}<br>
-            <i class="fas fa-palette vehicle-details"></i>{{ viaje.id_user_car_journey_i.color_car_v }}
-            <i class="fas fa-closed-captioning vehicle-details"></i>{{ viaje.id_user_car_journey_i.plates_car_v }}<br>
-          </div>
-          <!-- Pie: Precio, Asientos y Acción -->
-          <div class="ride-footer">
-            <div class="ride-stats">
-              <p>
-                <span class="badge badge-success">{{ viaje.available_seats_i }} Lugares libres</span>
-                <span class="badge badge-secondary">${{ viaje.cost_journey_d }}</span>
-              </p>
+
+            <div class="vehicle-info-row">
+              <span class="vehicle-tag"><i class="fas fa-car-side"></i> {{ viaje.id_user_car_journey_i.mark_car_v }} {{ viaje.id_user_car_journey_i.model_car_v }}</span>
+              <span class="color-tag"><i class="fas fa-palette"></i> {{ viaje.id_user_car_journey_i.color_car_v }}</span>
+              <span class="plate-tag"><i class="fas fa-closed-captioning"></i> {{ viaje.id_user_car_journey_i.plates_car_v }}</span>
             </div>
           </div>
-          <button>
-            <i class="fas fa-sign-in-alt"></i> Unirse
-          </button>
-        </div>
-        <!-- bucle  Empty-->
+
+          <div class="ride-footer-actions">
+            <div class="ride-badges">
+              {% if viaje.is_driver %}
+              <span class="badge badge-role-driver"><i class="fas fa-crown"></i> Tu Viaje</span>
+              {% elif viaje.is_passenger %}
+              <span class="badge badge-role-passenger"><i class="fas fa-check-circle"></i> Reserva Confirmada</span>
+              {% else %}
+              <span class="badge badge-success">{{ viaje.available_seats_i }} Lugares libres</span>
+              {% endif %}
+              <span class="badge badge-secondary">${{ viaje.cost_journey_d }}</span>
+            </div>
+
+            <div class="card-buttons-group">
+              <button class="btn-join-ride {{ viaje.role_btn_class }}" type="button"
+                data-ride-id="{{ viaje.id_journey_i }}" onclick="openLiveRideFromBtn(this)">
+                <i class="{{ viaje.role_icon }}"></i> {{ viaje.role_btn_text }}
+              </button>
+            </div>
+          </div>
+        </article>
         {% empty %}
-        <!-- Estado Vacío -->
-        <div class="no-rides">
-          <i class="fas fa-search error-icon"></i>
-          <h3>No hay viajes disponibles</h3>
-          <p>Prueba seleccionando otras fechas u otros destinos.</p>
-        </div>
-        <!-- bucle  Fin -->
+        <article class="ride-card empty-state-card"
+          style="grid-column: 1 / -1; text-align: center; padding: 40px 20px;">
+          <div style="font-size: 48px; color: #10b981; margin-bottom: 16px;">
+            <i class="fas fa-route"></i>
+          </div>
+          <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">No hay viajes activos en este momento</h3>
+          <p style="font-size: 14px; color: #6b7280; max-width: 480px; margin: 0 auto;">Los viajes registrados y activos en la base de datos aparecerán aquí automáticamente.</p>
+        </article>
         {% endfor %}
       </div>
     </div>
-  </div>
+  </main>
+
+  {% include 'components/live_ride_modal.html' %}
+
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
 
   <script src="{% static 'js/dashboard.js' %}"></script>
+  <script src="{% static 'js/modules/live_config.js' %}"></script>
+  <script src="{% static 'js/modules/live_mapbox.js' %}"></script>
+  <script src="{% static 'js/modules/live_visitor.js' %}"></script>
+  <script src="{% static 'js/modules/live_passenger.js' %}"></script>
+  <script src="{% static 'js/modules/live_driver.js' %}"></script>
+  <script src="{% static 'js/live_map.js' %}"></script>
 </body>
 
 </html>

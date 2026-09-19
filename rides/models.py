@@ -84,6 +84,7 @@ class Reservation(models.Model):
     id_reservation_i = models.AutoField(primary_key=True, db_column='id_reservation_i')
     id_journey_reservation_i = models.ForeignKey(Journey, on_delete=models.CASCADE, db_column='id_journey_reservation_i')
     id_user_passenger_reservation_i = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_column='id_user_passenger_reservation_i')
+    seat_number_i = models.IntegerField(null=True, blank=True, db_column='seat_number_i')
     price_user_pass_d = models.DecimalField(max_digits=10, decimal_places=2, db_column='price_user_pass_d')
     date_create_t = models.DateTimeField(auto_now_add=True, db_column='date_create_t')
     date_update_t = models.DateTimeField(auto_now=True, db_column='date_update_t')
