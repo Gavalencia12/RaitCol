@@ -39,14 +39,21 @@ function renderSeatsGrid(seatsList = [], role = 'visitor') {
     if (seat.isTaken) {
       const isMe = seat.isCurrentUser;
       cardNode.classList.add(isMe ? 'is-me' : 'is-taken');
+      cardNode.style.cursor = 'not-allowed';
+      cardNode.style.opacity = '0.8';
 
-      if (badgeEl) badgeEl.textContent = isMe ? 'Tu Reserva' : 'Ocupado';
+      if (badgeEl) {
+        badgeEl.textContent = isMe ? '🔒 Tu Reserva' : '🔒 Ocupado';
+        badgeEl.style.background = isMe ? 'var(--color-primary)' : '#cbd5e1';
+        badgeEl.style.color = isMe ? '#ffffff' : '#475569';
+      }
       if (nameEl) {
-        const passName = isMe ? `${seat.passengerName || 'Tú'} (Tú)` : (seat.passengerName || 'Reservado');
+        const passName = isMe ? `${seat.passengerName || 'Tú'} (Tú)` : (seat.passengerName || 'Asiento No Disponible');
         nameEl.textContent = passName;
         nameEl.title = passName;
+        nameEl.style.color = isMe ? 'var(--color-primary)' : '#64748b';
       }
-      if (iconEl) iconEl.style.color = isMe ? 'var(--color-primary)' : 'var(--color-driver-primary)';
+      if (iconEl) iconEl.style.color = isMe ? 'var(--color-primary)' : '#94a3b8';
     } else {
       const isSelected = (currentSelectedSeat === seat.seatNumber);
       if (isSelected && role === 'visitor') cardNode.classList.add('is-selected');

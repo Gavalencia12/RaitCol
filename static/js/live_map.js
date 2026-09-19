@@ -88,17 +88,31 @@ async function handleReserveAction() {
       currentRideData.isVisitor = false;
       currentRideData.availableSeats = data.availableSeats;
 
+      // Actualización instantánea local (0ms)
+      if (currentSelectedSeat && currentRideData.seats) {
+        const seatObj = currentRideData.seats.find(s => s.seatNumber === currentSelectedSeat);
+        if (seatObj) {
+          seatObj.isTaken = true;
+          seatObj.isCurrentUser = true;
+        }
+      }
+
+      switchModalRoleView('passenger');
+      if (currentRideData.seats) renderSeatsGrid(currentRideData.seats, 'passenger');
+      updateFeedCardRoleUI(currentRideData.id, 'passenger', data.availableSeats);
+
       try {
         const freshResp = await fetch(`/api/journey/${currentRideData.id}/`);
         if (freshResp.ok) {
           const freshData = await freshResp.json();
-          if (freshData.seats) currentRideData.seats = freshData.seats;
+          if (freshData.seats) {
+            currentRideData.seats = freshData.seats;
+            renderSeatsGrid(currentRideData.seats, 'passenger');
+          }
         }
       } catch (e) { }
 
-      switchModalRoleView('passenger');
       startPassengerPolling();
-      updateFeedCardRoleUI(currentRideData.id, 'passenger', data.availableSeats);
     } else {
       alert(data.message || 'No se pudo realizar la reserva.');
     }
