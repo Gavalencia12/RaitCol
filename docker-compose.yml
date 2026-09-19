@@ -16,17 +16,13 @@ services:
       MYSQL_PASSWORD: raitcol_pass
       MYSQL_ROOT_PASSWORD: raitcol_root_pass
     ports:
-      # Mapeamos el puerto 3307 local al 3306 del contenedor
-      # Esto evita conflictos si ya tienes un MySQL instalado y corriendo localmente.
-      - "3308:3307"
+      - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
 
   web:
     build: .
     container_name: raitcol_web
-    # Mapea el directorio actual al directorio /app dentro del contenedor
-    # para permitir que los cambios en el código se reflejen en tiempo real (Live Reload).
     volumes:
       - .:/app
     ports:
@@ -40,6 +36,19 @@ services:
       - DB_PASSWORD=raitcol_pass
       - DB_PORT=3306
       - DEBUG=True
+    depends_on:
+      db:
+        condition: service_healthy
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: raitcol_phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: raitcol_root_pass
     depends_on:
       db:
         condition: service_healthy
