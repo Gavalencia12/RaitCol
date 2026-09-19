@@ -35,10 +35,20 @@ document.addEventListener('DOMContentLoaded', () => {
       try { mapboxToken = JSON.parse(tokenElement.textContent); } catch (e) { }
     }
 
-    const origLat = 19.1158;
-    const origLng = -104.3308;
-    const destLat = 19.1170;
-    const destLng = -104.3985;
+    let origLat = parseFloat(document.getElementById('origen_lat').value) || 19.1158;
+    let origLng = parseFloat(document.getElementById('origen_lng').value) || -104.3308;
+
+    const destSelect = document.getElementById('destino');
+    let destLat = 19.1170;
+    let destLng = -104.3985;
+
+    if (destSelect && destSelect.options[destSelect.selectedIndex]) {
+      const opt = destSelect.options[destSelect.selectedIndex];
+      if (opt.dataset.lat && opt.dataset.lng) {
+        destLat = parseFloat(opt.dataset.lat);
+        destLng = parseFloat(opt.dataset.lng);
+      }
+    }
 
     document.getElementById('origen_lat').value = origLat;
     document.getElementById('origen_lng').value = origLng;
@@ -52,35 +62,106 @@ document.addEventListener('DOMContentLoaded', () => {
           createRideMapInstance = new mapboxgl.Map({
             container: 'createRideMapContainer',
             style: 'mapbox://styles/mapbox/streets-v12',
-            center: [origLng, origLat],
-            zoom: 13
+            center: [(origLng + destLng) / 2, (origLat + destLat) / 2],
+            zoom: 12
           });
 
           // Marcador de Origen
           const elOrig = document.createElement('div');
-          elOrig.innerHTML = '<span style="background:#00b865; color:white; padding:3px 8px; border-radius:10px; font-size:10px; font-weight:bold;">📍 Tu Origen</span>';
+          elOrig.innerHTML = '<span style="background:#00b865; color:white; padding:4px 8px; border-radius:10px; font-size:10px; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.2);">📍 Tu Origen</span>';
           const origMarker = new mapboxgl.Marker({ element: elOrig, draggable: true })
             .setLngLat([origLng, origLat])
             .addTo(createRideMapInstance);
+
+          // Marcador de Destino
+          const elDest = document.createElement('div');
+          elDest.innerHTML = '<span style="background:#0f172a; color:white; padding:4px 8px; border-radius:10px; font-size:10px; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🎓 Campus UCol</span>';
+          const destMarker = new mapboxgl.Marker({ element: elDest })
+            .setLngLat([destLng, destLat])
+            .addTo(createRideMapInstance);
+
+          function updatePreviewRoute() {
+            const oLat = parseFloat(document.getElementById('origen_lat').value) || origLat;
+            const oLng = parseFloat(document.getElementById('origen_lng').value) || origLng;
+            const dLat = parseFloat(document.getElementById('destino_lat').value) || destLat;
+            const dLng = parseFloat(document.getElementById('destino_lng').value) || destLng;
+
+            origMarker.setLngLat([oLng, oLat]);
+            destMarker.setLngLat([dLng, dLat]);
+
+            const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${oLng.toFixed(6)},${oLat.toFixed(6)};${dLng.toFixed(6)},${dLat.toFixed(6)}?geometries=geojson&access_token=${mapboxToken}`;
+
+            fetch(directionsUrl)
+              .then(res => res.json())
+              .then(data => {
+                let routeGeoJSON = null;
+                if (data.routes && data.routes.length > 0) {
+                  routeGeoJSON = data.routes[0].geometry;
+                } else {
+                  routeGeoJSON = {
+                    'type': 'LineString',
+                    'coordinates': [[oLng, oLat], [dLng, dLat]]
+                  };
+                }
+
+                if (createRideMapInstance.getSource('preview-route')) {
+                  createRideMapInstance.getSource('preview-route').setData({
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': routeGeoJSON
+                  });
+                } else {
+                  createRideMapInstance.addSource('preview-route', {
+                    'type': 'geojson',
+                    'data': { 'type': 'Feature', 'properties': {}, 'geometry': routeGeoJSON }
+                  });
+                  createRideMapInstance.addLayer({
+                    'id': 'preview-route-line',
+                    'type': 'line',
+                    'source': 'preview-route',
+                    'layout': { 'line-join': 'round', 'line-cap': 'round' },
+                    'paint': { 'line-color': '#00b865', 'line-width': 5, 'line-opacity': 0.9 }
+                  });
+                }
+
+                const bounds = new mapboxgl.LngLatBounds();
+                bounds.extend([oLng, oLat]);
+                bounds.extend([dLng, dLat]);
+                createRideMapInstance.fitBounds(bounds, { padding: 40, maxZoom: 14.5 });
+              })
+              .catch(err => console.warn('Error al calcular ruta previa:', err));
+          }
 
           origMarker.on('dragend', () => {
             const lngLat = origMarker.getLngLat();
             document.getElementById('origen_lat').value = lngLat.lat;
             document.getElementById('origen_lng').value = lngLat.lng;
+            updatePreviewRoute();
           });
 
-          // Marcador de Destino (FIE)
-          const elDest = document.createElement('div');
-          elDest.innerHTML = '<span style="background:#0f172a; color:white; padding:3px 8px; border-radius:10px; font-size:10px; font-weight:bold;">🏁 Destino FIE</span>';
-          new mapboxgl.Marker({ element: elDest })
-            .setLngLat([destLng, destLat])
-            .addTo(createRideMapInstance);
+          if (destSelect) {
+            destSelect.addEventListener('change', () => {
+              const selectedOpt = destSelect.options[destSelect.selectedIndex];
+              if (selectedOpt && selectedOpt.dataset.lat && selectedOpt.dataset.lng) {
+                document.getElementById('destino_lat').value = selectedOpt.dataset.lat;
+                document.getElementById('destino_lng').value = selectedOpt.dataset.lng;
+                updatePreviewRoute();
+              }
+            });
+          }
+
+          createRideMapInstance.on('load', () => {
+            updatePreviewRoute();
+          });
+
+          window.updateCreateRidePreviewRoute = updatePreviewRoute;
 
         } catch (e) {
           console.warn('Error al crear mapa de publicar viaje:', e);
         }
       } else {
         createRideMapInstance.resize();
+        if (window.updateCreateRidePreviewRoute) window.updateCreateRidePreviewRoute();
       }
     }
   }
@@ -100,8 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
             origInput.value = 'Mi Ubicación Actual (GPS)';
           }
 
-          if (createRideMapInstance) {
-            createRideMapInstance.flyTo({ center: [lng, lat], zoom: 15 });
+          if (window.updateCreateRidePreviewRoute) {
+            window.updateCreateRidePreviewRoute();
+          } else if (createRideMapInstance) {
+            createRideMapInstance.flyTo({ center: [lng, lat], zoom: 14 });
           }
 
           if (btnDetectGPS) btnDetectGPS.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> GPS Detectado';

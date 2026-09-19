@@ -70,10 +70,23 @@
                 <label for="origen">¿Desde dónde sales?</label>
                 <input class="form-control" id="origen" name="origen" type="text" placeholder="Ej. Calle Jazmín #1011..." required/>
               </div>
-              <!-- Destino input-->
+              <!-- Destino input de Universidades de Colima (Manzanillo / El Naranjo) -->
               <div class="form-group">
-                <label for="destino">¿A qué Universidad vas?</label>
-                <input class="form-control" id="destino" name="destino" type="text" placeholder="Ej. FIE Campus Naranjo..." required/>
+                <label for="destino"><i class="fas fa-graduation-cap" style="color: #00b865;"></i> ¿A qué Campus / Facultad de la UCol vas?</label>
+                <select class="form-control" id="destino" name="destino" required style="font-weight: 600; color: #1e293b;">
+                  <option value="FIE - Campus El Naranjo (UCol)" data-lat="19.1170" data-lng="-104.3985" selected>
+                    🎓 FIE - Facultad de Ingeniería Electromecánica (Campus El Naranjo)
+                  </option>
+                  <option value="FCAM - Campus El Naranjo (UCol)" data-lat="19.1173" data-lng="-104.3978">
+                    🎓 FCAM - Facultad de Contabilidad y Administración Manzanillo (Campus El Naranjo)
+                  </option>
+                  <option value="FACIMAR - San Pedrito (UCol)" data-lat="19.0805" data-lng="-104.3060">
+                    🎓 FACIMAR - Facultad de Ciencias Marinas (Manzanillo)
+                  </option>
+                  <option value="Bachilleratos #8, #9 y #10 (Campus El Naranjo)" data-lat="19.1165" data-lng="-104.3990">
+                    🎓 Bachilleratos #8, #9 y #10 (Campus El Naranjo)
+                  </option>
+                </select>
               </div>
             </div>
             <!-- Fecha input-->
