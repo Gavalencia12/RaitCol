@@ -40,9 +40,12 @@
       <!-- The Modal -->
       <div id="myModal" class="modal">
         <!-- Modal content -->
-        <div class="modal-content" style="max-width: 660px; width: 92%; margin: 25px auto; border-radius: 16px; padding: 24px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); border: none;">
-          <div class="modal-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-            <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0;"><i class="fas fa-car" style="color: #00b865; margin-right: 8px;"></i> Publicar mi Viaje</h2>
+        <div class="modal-content"
+          style="max-width: 660px; width: 92%; margin: 80px auto; border-radius: 16px; padding: 24px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); border: none;">
+          <div class="modal-header"
+            style="border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+            <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0;"><i class="fas fa-car"
+                style="color: #00b865; margin-right: 8px;"></i> Publicar mi Viaje</h2>
             <span class="close" style="font-size: 24px; cursor: pointer; color: #64748b; line-height: 1;">&times;</span>
           </div>
 
@@ -55,14 +58,18 @@
             <input type="hidden" id="destino_lng" name="destino_lng" value="">
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-              <span style="font-size: 13px; font-weight: 700; color: #334155;"><i class="fas fa-map-location-dot" style="color: #00b865;"></i> Vista previa de la ruta</span>
-              <button type="button" id="btnDetectGPS" style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition: all 0.2s;">
+              <span style="font-size: 13px; font-weight: 700; color: #334155;"><i class="fas fa-map-location-dot"
+                  style="color: #00b865;"></i> Vista previa de la ruta</span>
+              <button type="button" id="btnDetectGPS"
+                style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition: all 0.2s;">
                 <i class="fas fa-crosshairs"></i> Detectar mi GPS
               </button>
             </div>
 
             <!-- Contenedor del Mapa interactivo para publicar viaje -->
-            <div id="createRideMapContainer" style="width: 100%; height: 250px; border-radius: 12px; margin-bottom: 18px; border: 1px solid #cbd5e1; background: #f8fafc; overflow: hidden; position: relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);"></div>
+            <div id="createRideMapContainer"
+              style="width: 100%; height: 250px; border-radius: 12px; margin-bottom: 18px; border: 1px solid #cbd5e1; background: #f8fafc; overflow: hidden; position: relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);">
+            </div>
 
             <!-- Grid de Origen y Destino -->
             <div class="form-grid" style="margin-bottom: 14px;">
@@ -70,7 +77,8 @@
                 <label for="origen">¿Desde dónde sales?</label>
                 <div class="input-wrapper">
                   <i class="fas fa-location-dot"></i>
-                  <input class="form-control" id="origen" name="origen" type="text" placeholder="Ej. Calle Jazmín #1011..." required/>
+                  <input class="form-control" id="origen" name="origen" type="text"
+                    placeholder="Ej. Calle Jazmín #1011..." required />
                 </div>
               </div>
 
@@ -78,7 +86,8 @@
                 <label for="destino">¿A qué Universidad vas?</label>
                 <div class="input-wrapper">
                   <i class="fas fa-graduation-cap"></i>
-                  <select class="form-control" id="destino" name="destino" required style="font-weight: 600; color: #1e293b;">
+                  <select class="form-control" id="destino" name="destino" required
+                    style="font-weight: 600; color: #1e293b;">
                     <option value="FIE - Campus El Naranjo (UCol)" data-lat="19.1170" data-lng="-104.3985" selected>
                       FIE - Campus El Naranjo (UCol)
                     </option>
@@ -88,7 +97,8 @@
                     <option value="FACIMAR - San Pedrito (UCol)" data-lat="19.0805" data-lng="-104.3060">
                       FACIMAR - San Pedrito (UCol)
                     </option>
-                    <option value="Bachilleratos #8, #9 y #10 (Campus El Naranjo)" data-lat="19.1165" data-lng="-104.3990">
+                    <option value="Bachilleratos #8, #9 y #10 (Campus El Naranjo)" data-lat="19.1165"
+                      data-lng="-104.3990">
                       Bachilleratos 8, 9 y 10 - Campus El Naranjo
                     </option>
                   </select>
@@ -99,7 +109,7 @@
             <!-- Grid de Fecha y Horario -->
             <div class="form-grid" style="margin-bottom: 14px;">
               <div class="form-group">
-                <label for="fecha_pro">Fecha del Viaje</label>                      
+                <label for="fecha_pro">Fecha del Viaje</label>
                 <div class="input-wrapper">
                   <i class="fas fa-calendar-day"></i>
                   <input class="form-control" id="fecha_pro" name="fecha" type="date" required />
@@ -110,7 +120,7 @@
                 <label for="horario">Horario de Salida</label>
                 <div class="input-wrapper">
                   <i class="fas fa-clock"></i>
-                  <input class="form-control" id="horario" name="horario" type="time" required/>
+                  <input class="form-control" id="horario" name="horario" type="time" required />
                 </div>
               </div>
             </div>
@@ -118,41 +128,49 @@
             <!-- Grid de Asientos y Precio -->
             <div class="form-grid" style="margin-bottom: 14px;">
               <div class="form-group">
-                <label for="asientos">Lugares Disponibles</label>                      
+                <label for="asientos">Lugares Disponibles</label>
                 <div class="input-wrapper">
                   <i class="fas fa-chair"></i>
-                  <input class="form-control" id="asientos" name="asientos" type="number" min="1" max="4" placeholder="1" required />
+                  <input class="form-control" id="asientos" name="asientos" type="number" min="1" max="4"
+                    placeholder="1" required />
                 </div>
               </div>
 
               <div class="form-group">
-                <label for="precio">Precio por Persona (MXN)</label>                      
+                <label for="precio">Precio por Persona (MXN)</label>
                 <div class="input-wrapper">
                   <i class="fas fa-dollar-sign"></i>
-                  <input class="form-control" id="precio" name="precio" type="number" min="0" max="100" placeholder="40" required />
+                  <input class="form-control" id="precio" name="precio" type="number" min="0" max="100" placeholder="40"
+                    required />
                 </div>
               </div>
             </div>
 
             <!-- Message input-->
             <div class="form-group" style="margin-bottom: 20px;">
-              <label for="message">Mensaje / Notas adicionales</label>                      
-              <textarea class="form-control" id="message" name="message" placeholder="Describe detalles adicionales de tu viaje..." style="height: 4rem; padding-left: 14px;"></textarea>
+              <label for="message">Mensaje / Notas adicionales</label>
+              <textarea class="form-control" id="message" name="message"
+                placeholder="Describe detalles adicionales de tu viaje..."
+                style="height: 4rem; padding-left: 14px;"></textarea>
             </div>
 
             <!-- Submit Button-->
             <div class="d-grid">
-              <button class="btn-submit" id="submitButton2" type="submit" style="width: 100%; padding: 12px; font-size: 15px; font-weight: 700; border-radius: 10px;">
+              <button class="btn-submit" id="submitButton2" type="submit"
+                style="width: 100%; padding: 12px; font-size: 15px; font-weight: 700; border-radius: 10px;">
                 <i class="fa-solid fa-paper-plane"></i> Publicar mi viaje
               </button>
-            </div>      
+            </div>
           </form>
           {% else %}
           <!-- Estado alternativo: El usuario no tiene vehículos registrados -->
           <div class="alert alert-warning" style="text-align: center; padding: 20px;">
-            <h3 style="margin-bottom: 10px;"><i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Requiere registro de vehículo</h3>
-            <p style="margin-bottom: 16px;">Lo sentimos, no puedes crear un viaje porque no tienes ningún vehículo activo registrado en tu cuenta.</p>
-            <a href="{% url 'profile' %}" class="btn-submit" style="display: inline-block; width: auto; padding: 10px 20px; text-decoration: none;">
+            <h3 style="margin-bottom: 10px;"><i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+              Requiere registro de vehículo</h3>
+            <p style="margin-bottom: 16px;">Lo sentimos, no puedes crear un viaje porque no tienes ningún vehículo
+              activo registrado en tu cuenta.</p>
+            <a href="{% url 'profile' %}" class="btn-submit"
+              style="display: inline-block; width: auto; padding: 10px 20px; text-decoration: none;">
               <i class="fas fa-car"></i> Registrar un Vehículo ahora
             </a>
           </div>
@@ -172,13 +190,17 @@
           <div class="ride-body-details">
             <div class="driver-info-row">
               <i class="fas fa-id-card driver-icon" style="color: #00b865;"></i>
-              <strong style="color: #1e293b;">{{ viaje.id_user_car_journey_i.id_user_car_i.first_name }} {{ viaje.id_user_car_journey_i.id_user_car_i.last_name }}</strong>
+              <strong style="color: #1e293b;">{{ viaje.id_user_car_journey_i.id_user_car_i.first_name }} {{
+                viaje.id_user_car_journey_i.id_user_car_i.last_name }}</strong>
             </div>
 
             <div class="vehicle-info-row">
-              <span class="vehicle-tag"><i class="fas fa-car-side"></i> {{ viaje.id_user_car_journey_i.mark_car_v }} {{ viaje.id_user_car_journey_i.model_car_v }}</span>
-              <span class="color-tag"><i class="fas fa-palette"></i> {{ viaje.id_user_car_journey_i.color_car_v }}</span>
-              <span class="plate-tag"><i class="fas fa-closed-captioning"></i> {{ viaje.id_user_car_journey_i.plates_car_v }}</span>
+              <span class="vehicle-tag"><i class="fas fa-car-side"></i> {{ viaje.id_user_car_journey_i.mark_car_v }} {{
+                viaje.id_user_car_journey_i.model_car_v }}</span>
+              <span class="color-tag"><i class="fas fa-palette"></i> {{ viaje.id_user_car_journey_i.color_car_v
+                }}</span>
+              <span class="plate-tag"><i class="fas fa-closed-captioning"></i> {{
+                viaje.id_user_car_journey_i.plates_car_v }}</span>
             </div>
           </div>
 
@@ -208,8 +230,10 @@
           <div style="font-size: 48px; color: #10b981; margin-bottom: 16px;">
             <i class="fas fa-route"></i>
           </div>
-          <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">No hay viajes activos en este momento</h3>
-          <p style="font-size: 14px; color: #6b7280; max-width: 480px; margin: 0 auto;">Los viajes registrados y activos en la base de datos aparecerán aquí automáticamente.</p>
+          <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">No hay viajes activos en
+            este momento</h3>
+          <p style="font-size: 14px; color: #6b7280; max-width: 480px; margin: 0 auto;">Los viajes registrados y activos
+            en la base de datos aparecerán aquí automáticamente.</p>
         </article>
         {% endfor %}
       </div>
