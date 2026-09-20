@@ -132,10 +132,38 @@ document.addEventListener('DOMContentLoaded', () => {
               .catch(err => console.warn('Error al calcular ruta previa:', err));
           }
 
+          function reverseGeocodeOrigin(lat, lng) {
+            const origInput = document.getElementById('origen');
+            if (!origInput) return;
+
+            if (mapboxToken) {
+              const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng.toFixed(6)},${lat.toFixed(6)}.json?access_token=${mapboxToken}&language=es&types=address,poi,neighborhood,locality`;
+              fetch(geocodeUrl)
+                .then(res => res.json())
+                .then(data => {
+                  if (data && data.features && data.features.length > 0) {
+                    const feat = data.features[0];
+                    const mainText = feat.text || feat.place_name;
+                    const contextName = feat.context && feat.context.length > 0 ? feat.context[0].text : '';
+                    const fullAddress = contextName && !mainText.includes(contextName) ? `${mainText}, ${contextName}` : mainText;
+                    origInput.value = fullAddress;
+                  } else {
+                    origInput.value = `Calle / Zona (GPS ${lat.toFixed(3)}, ${lng.toFixed(3)})`;
+                  }
+                })
+                .catch(() => {
+                  origInput.value = 'Mi Ubicación Actual (GPS)';
+                });
+            } else {
+              origInput.value = 'Mi Ubicación Actual (GPS)';
+            }
+          }
+
           origMarker.on('dragend', () => {
             const lngLat = origMarker.getLngLat();
             document.getElementById('origen_lat').value = lngLat.lat;
             document.getElementById('origen_lng').value = lngLat.lng;
+            reverseGeocodeOrigin(lngLat.lat, lngLat.lng);
             updatePreviewRoute();
           });
 
@@ -155,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
 
           window.updateCreateRidePreviewRoute = updatePreviewRoute;
+          window.reverseGeocodeOrigin = reverseGeocodeOrigin;
 
         } catch (e) {
           console.warn('Error al crear mapa de publicar viaje:', e);
@@ -176,9 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
           document.getElementById('origen_lat').value = lat;
           document.getElementById('origen_lng').value = lng;
           
-          const origInput = document.getElementById('origen');
-          if (origInput && !origInput.value) {
-            origInput.value = 'Mi Ubicación Actual (GPS)';
+          if (window.reverseGeocodeOrigin) {
+            window.reverseGeocodeOrigin(lat, lng);
+          } else {
+            const origInput = document.getElementById('origen');
+            if (origInput) origInput.value = 'Mi Ubicación Actual (GPS)';
           }
 
           if (window.updateCreateRidePreviewRoute) {
