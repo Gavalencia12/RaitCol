@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function startGlobalFeedPolling() {
   setInterval(() => {
+    if (document.hidden) return;
     const rideBtns = document.querySelectorAll('button[data-ride-id]');
     const processedIds = new Set();
     rideBtns.forEach(async (btn) => {
@@ -23,7 +24,7 @@ function startGlobalFeedPolling() {
         }
       } catch (e) { }
     });
-  }, 4000);
+  }, 10000);
 }
 
 function switchModalRoleView(role = 'visitor') {

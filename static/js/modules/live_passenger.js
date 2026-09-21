@@ -3,6 +3,7 @@ function startPassengerPolling() {
   if (!currentRideData.id) return;
 
   pollIntervalId = setInterval(async () => {
+    if (document.hidden) return;
     try {
       const resp = await fetch(`/api/journey/${currentRideData.id}/`);
       if (resp.ok) {

@@ -78,6 +78,7 @@ function startDriverPolling(rideId) {
   if (!rideId) return;
 
   driverPollIntervalId = setInterval(async () => {
+    if (document.hidden) return;
     try {
       const resp = await fetch(`/api/journey/${rideId}/`);
       if (resp.ok) {
