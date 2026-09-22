@@ -40,71 +40,125 @@
       <!-- The Modal -->
       <div id="myModal" class="modal">
         <!-- Modal content -->
-        <div class="modal-content">
-          <div class="modal-header">
+        <div class="modal-content modal-content-publish">
+          <div class="modal-header modal-header-publish">
+            <h2 class="modal-header-title"><i class="fas fa-car"></i> Publicar mi Viaje</h2>
             <span class="close">&times;</span>
-            <h2>Publicar mi Viaje</h2>
           </div>
-          <br>
+
           {% if has_car %}
           <form method="POST" action="{% url 'home' %}" id="ViajeForm">
             {% csrf_token %}
+            <input type="hidden" id="origen_lat" name="origen_lat" value="">
+            <input type="hidden" id="origen_lng" name="origen_lng" value="">
+            <input type="hidden" id="destino_lat" name="destino_lat" value="">
+            <input type="hidden" id="destino_lng" name="destino_lng" value="">
 
-            <!-- Origen input-->
-            <div class="form-grid">
+            <div class="modal-route-preview-bar">
+              <span class="preview-route-title"><i class="fas fa-map-location-dot"></i> Vista previa de la ruta</span>
+              <button type="button" id="btnDetectGPS" class="btn-detect-gps">
+                <i class="fas fa-crosshairs"></i> Detectar mi GPS
+              </button>
+            </div>
+
+            <!-- Contenedor del Mapa interactivo para publicar viaje -->
+            <div id="createRideMapContainer" class="create-ride-map-box"></div>
+
+            <!-- Grid de Origen y Destino -->
+            <div class="form-grid" style="margin-bottom: 14px;">
               <div class="form-group">
                 <label for="origen">¿Desde dónde sales?</label>
-                <input class="form-control" id="origen" name="origen" type="text" placeholder="Ej. Walmart..." required/>
+                <div class="input-wrapper">
+                  <i class="fas fa-location-dot"></i>
+                  <input class="form-control" id="origen" name="origen" type="text"
+                    placeholder="Ej. Calle Jazmín #1011..." required />
+                </div>
               </div>
-              <!-- Destino input-->
+
               <div class="form-group">
                 <label for="destino">¿A qué Universidad vas?</label>
-                <input class="form-control" id="destino" name="destino" type="text" placeholder="Ej. FIE.." required/>
+                <div class="input-wrapper">
+                  <i class="fas fa-graduation-cap"></i>
+                  <select class="form-control" id="destino" name="destino" required
+                    style="font-weight: 600; color: var(--color-text-main);">
+                    <option value="FIE - Campus El Naranjo (UCol)" data-lat="19.1170" data-lng="-104.3985" selected>
+                      FIE - Campus El Naranjo (UCol)
+                    </option>
+                    <option value="FCAM - Campus El Naranjo (UCol)" data-lat="19.1173" data-lng="-104.3978">
+                      FCAM - Campus El Naranjo (UCol)
+                    </option>
+                    <option value="FACIMAR - San Pedrito (UCol)" data-lat="19.0805" data-lng="-104.3060">
+                      FACIMAR - San Pedrito (UCol)
+                    </option>
+                    <option value="Bachilleratos #8, #9 y #10 (Campus El Naranjo)" data-lat="19.1165"
+                      data-lng="-104.3990">
+                      Bachilleratos 8, 9 y 10 - Campus El Naranjo
+                    </option>
+                  </select>
+                </div>
               </div>
             </div>
-            <!-- Fecha input-->
-            <div class="form-grid">
+
+            <div class="form-grid" style="margin-bottom: 14px;">
               <div class="form-group">
-                <label for="fecha_pro">Fecha</label>                      
-                <input class="form-control" id="fecha_pro" name="fecha" type="date" required />
+                <label for="fecha_pro">Fecha del Viaje</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-calendar-day"></i>
+                  <input class="form-control" id="fecha_pro" name="fecha" type="date" required />
+                </div>
               </div>
-              <!-- Horario input-->
+
               <div class="form-group">
-                <label for="horario">Horario</label>
-                <input class="form-control" id="horario" name="horario" type="time" required/>
-              </div>
-            </div>
-            <div class="form-grid">
-              <!-- Lugares Disponibles input-->
-              <div class="form-group">
-                <label for="asientos">Lugares Disponibles</label>                      
-                <input class="form-control" id="asientos" name="asientos" type="number" min="1" max="4" placeholder="1 lugar" required />
-              </div>
-              <!-- Precio por persona input-->
-              <div class="form-group">
-                <label for="precio">Precio por Persona (MXN)</label>                      
-                <input class="form-control" id="precio" name="precio" type="number" min="0" max="100" placeholder="$40" required />
+                <label for="horario">Horario de Salida</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-clock"></i>
+                  <input class="form-control" id="horario" name="horario" type="time" required />
+                </div>
               </div>
             </div>
-            <!-- Message input-->
-            <div class="form-group">
-              <label for="message">Mensaje / Notas del viaje</label>                      
-              <textarea class="form-control" id="message" name="message" placeholder="Describe detalles adicionales de tu viaje..." style="height: 4rem"></textarea>
+
+            <div class="form-grid" style="margin-bottom: 14px;">
+              <div class="form-group">
+                <label for="asientos">Lugares Disponibles</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-chair"></i>
+                  <input class="form-control" id="asientos" name="asientos" type="number" min="1" max="4"
+                    placeholder="1" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="precio">Precio por Persona (MXN)</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-dollar-sign"></i>
+                  <input class="form-control" id="precio" name="precio" type="number" min="0" max="100" placeholder="40"
+                    required />
+                </div>
+              </div>
             </div>
-            <br>
-            <!-- Submit Button-->
+
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label for="message">Mensaje / Notas adicionales</label>
+              <textarea class="form-control" id="message" name="message"
+                placeholder="Describe detalles adicionales de tu viaje..."
+                style="height: 4rem; padding-left: 14px;"></textarea>
+            </div>
+
             <div class="d-grid">
-              <button class="btn-submit" id="submitButton2" type="submit">
-                <i class="fa-solid fa-paper-plane"></i> Publicar viaje
+              <button class="btn-submit btn-submit-publish" id="submitButton2" type="submit">
+                <i class="fa-solid fa-paper-plane"></i> Publicar mi viaje
               </button>
-            </div>      
+            </div>
           </form>
           {% else %}
           <!-- Estado alternativo: El usuario no tiene vehículos registrados -->
           <div class="alert alert-warning" style="text-align: center; padding: 20px;">
-            <h3 style="margin-bottom: 10px;"><i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Requiere registro de vehículo</h3>
-            <p style="margin-bottom: 16px;">Lo sentimos, no puedes crear un viaje porque no tienes ningún vehículo activo registrado en tu cuenta.</p>
-            <a href="{% url 'profile' %}" class="btn-submit" style="display: inline-block; width: auto; padding: 10px 20px; text-decoration: none;">
+            <h3 style="margin-bottom: 10px;"><i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+              Requiere registro de vehículo</h3>
+            <p style="margin-bottom: 16px;">Lo sentimos, no puedes crear un viaje porque no tienes ningún vehículo
+              activo registrado en tu cuenta.</p>
+            <a href="{% url 'profile' %}" class="btn-submit"
+              style="display: inline-block; width: auto; padding: 10px 20px; text-decoration: none;">
               <i class="fas fa-car"></i> Registrar un Vehículo ahora
             </a>
           </div>
@@ -114,7 +168,7 @@
 
       <div class="rides-grid" style="margin-top: 24px;">
         {% for viaje in viajes %}
-        <article class="ride-card">
+        <article class="ride-card" data-cost="{{ viaje.cost_journey_d }}" data-seats="{{ viaje.available_seats_i }}">
           <div class="ride-header-route">
             <div class="route-origin">{{ viaje.id_route_journey_i.id_address_origin_i.name_address_v }}</div>
             <i class="fas fa-arrow-right route-arrow-icon"></i>
@@ -160,8 +214,10 @@
           <div style="font-size: 48px; color: #10b981; margin-bottom: 16px;">
             <i class="fas fa-route"></i>
           </div>
-          <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">No hay viajes activos en este momento</h3>
-          <p style="font-size: 14px; color: #6b7280; max-width: 480px; margin: 0 auto;">Los viajes registrados y activos en la base de datos aparecerán aquí automáticamente.</p>
+          <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">No hay viajes activos en
+            este momento</h3>
+          <p style="font-size: 14px; color: #6b7280; max-width: 480px; margin: 0 auto;">Los viajes registrados y activos
+            en la base de datos aparecerán aquí automáticamente.</p>
         </article>
         {% endfor %}
       </div>

@@ -3,14 +3,15 @@ function startPassengerPolling() {
   if (!currentRideData.id) return;
 
   pollIntervalId = setInterval(async () => {
+    if (document.hidden) return;
     try {
       const resp = await fetch(`/api/journey/${currentRideData.id}/`);
       if (resp.ok) {
         const freshData = await resp.json();
 
-        if (freshData.originLat && freshData.originLng && liveDriverMarker) {
-          const dLat = parseCoord(freshData.originLat);
-          const dLng = parseCoord(freshData.originLng);
+        const dLat = parseCoord(freshData.driverLat || freshData.originLat);
+        const dLng = parseCoord(freshData.driverLng || freshData.originLng);
+        if (dLat !== null && dLng !== null && liveDriverMarker) {
           liveDriverMarker.setLngLat([dLng, dLat]);
         }
 

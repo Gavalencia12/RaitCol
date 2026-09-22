@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .models import Journey, Car, Reservation
+from .models import Journey, Car, Reservation, Address, Route
 from .forms import CarForm
 
 from django.conf import settings
@@ -15,6 +15,81 @@ import json
 # Create your views here.
 @login_required(login_url='login_page')
 def home(request):
+    user_cars = Car.objects.filter(id_user_car_i=request.user, is_active_b=True)
+    has_car = user_cars.exists()
+    is_driver = request.user.groups.filter(name='Conductor').exists() or has_car
+
+    if request.method == 'POST':
+        if not has_car:
+            messages.error(request, "Lo sentimos, necesitas registrar un vehículo en tu perfil antes de publicar un viaje.")
+            return redirect('profile')
+
+        origen_name = request.POST.get('origen', '').strip()
+        destino_name = request.POST.get('destino', '').strip()
+        horario = request.POST.get('horario', '').strip()
+        
+        try:
+            asientos = int(request.POST.get('asientos', 3))
+        except (ValueError, TypeError):
+            asientos = 3
+
+        try:
+            precio = float(request.POST.get('precio', 25))
+        except (ValueError, TypeError):
+            precio = 25.0
+
+        if not origen_name or not destino_name:
+            messages.error(request, "Por favor proporciona un origen y destino válidos.")
+            return redirect('home')
+
+        # Coordenadas enviadas por el mapa/GPS (o fallbacks por defecto)
+        try:
+            orig_lat = float(request.POST.get('origen_lat')) if request.POST.get('origen_lat') else 19.1158
+            orig_lng = float(request.POST.get('origen_lng')) if request.POST.get('origen_lng') else -104.3308
+        except (ValueError, TypeError):
+            orig_lat, orig_lng = 19.1158, -104.3308
+
+        try:
+            dest_lat = float(request.POST.get('destino_lat')) if request.POST.get('destino_lat') else 19.1170
+            dest_lng = float(request.POST.get('destino_lng')) if request.POST.get('destino_lng') else -104.3985
+        except (ValueError, TypeError):
+            dest_lat, dest_lng = 19.1170, -104.3985
+
+        origin_address = Address.objects.create(
+            name_address_v=origen_name,
+            hour_init_t=horario if horario else None,
+            latitude_d=orig_lat,
+            longitude_d=orig_lng,
+            is_active_b=True
+        )
+
+        dest_address = Address.objects.create(
+            name_address_v=destino_name,
+            latitude_d=dest_lat,
+            longitude_d=dest_lng,
+            is_active_b=True
+        )
+
+        route = Route.objects.create(
+            id_address_origin_i=origin_address,
+            id_address_destiny_i=dest_address,
+            is_active_b=True
+        )
+
+        driver_car = user_cars.first()
+        Journey.objects.create(
+            id_user_car_journey_i=driver_car,
+            id_route_journey_i=route,
+            id_address_journey_i=origin_address,
+            cost_journey_d=precio,
+            available_seats_i=asientos,
+            status_v='active',
+            is_active_b=True
+        )
+
+        messages.success(request, "¡Tu viaje ha sido publicado exitosamente y ya aparece en la lista!")
+        return redirect('home')
+
     viajes_qs = Journey.objects.filter(
         is_active_b=True, 
         status_v='active',
@@ -145,6 +220,9 @@ def journey_detail_api(request, journey_id):
                 'isCurrentUser': False
             })
 
+    driver_lat = float(journey.id_address_journey_i.latitude_d) if journey.id_address_journey_i else float(origin.latitude_d)
+    driver_lng = float(journey.id_address_journey_i.longitude_d) if journey.id_address_journey_i else float(origin.longitude_d)
+
     return JsonResponse({
         'id': journey.id_journey_i,
         'routeId': route.id_route_i,
@@ -171,6 +249,8 @@ def journey_detail_api(request, journey_id):
         'destination': dest.name_address_v,
         'destLat': float(dest.latitude_d),
         'destLng': float(dest.longitude_d),
+        'driverLat': driver_lat,
+        'driverLng': driver_lng,
     })
 
 @csrf_exempt
@@ -313,7 +393,25 @@ def update_ride_location_api(request, journey_id):
 
     # Actualización de posición del conductor en vivo (mantiene el origen de la ruta fijo)
     if 'driver_lat' in data and 'driver_lng' in data:
-        updated = True
+        try:
+            d_lat = float(data['driver_lat'])
+            d_lng = float(data['driver_lng'])
+            if journey.id_address_journey_i:
+                journey.id_address_journey_i.latitude_d = d_lat
+                journey.id_address_journey_i.longitude_d = d_lng
+                journey.id_address_journey_i.save()
+            else:
+                current_loc = Address.objects.create(
+                    name_address_v="Ubicación Conductor En Vivo",
+                    latitude_d=d_lat,
+                    longitude_d=d_lng,
+                    is_active_b=True
+                )
+                journey.id_address_journey_i = current_loc
+                journey.save()
+            updated = True
+        except (ValueError, TypeError):
+            pass
 
     if 'origin_lat' in data and 'origin_lng' in data:
         origin.latitude_d = float(data['origin_lat'])

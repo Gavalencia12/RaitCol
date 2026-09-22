@@ -19,32 +19,242 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   // Abrir modal de publicar viaje
-  // Obtener el  modal
-      var modal = document.getElementById("myModal");
+  var modal = document.getElementById("myModal");
+  var btn = document.getElementById("myBtn");
+  var span = document.getElementsByClassName("close")[0];
+  var btnDetectGPS = document.getElementById("btnDetectGPS");
+  let createRideMapInstance = null;
 
-      // Obtén el botón que abre el modal.
-      var btn = document.getElementById("myBtn");
+  function initCreateRideMap() {
+    const container = document.getElementById("createRideMapContainer");
+    if (!container) return;
 
-      // Get the <span> element that closes the modal
-      var span = document.getElementsByClassName("close")[0];
+    let mapboxToken = '';
+    const tokenElement = document.getElementById('mapbox-token-data');
+    if (tokenElement && tokenElement.textContent) {
+      try { mapboxToken = JSON.parse(tokenElement.textContent); } catch (e) { }
+    }
 
-      // When the user clicks on the button, open the modal
-      btn.onclick = function() {
-        modal.style.display = "block";
+    let origLat = parseFloat(document.getElementById('origen_lat').value) || 19.1158;
+    let origLng = parseFloat(document.getElementById('origen_lng').value) || -104.3308;
+
+    const destSelect = document.getElementById('destino');
+    let destLat = 19.1170;
+    let destLng = -104.3985;
+
+    if (destSelect && destSelect.options[destSelect.selectedIndex]) {
+      const opt = destSelect.options[destSelect.selectedIndex];
+      if (opt.dataset.lat && opt.dataset.lng) {
+        destLat = parseFloat(opt.dataset.lat);
+        destLng = parseFloat(opt.dataset.lng);
       }
+    }
 
-      // When the user clicks on <span> (x), close the modal
-      span.onclick = function() {
-        modal.style.display = "none";
-      }
+    document.getElementById('origen_lat').value = origLat;
+    document.getElementById('origen_lng').value = origLng;
+    document.getElementById('destino_lat').value = destLat;
+    document.getElementById('destino_lng').value = destLng;
 
-      // When the user clicks anywhere outside of the modal, close it
-      window.onclick = function(event) {
-        if (event.target == modal) {
-          modal.style.display = "none";
+    if (mapboxToken && typeof mapboxgl !== 'undefined') {
+      mapboxgl.accessToken = mapboxToken;
+      if (!createRideMapInstance) {
+        try {
+          createRideMapInstance = new mapboxgl.Map({
+            container: 'createRideMapContainer',
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [(origLng + destLng) / 2, (origLat + destLat) / 2],
+            zoom: 12
+          });
+
+          // Marcador de Origen
+          const elOrig = document.createElement('div');
+          elOrig.innerHTML = '<span style="background:#00b865; color:white; padding:4px 8px; border-radius:10px; font-size:10px; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.2);">📍 Tu Origen</span>';
+          const origMarker = new mapboxgl.Marker({ element: elOrig, draggable: true })
+            .setLngLat([origLng, origLat])
+            .addTo(createRideMapInstance);
+
+          // Marcador de Destino
+          const elDest = document.createElement('div');
+          elDest.innerHTML = '<span style="background:#0f172a; color:white; padding:4px 8px; border-radius:10px; font-size:10px; font-weight:bold; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🎓 Campus UCol</span>';
+          const destMarker = new mapboxgl.Marker({ element: elDest })
+            .setLngLat([destLng, destLat])
+            .addTo(createRideMapInstance);
+
+          function updatePreviewRoute() {
+            const oLat = parseFloat(document.getElementById('origen_lat').value) || origLat;
+            const oLng = parseFloat(document.getElementById('origen_lng').value) || origLng;
+            const dLat = parseFloat(document.getElementById('destino_lat').value) || destLat;
+            const dLng = parseFloat(document.getElementById('destino_lng').value) || destLng;
+
+            origMarker.setLngLat([oLng, oLat]);
+            destMarker.setLngLat([dLng, dLat]);
+
+            const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${oLng.toFixed(6)},${oLat.toFixed(6)};${dLng.toFixed(6)},${dLat.toFixed(6)}?geometries=geojson&access_token=${mapboxToken}`;
+
+            fetch(directionsUrl)
+              .then(res => res.json())
+              .then(data => {
+                let routeGeoJSON = null;
+                if (data.routes && data.routes.length > 0) {
+                  routeGeoJSON = data.routes[0].geometry;
+                } else {
+                  routeGeoJSON = {
+                    'type': 'LineString',
+                    'coordinates': [[oLng, oLat], [dLng, dLat]]
+                  };
+                }
+
+                if (createRideMapInstance.getSource('preview-route')) {
+                  createRideMapInstance.getSource('preview-route').setData({
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': routeGeoJSON
+                  });
+                } else {
+                  createRideMapInstance.addSource('preview-route', {
+                    'type': 'geojson',
+                    'data': { 'type': 'Feature', 'properties': {}, 'geometry': routeGeoJSON }
+                  });
+                  createRideMapInstance.addLayer({
+                    'id': 'preview-route-line',
+                    'type': 'line',
+                    'source': 'preview-route',
+                    'layout': { 'line-join': 'round', 'line-cap': 'round' },
+                    'paint': { 'line-color': '#00b865', 'line-width': 5, 'line-opacity': 0.9 }
+                  });
+                }
+
+                const bounds = new mapboxgl.LngLatBounds();
+                bounds.extend([oLng, oLat]);
+                bounds.extend([dLng, dLat]);
+                createRideMapInstance.fitBounds(bounds, { padding: 40, maxZoom: 14.5 });
+              })
+              .catch(err => console.warn('Error al calcular ruta previa:', err));
+          }
+
+          function reverseGeocodeOrigin(lat, lng) {
+            const origInput = document.getElementById('origen');
+            if (!origInput) return;
+
+            if (mapboxToken) {
+              const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng.toFixed(6)},${lat.toFixed(6)}.json?access_token=${mapboxToken}&language=es&types=address,poi,neighborhood,locality`;
+              fetch(geocodeUrl)
+                .then(res => res.json())
+                .then(data => {
+                  if (data && data.features && data.features.length > 0) {
+                    const feat = data.features[0];
+                    const mainText = feat.text || feat.place_name;
+                    const contextName = feat.context && feat.context.length > 0 ? feat.context[0].text : '';
+                    const fullAddress = contextName && !mainText.includes(contextName) ? `${mainText}, ${contextName}` : mainText;
+                    origInput.value = fullAddress;
+                  } else {
+                    origInput.value = `Calle / Zona (GPS ${lat.toFixed(3)}, ${lng.toFixed(3)})`;
+                  }
+                })
+                .catch(() => {
+                  origInput.value = 'Mi Ubicación Actual (GPS)';
+                });
+            } else {
+              origInput.value = 'Mi Ubicación Actual (GPS)';
+            }
+          }
+
+          origMarker.on('dragend', () => {
+            const lngLat = origMarker.getLngLat();
+            document.getElementById('origen_lat').value = lngLat.lat;
+            document.getElementById('origen_lng').value = lngLat.lng;
+            reverseGeocodeOrigin(lngLat.lat, lngLat.lng);
+            updatePreviewRoute();
+          });
+
+          if (destSelect) {
+            destSelect.addEventListener('change', () => {
+              const selectedOpt = destSelect.options[destSelect.selectedIndex];
+              if (selectedOpt && selectedOpt.dataset.lat && selectedOpt.dataset.lng) {
+                document.getElementById('destino_lat').value = selectedOpt.dataset.lat;
+                document.getElementById('destino_lng').value = selectedOpt.dataset.lng;
+                updatePreviewRoute();
+              }
+            });
+          }
+
+          createRideMapInstance.on('load', () => {
+            updatePreviewRoute();
+          });
+
+          window.updateCreateRidePreviewRoute = updatePreviewRoute;
+          window.reverseGeocodeOrigin = reverseGeocodeOrigin;
+
+        } catch (e) {
+          console.warn('Error al crear mapa de publicar viaje:', e);
         }
+      } else {
+        createRideMapInstance.resize();
+        if (window.updateCreateRidePreviewRoute) window.updateCreateRidePreviewRoute();
       }
-      // Abrir modal de publicar viaje
+    }
+  }
+
+  function detectUserGPS() {
+    if ('geolocation' in navigator) {
+      if (btnDetectGPS) btnDetectGPS.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Detectando GPS...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          document.getElementById('origen_lat').value = lat;
+          document.getElementById('origen_lng').value = lng;
+          
+          if (window.reverseGeocodeOrigin) {
+            window.reverseGeocodeOrigin(lat, lng);
+          } else {
+            const origInput = document.getElementById('origen');
+            if (origInput) origInput.value = 'Mi Ubicación Actual (GPS)';
+          }
+
+          if (window.updateCreateRidePreviewRoute) {
+            window.updateCreateRidePreviewRoute();
+          } else if (createRideMapInstance) {
+            createRideMapInstance.flyTo({ center: [lng, lat], zoom: 14 });
+          }
+
+          if (btnDetectGPS) btnDetectGPS.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> GPS Detectado';
+        },
+        (err) => {
+          console.warn('GPS error:', err.message);
+          if (btnDetectGPS) btnDetectGPS.innerHTML = '<i class="fas fa-crosshairs"></i> Detectar mi GPS';
+        },
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    }
+  }
+
+  if (btnDetectGPS) {
+    btnDetectGPS.addEventListener('click', detectUserGPS);
+  }
+
+  if (btn) {
+    btn.onclick = function() {
+      if (modal) modal.style.display = "block";
+      setTimeout(() => {
+        initCreateRideMap();
+        detectUserGPS();
+      }, 150);
+    }
+  }
+
+  if (span) {
+    span.onclick = function() {
+      if (modal) modal.style.display = "none";
+    }
+  }
+
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      if (modal) modal.style.display = "none";
+    }
+  }
+  // Abrir modal de publicar viaje
   // Lógica para cerrar sesión
   const logoutBtn = document.getElementById('logoutBtn');
   if (!logoutBtn) return;
