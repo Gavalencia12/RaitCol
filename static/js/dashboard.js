@@ -104,6 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
                   };
                 }
 
+                const polyInput = document.getElementById('route_polyline');
+                if (polyInput && routeGeoJSON) {
+                  polyInput.value = JSON.stringify(routeGeoJSON.coordinates || routeGeoJSON);
+                }
+
                 if (createRideMapInstance.getSource('preview-route')) {
                   createRideMapInstance.getSource('preview-route').setData({
                     'type': 'Feature',
@@ -166,6 +171,32 @@ document.addEventListener('DOMContentLoaded', () => {
             reverseGeocodeOrigin(lngLat.lat, lngLat.lng);
             updatePreviewRoute();
           });
+
+          const origInputEl = document.getElementById('origen');
+          if (origInputEl) {
+            let geocodeTimeout = null;
+            origInputEl.addEventListener('input', () => {
+              clearTimeout(geocodeTimeout);
+              geocodeTimeout = setTimeout(() => {
+                const queryText = origInputEl.value.trim();
+                if (queryText.length > 3 && mapboxToken) {
+                  const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(queryText)}.json?access_token=${mapboxToken}&language=es&country=mx`;
+                  fetch(geocodeUrl)
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data && data.features && data.features.length > 0) {
+                        const center = data.features[0].center;
+                        document.getElementById('origen_lat').value = center[1];
+                        document.getElementById('origen_lng').value = center[0];
+                        origMarker.setLngLat([center[0], center[1]]);
+                        updatePreviewRoute();
+                      }
+                    })
+                    .catch(e => console.warn('Error al geocodificar dirección de origen:', e));
+                }
+              }, 600);
+            });
+          }
 
           if (destSelect) {
             destSelect.addEventListener('change', () => {

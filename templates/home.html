@@ -53,6 +53,7 @@
             <input type="hidden" id="origen_lng" name="origen_lng" value="">
             <input type="hidden" id="destino_lat" name="destino_lat" value="">
             <input type="hidden" id="destino_lng" name="destino_lng" value="">
+            <input type="hidden" id="route_polyline" name="route_polyline" value="">
 
             <div class="modal-route-preview-bar">
               <span class="preview-route-title"><i class="fas fa-map-location-dot"></i> Vista previa de la ruta</span>
@@ -60,7 +61,6 @@
                 <i class="fas fa-crosshairs"></i> Detectar mi GPS
               </button>
             </div>
-
             <!-- Contenedor del Mapa interactivo para publicar viaje -->
             <div id="createRideMapContainer" class="create-ride-map-box"></div>
 
@@ -81,18 +81,29 @@
                   <i class="fas fa-graduation-cap"></i>
                   <select class="form-control" id="destino" name="destino" required
                     style="font-weight: 600; color: var(--color-text-main);">
-                    <option value="FIE - Campus El Naranjo (UCol)" data-lat="19.1170" data-lng="-104.3985" selected>
+                    <option value="FIE - Campus El Naranjo (UCol)" data-lat="19.1240099992358" data-lng="-104.39999938977864" selected>
                       FIE - Campus El Naranjo (UCol)
                     </option>
-                    <option value="FCAM - Campus El Naranjo (UCol)" data-lat="19.1173" data-lng="-104.3978">
+                    <option value="FCAM - Campus El Naranjo (UCol)" data-lat="19.125166817918682" data-lng="-104.39970024782167">
                       FCAM - Campus El Naranjo (UCol)
                     </option>
-                    <option value="FACIMAR - San Pedrito (UCol)" data-lat="19.0805" data-lng="-104.3060">
-                      FACIMAR - San Pedrito (UCol)
+                    <option value="FACIMAR - Campus El Naranjo (UCol)" data-lat="19.12477244882305" data-lng="-104.40179424152048">
+                      FACIMAR - Campus El Naranjo (UCol)
                     </option>
-                    <option value="Bachilleratos #8, #9 y #10 (Campus El Naranjo)" data-lat="19.1165"
-                      data-lng="-104.3990">
-                      Bachilleratos 8, 9 y 10 - Campus El Naranjo
+                    <option value="FACOMEX - Campus Valle de las Garzas (UCol)" data-lat="19.0992683781219" data-lng="-104.30509560460645">
+                      FACOMEX - Campus Valle de las Garzas (UCol)
+                    </option>
+                    <option value="FTG - Campus Valle de las Garzas (UCol)" data-lat="19.098013962795516" data-lng="-104.30486134264052">
+                      FTG - Campus Valle de las Garzas (UCol)
+                    </option>
+                    <option value="Bachilleratos #8, #9 y #10 San Pedrito (UCol)" data-lat="19.058262879151197" data-lng="-104.30232973740158">
+                      Bachilleratos 8, 9 y 10 - San Pedrito (UCol)
+                    </option>
+                    <option value="Bachilleratos #23 y #27 Santiago (UCol)" data-lat="19.130934222928115" data-lng="-104.34836016536269">
+                      Bachilleratos 23 y 27 - Santiago (UCol)
+                    </option>
+                    <option value="Bachillerato #14 El Colomo (UCol)" data-lat="19.05533168540849" data-lng="-104.2465883040877">
+                      Bachillerato 14 - El Colomo (UCol)
                     </option>
                   </select>
                 </div>
@@ -166,9 +177,100 @@
         </div>
       </div>
 
-      <div class="rides-grid" style="margin-top: 24px;">
+      <!-- Barra Principal y Menú Desplegable de Filtros -->
+      <div class="filter-action-wrapper" style="margin-top: 18px; margin-bottom: 16px; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" id="btnDetectPassengerGPS" class="btn-detect-passenger-gps">
+              <i class="fas fa-location-crosshairs"></i> Detectar mi GPS
+            </button>
+
+            <!-- Botón con Icono y Texto para Desplegar Filtros -->
+            <button type="button" id="btnToggleFilterDropdown" class="btn-filter-dropdown-toggle" title="Filtrar viajes">
+              <i class="fas fa-sliders"></i> <span>Filtros</span>
+              <span id="activeFilterBadgeCount" class="badge-filter-count" style="display:none;">0</span>
+            </button>
+          </div>
+
+          <div class="proximity-counter-text" id="proximityFilterCounter" style="margin: 0; font-size: 13px;">
+            <i class="fas fa-filter"></i> Cargando viajes...
+          </div>
+        </div>
+
+        <!-- Menú Desplegable de Filtros (Dropdown Menu) -->
+        <div id="filterDropdownMenu" class="filter-dropdown-menu" style="display: none;">
+          <div class="filter-dropdown-header">
+            <h5 style="margin: 0; font-size: 14px; font-weight: 700; color: #1e293b;">
+              <i class="fas fa-sliders" style="color: var(--color-primary);"></i> Filtrar Viajes
+            </h5>
+            <button type="button" id="btnClearAllFilters" class="btn-clear-filters">
+              <i class="fas fa-rotate-left"></i> Limpiar
+            </button>
+          </div>
+
+          <div class="filter-dropdown-grid">
+            <!-- 1. Mis Reservas y Mis Viajes Publicados -->
+            <div class="filter-item-box" style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">
+              <label class="proximity-toggle-label" style="background: #f0fdf4; padding: 8px 12px; border-radius: 10px; border: 1px solid #bbf7d0; width: 100%; display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="chkFilterMyReservationsOnly" style="accent-color: var(--color-primary); width: 16px; height: 16px;">
+                <span><i class="fas fa-ticket" style="color: var(--color-primary);"></i> Mis Reservas Confirmadas</span>
+              </label>
+
+              <label class="proximity-toggle-label" style="background: #eff6ff; padding: 8px 12px; border-radius: 10px; border: 1px solid #bfdbfe; width: 100%; display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="chkFilterMyRidesOnly" style="accent-color: #2563eb; width: 16px; height: 16px;">
+                <span><i class="fas fa-car-side" style="color: #2563eb;"></i> Mis Viajes Publicados (Conductor)</span>
+              </label>
+            </div>
+
+            <!-- 2. Cercanía GPS -->
+            <div class="filter-item-box">
+              <label class="proximity-toggle-label" style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="chkFilterNearbyOnly" style="accent-color: var(--color-primary); width: 16px; height: 16px;">
+                <span><i class="fas fa-route" style="color: var(--color-primary);"></i> Cerca de mi ruta</span>
+              </label>
+              <select id="selectProximityRadius" class="proximity-radius-select" style="width: 100%;">
+                <option value="3" selected>Radio: 3 km (Recomendado)</option>
+                <option value="5">Radio: 5 km</option>
+                <option value="10">Radio: 10 km</option>
+              </select>
+            </div>
+
+            <!-- 3. Campus Destino -->
+            <div class="filter-item-box">
+              <label style="font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 6px; display: block;"> Campus Destino</label>
+              <select id="selectCampusDestination" class="proximity-radius-select" style="width: 100%;">
+                <option value="all" selected>Todos los Campus</option>
+                <option value="Naranjo">Campus El Naranjo (FIE / FCAM)</option>
+                <option value="San Pedrito">Campus San Pedrito (FACIMAR)</option>
+                <option value="Bachilleratos">Bachilleratos 8, 9 y 10</option>
+              </select>
+            </div>
+
+            <!-- 4. Precio Máximo -->
+            <div class="filter-item-box" style="grid-column: 1 / -1;">
+              <label style="font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 6px; display: block;"> Precio Máximo</label>
+              <select id="selectMaxPrice" class="proximity-radius-select" style="width: 100%;">
+                <option value="all" selected>Cualquier Precio</option>
+                <option value="30">Hasta $30 MXN</option>
+                <option value="50">Hasta $50 MXN</option>
+                <option value="80">Hasta $80 MXN</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rides-grid" style="margin-top: 16px;">
         {% for viaje in viajes %}
-        <article class="ride-card" data-cost="{{ viaje.cost_journey_d }}" data-seats="{{ viaje.available_seats_i }}">
+        <article class="ride-card" data-cost="{{ viaje.cost_journey_d }}" data-seats="{{ viaje.available_seats_i }}"
+          data-is-passenger="{{ viaje.is_passenger|yesno:'true,false' }}"
+          data-is-driver="{{ viaje.is_driver|yesno:'true,false' }}"
+          data-destination="{{ viaje.id_route_journey_i.id_address_destiny_i.name_address_v }}"
+          data-origin-lat="{{ viaje.id_route_journey_i.id_address_origin_i.latitude_d }}"
+          data-origin-lng="{{ viaje.id_route_journey_i.id_address_origin_i.longitude_d }}"
+          data-dest-lat="{{ viaje.id_route_journey_i.id_address_destiny_i.latitude_d }}"
+          data-dest-lng="{{ viaje.id_route_journey_i.id_address_destiny_i.longitude_d }}"
+          data-polyline="{{ viaje.id_route_journey_i.map_polyline_v|default:'' }}">
           <div class="ride-header-route">
             <div class="route-origin">{{ viaje.id_route_journey_i.id_address_origin_i.name_address_v }}</div>
             <i class="fas fa-arrow-right route-arrow-icon"></i>
@@ -234,6 +336,7 @@
   <script src="{% static 'js/modules/live_visitor.js' %}"></script>
   <script src="{% static 'js/modules/live_passenger.js' %}"></script>
   <script src="{% static 'js/modules/live_driver.js' %}"></script>
+  <script src="{% static 'js/modules/proximity_filter.js' %}"></script>
   <script src="{% static 'js/live_map.js' %}"></script>
 </body>
 

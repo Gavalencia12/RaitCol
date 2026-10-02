@@ -81,6 +81,28 @@
             </div>
           </div>
 
+          <!-- Punto de Encuentro Personalizable -->
+          <div class="pickup-point-box"
+            style="margin-bottom: 16px; padding: 14px; background: #ffffff; border: 1.5px solid #00b865; border-radius: 14px; box-shadow: 0 2px 8px rgba(0, 184, 101, 0.08);">
+            <h5
+              style="font-size: 13px; font-weight: 700; color: #1e293b; margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between;">
+              <span><i class="fas fa-street-view" style="color: #00b865;"></i> Punto de Encuentro (Abordaje)</span>
+              <span
+                style="font-size: 11px; color: #00b865; font-weight: 700; background: #f0fdf4; padding: 2px 8px; border-radius: 10px;">Personalizable</span>
+            </h5>
+            <p style="font-size: 12px; color: #64748b; margin: 0 0 10px 0; line-height: 1.4;">
+              Indica la esquina o punto sobre la ruta donde te esperará el conductor.
+            </p>
+            <div class="input-wrapper" style="position: relative;">
+              <i class="fas fa-location-dot" style="position: absolute; left: 12px; top: 12px; color: #00b865;"></i>
+              <input type="text" id="inputPickupPointName" class="form-control"
+                placeholder="Ej. Esquina de Av. Tecnológico y Jazmín"
+                style="padding-left: 36px; font-size: 13px; font-weight: 600; border-radius: 8px; border: 1px solid #cbd5e1;">
+            </div>
+            <input type="hidden" id="inputPickupLat" value="">
+            <input type="hidden" id="inputPickupLng" value="">
+          </div>
+
           <button class="btn-resume-trip btn-action-reserve" id="btnReserveSeatAction" type="button"
             style="background: linear-gradient(135deg, #00b865 0%, #10b981 100%); font-weight: 700; width: 100%;">
             <i class="fas fa-ticket"></i> Reservar 1 Asiento
@@ -140,7 +162,7 @@
             </div>
           </div>
 
-          <button class="btn-end-journey" type="button" onclick="alert('Funcionalidad para finalizar viaje')"
+          <button class="btn-end-journey" type="button" id="btnFinishRideAction" onclick="handleFinishRide()"
             style="width: 100%; padding: 11px; background: #ef4444; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">
             <i class="fas fa-flag-checkered"></i> Finalizar este Viaje
           </button>

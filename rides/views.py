@@ -70,9 +70,12 @@ def home(request):
             is_active_b=True
         )
 
+        route_polyline = request.POST.get('route_polyline', '').strip()
+
         route = Route.objects.create(
             id_address_origin_i=origin_address,
             id_address_destiny_i=dest_address,
+            map_polyline_v=route_polyline if route_polyline else None,
             is_active_b=True
         )
 
@@ -112,6 +115,15 @@ def home(request):
         ).values_list('id_journey_reservation_i_id', flat=True)
     )
 
+    # Parámetros de geolocalización opcionales recibidos por GET
+    p_lat = request.GET.get('lat')
+    p_lng = request.GET.get('lng')
+    nearby_only = (request.GET.get('nearby') == 'true')
+    max_radius_orig = float(request.GET.get('max_origin', 3.0)) if request.GET.get('max_origin') else 3.0
+    max_radius_route = float(request.GET.get('max_route', 2.0)) if request.GET.get('max_route') else 2.0
+
+    filtered_viajes = []
+
     for viaje in viajes_qs:
         driver_user = viaje.id_user_car_journey_i.id_user_car_i
         viaje.is_driver = (request.user.id == driver_user.id)
@@ -130,16 +142,38 @@ def home(request):
             viaje.role_btn_text = 'Ver Detalle / Reservar'
             viaje.role_icon = 'fas fa-ticket'
 
+        # Evaluación de proximidad si hay GPS
+        viaje.proximity_info = None
+        if p_lat and p_lng:
+            try:
+                from .utils import is_journey_near_passenger
+                prox = is_journey_near_passenger(
+                    float(p_lat), float(p_lng), viaje,
+                    max_origin_radius_km=max_radius_orig,
+                    max_route_radius_km=max_radius_route
+                )
+                viaje.proximity_info = prox
+            except (ValueError, TypeError):
+                pass
+
+        if nearby_only and viaje.proximity_info and not viaje.proximity_info['is_near']:
+            continue
+
+        filtered_viajes.append(viaje)
+
     user_cars = Car.objects.filter(id_user_car_i=request.user, is_active_b=True)
     has_car = user_cars.exists()
     is_driver = request.user.groups.filter(name='Conductor').exists() or has_car
 
     context = {
-        'viajes': viajes_qs,
+        'viajes': filtered_viajes,
         'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', ''),
         'has_car': has_car,
         'is_driver': is_driver,
         'user_cars': user_cars,
+        'p_lat': p_lat or '',
+        'p_lng': p_lng or '',
+        'nearby_only': nearby_only,
     }
     return render(request, "home.html", context)
 
@@ -208,6 +242,9 @@ def journey_detail_api(request, journey_id):
                 'passengerId': passenger.id,
                 'passengerName': p_name,
                 'passengerAccount': getattr(passenger, 'no_cuenta_v', ''),
+                'pickupName': res.pickup_name_v or 'Punto de encuentro asignado',
+                'pickupLat': float(res.pickup_lat) if res.pickup_lat else None,
+                'pickupLng': float(res.pickup_lng) if res.pickup_lng else None,
                 'isCurrentUser': (passenger.id == request.user.id)
             })
         else:
@@ -217,6 +254,9 @@ def journey_detail_api(request, journey_id):
                 'passengerId': None,
                 'passengerName': None,
                 'passengerAccount': None,
+                'pickupName': None,
+                'pickupLat': None,
+                'pickupLng': None,
                 'isCurrentUser': False
             })
 
@@ -314,17 +354,97 @@ def reserve_journey_api(request, journey_id):
                 requested_seat = s
                 break
 
+    pickup_lat = data.get('pickup_lat')
+    pickup_lng = data.get('pickup_lng')
+    pickup_name = (data.get('pickup_name') or '').strip() or 'Ubicación seleccionada en el mapa'
+
     # Crear reserva y actualizar asientos disponibles
-    Reservation.objects.create(
+    res = Reservation.objects.create(
         id_journey_reservation_i=journey,
         id_user_passenger_reservation_i=request.user,
         seat_number_i=requested_seat,
         price_user_pass_d=journey.cost_journey_d,
+        pickup_lat=pickup_lat if pickup_lat else None,
+        pickup_lng=pickup_lng if pickup_lng else None,
+        pickup_name_v=pickup_name,
         is_active_b=True
     )
 
     journey.available_seats_i = max(0, journey.available_seats_i - 1)
     journey.save()
+
+    # Enviar correos institucionales de notificación vía Brevo API HTTP
+    try:
+        from users.utils import send_custom_email
+        car = journey.id_user_car_journey_i
+
+        # 1. Correo para el Conductor
+        driver_subject = "🚘 ¡Nuevo pasajero en tu viaje UniRide!"
+        driver_msg_text = f"El usuario {request.user.first_name} {request.user.last_name} ({request.user.email}) ha reservado el Asiento #{requested_seat}.\nPunto de encuentro: {pickup_name}"
+        driver_html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+            <div style="background-color: #15803d; color: white; padding: 20px; text-align: center;">
+                <h2 style="margin:0;">🚘 ¡Nuevo Pasajero en tu Viaje!</h2>
+                <p style="margin: 5px 0 0 0; opacity: 0.9;">Sistema de Carpooling Universitario UniRide</p>
+            </div>
+            <div style="padding: 24px; color: #1e293b;">
+                <p style="font-size: 16px;">Hola <strong>{driver.first_name}</strong>,</p>
+                <p style="font-size: 15px; color: #475569;">Un estudiante ha reservado un lugar en tu viaje de <strong>{journey.id_route_journey_i.id_address_origin_i.name_address_v}</strong> a <strong>{journey.id_route_journey_i.id_address_destiny_i.name_address_v}</strong>.</p>
+                
+                <div style="background-color: #f0fdf4; border-left: 4px solid #00b865; padding: 16px; margin: 20px 0; border-radius: 6px;">
+                    <p style="margin: 0 0 8px 0; font-size: 14px; color: #166534;"><strong>Detalles del Pasajero:</strong></p>
+                    <ul style="margin: 0; padding-left: 20px; color: #15803d;">
+                        <li><strong>Pasajero:</strong> {request.user.first_name} {request.user.last_name} ({request.user.email})</li>
+                        <li><strong>Asiento Reservado:</strong> Asiento #{requested_seat}</li>
+                        <li><strong>📍 Punto de Encuentro acordado:</strong> {pickup_name}</li>
+                    </ul>
+                </div>
+                
+                <p style="font-size: 14px; color: #64748b;">Puedes consultar la ubicación de abordaje en tiempo real en tu panel de UniRide.</p>
+            </div>
+            <div style="background-color: #f8fafc; padding: 12px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                UniRide - Universidad de Colima
+            </div>
+        </div>
+        """
+        send_custom_email(driver_subject, driver_msg_text, [driver.email], html_content=driver_html)
+
+        # 2. Correo para el Pasajero
+        passenger_subject = "✅ ¡Reserva Confirmada en UniRide!"
+        passenger_msg_text = f"Tu reserva del Asiento #{requested_seat} ha sido confirmada con el conductor {driver.first_name} {driver.last_name}.\nPunto de encuentro: {pickup_name}"
+        passenger_html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+            <div style="background-color: #00b865; color: white; padding: 20px; text-align: center;">
+                <h2 style="margin:0;">✅ ¡Reserva Confirmada!</h2>
+                <p style="margin: 5px 0 0 0; opacity: 0.9;">Tu viaje universitario en UniRide</p>
+            </div>
+            <div style="padding: 24px; color: #1e293b;">
+                <p style="font-size: 16px;">Hola <strong>{request.user.first_name}</strong>,</p>
+                <p style="font-size: 15px; color: #475569;">Tu reserva ha sido confirmada exitosamente. Aquí tienes la información de tu viaje:</p>
+                
+                <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; padding: 16px; margin: 20px 0; border-radius: 8px;">
+                    <p style="margin: 0 0 8px 0; font-size: 14px; color: #0f172a;"><strong>Información del Conductor y Vehículo:</strong></p>
+                    <ul style="margin: 0; padding-left: 20px; color: #334155;">
+                        <li><strong>Conductor:</strong> {driver.first_name} {driver.last_name} ({driver.email})</li>
+                        <li><strong>Vehículo:</strong> {car.mark_car_v} {car.model_car_v} ({car.color_car_v})</li>
+                        <li><strong>Placas:</strong> {car.plates_car_v}</li>
+                        <li><strong>Asiento Asignado:</strong> Asiento #{requested_seat}</li>
+                        <li><strong>Precio:</strong> ${journey.cost_journey_d} MXN</li>
+                        <li><strong>📍 Punto de Encuentro:</strong> {pickup_name}</li>
+                    </ul>
+                </div>
+                
+                <p style="font-size: 14px; color: #64748b;">Recuerda estar presente unos minutos antes en el punto de encuentro acordado.</p>
+            </div>
+            <div style="background-color: #f8fafc; padding: 12px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                UniRide - Universidad de Colima
+            </div>
+        </div>
+        """
+        send_custom_email(passenger_subject, passenger_msg_text, [request.user.email], html_content=passenger_html)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error al enviar correos de reserva: {e}")
 
     return JsonResponse({
         'success': True,
@@ -357,6 +477,33 @@ def cancel_reservation_api(request, journey_id):
     return JsonResponse({
         'success': True,
         'message': 'Tu reserva ha sido cancelada exitosamente.',
+        'availableSeats': journey.available_seats_i
+    })
+
+@csrf_exempt
+@login_required(login_url='login_page')
+@require_http_methods(["POST"])
+def finish_ride_api(request, journey_id):
+    """ API backend para que el conductor finalice un viaje activo """
+    journey = Journey.objects.filter(
+        pk=journey_id,
+        is_active_b=True
+    ).select_related('id_user_car_journey_i__id_user_car_i').first()
+
+    if not journey:
+        return JsonResponse({'success': False, 'message': 'No se encontró el viaje activo o ya ha finalizado.'}, status=404)
+
+    driver = journey.id_user_car_journey_i.id_user_car_i
+    if driver.id != request.user.id:
+        return JsonResponse({'success': False, 'message': 'Solo el conductor del viaje puede finalizarlo.'}, status=403)
+
+    journey.status_v = 'finished'
+    journey.is_active_b = False
+    journey.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': '¡El viaje ha finalizado exitosamente!',
         'availableSeats': journey.available_seats_i
     })
 
@@ -413,12 +560,6 @@ def update_ride_location_api(request, journey_id):
         except (ValueError, TypeError):
             pass
 
-    if 'origin_lat' in data and 'origin_lng' in data:
-        origin.latitude_d = float(data['origin_lat'])
-        origin.longitude_d = float(data['origin_lng'])
-        origin.save()
-        updated = True
-
     if 'dest_lat' in data and 'dest_lng' in data:
         dest.latitude_d = float(data['dest_lat'])
         dest.longitude_d = float(data['dest_lng'])
@@ -469,11 +610,12 @@ def register_car_view(request):
             if uploaded_file:
                 content_type = uploaded_file.content_type or 'image/png'
                 file_bytes = uploaded_file.read()
-                uploaded_file.seek(0)
                 base64_encoded = base64.b64encode(file_bytes).decode('utf-8')
                 car.lic_user_car_base64 = f"data:{content_type};base64,{base64_encoded}"
+                car.lic_user_car_v = None
             elif request.POST.get('lic_user_car_base64'):
                 car.lic_user_car_base64 = request.POST.get('lic_user_car_base64')
+                car.lic_user_car_v = None
 
             car.save()
             form.save_m2m()
@@ -492,4 +634,14 @@ def register_car_view(request):
     else:
         return redirect('profile')
 
-
+def finish_journey_api(request, journey_id):
+    if request.method == 'POST':
+        try:
+            journey = Journey.objects.get(pk=journey_id, id_user_car_journey_i=request.user)
+            journey.status_v = 'Finalizado'
+            journey.is_active_b = False
+            journey.save()
+            return JsonResponse({'success': True, 'message': 'Viaje finalizado exitosamente'})
+        except Journey.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Viaje no encontrado'})
+    return JsonResponse({'success': False, 'message': 'Método no permitido'})

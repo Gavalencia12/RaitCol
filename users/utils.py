@@ -8,10 +8,10 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-def send_custom_email(subject, message, recipient_list, from_email=None):
+def send_custom_email(subject, message, recipient_list, from_email=None, html_content=None):
     """
     Envía correo utilizando HTTP API de Brevo o Resend (para omitir bloqueos SMTP de Render/nube)
-    o fallback a Django SMTP send_mail.
+    o fallback a Django SMTP send_mail. Soporta texto plano y HTML.
     """
     if from_email is None:
         from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', '') or os.getenv('EMAIL_HOST_USER', '') or 'raitcol41@gmail.com'
@@ -33,6 +33,9 @@ def send_custom_email(subject, message, recipient_list, from_email=None):
                     "subject": subject,
                     "textContent": message
                 }
+                if html_content:
+                    payload["htmlContent"] = html_content
+
                 req = urllib.request.Request(
                     url,
                     data=json.dumps(payload).encode('utf-8'),
@@ -60,6 +63,9 @@ def send_custom_email(subject, message, recipient_list, from_email=None):
                 "subject": subject,
                 "text": message
             }
+            if html_content:
+                payload["html"] = html_content
+
             req = urllib.request.Request(
                 url,
                 data=json.dumps(payload).encode('utf-8'),
@@ -82,6 +88,7 @@ def send_custom_email(subject, message, recipient_list, from_email=None):
         message=message,
         from_email=from_email,
         recipient_list=recipient_list,
+        html_message=html_content,
         fail_silently=False
     )
     return True

@@ -65,6 +65,9 @@ function initLiveModalControls() {
   const btnCancelAction = document.getElementById('btnCancelReservationAction');
   if (btnCancelAction) btnCancelAction.addEventListener('click', handleCancelAction);
 
+  const btnFinishRideAction = document.getElementById('btnFinishRideAction');
+  if (btnFinishRideAction) btnFinishRideAction.addEventListener('click', handleFinishRide);
+
   const btnCenterOrigin = document.getElementById('btnCenterOnOrigin');
   if (btnCenterOrigin) {
     btnCenterOrigin.addEventListener('click', () => {
@@ -92,7 +95,15 @@ async function handleReserveAction() {
   }
 
   try {
-    const payload = {};
+    const pickupLat = document.getElementById('inputPickupLat')?.value || null;
+    const pickupLng = document.getElementById('inputPickupLng')?.value || null;
+    const pickupName = document.getElementById('inputPickupPointName')?.value.trim() || 'Punto de encuentro asignado';
+
+    const payload = {
+      pickup_lat: pickupLat,
+      pickup_lng: pickupLng,
+      pickup_name: pickupName
+    };
     if (currentSelectedSeat) payload.seat_number = currentSelectedSeat;
 
     const resp = await fetch(`/api/journey/${currentRideData.id}/reserve/`, {
@@ -200,6 +211,61 @@ async function handleCancelAction() {
     }
   }
 }
+
+// Finalizar viaje
+async function handleFinishRide() {
+  if (!currentRideData.id) return;
+  const btn = document.getElementById('btnFinishRideAction');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalizando viaje...';
+  }
+
+  try {
+    const resp = await fetch(`/api/journey/${currentRideData.id}/finish-ride/`, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await resp.json();
+
+    if (data.success) {
+      alert(data.message || '¡El viaje ha sido finalizado con éxito!');
+      if (typeof closeLiveRideModal === 'function') {
+        closeLiveRideModal();
+      }
+
+      // Remover o desvanecer la tarjeta del viaje en el feed principal
+      const rideCard = document.querySelector(`.ride-card button[onclick*="${currentRideData.id}"]`)?.closest('.ride-card');
+      if (rideCard) {
+        rideCard.style.transition = 'all 0.3s ease';
+        rideCard.style.opacity = '0';
+        rideCard.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          rideCard.remove();
+          if (typeof updateProximityUIFilter === 'function') {
+            updateProximityUIFilter();
+          }
+        }, 300);
+      } else {
+        window.location.reload();
+      }
+    } else {
+      alert(data.message || 'No se pudo finalizar el viaje.');
+    }
+  } catch (err) {
+    console.error('Error al finalizar viaje:', err);
+    alert('Ocurrió un error al procesar la finalización del viaje.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-flag-checkered"></i> Finalizar este Viaje';
+    }
+  }
+}
+window.handleFinishRide = handleFinishRide;
 
 function updateModalRideDetails(rideData) {
   if (rideData.cost !== undefined) {
@@ -315,6 +381,10 @@ function updateFeedCardRoleUI(rideId, role, availableSeats, cost) {
       `;
     }
   }
+
+  if (typeof updateProximityUIFilter === 'function') {
+    updateProximityUIFilter();
+  }
 }
 
 function openLiveRideFromBtn(btn) {
@@ -333,4 +403,5 @@ function openLiveRideFromBtn(btn) {
 window.openLiveRideFromBtn = openLiveRideFromBtn;
 window.openLiveRideModal = openLiveRideModal;
 window.closeLiveRideModal = closeLiveRideModal;
+window.handleFinishRide = handleFinishRide;
 
