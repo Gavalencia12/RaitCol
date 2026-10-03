@@ -518,7 +518,7 @@ body::before {
   margin: 30px auto;
   border-radius: var(--radius-lg);
   padding: 24px;
-  max-height: 90vh;
+  max-height: 94%;
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
   border: none;
@@ -665,4 +665,202 @@ body::before {
   background: var(--color-primary);
   color: #ffffff;
   border-color: var(--color-primary);
+}
+
+/* Barra de Filtro por Proximidad Inteligente */
+.proximity-filter-bar {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 20px;
+  margin-top: 18px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.proximity-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-detect-passenger-gps {
+  background: #f1f5f9;
+  color: var(--color-text-main);
+  border: 1.5px solid var(--color-border-dark);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-detect-passenger-gps:hover {
+  background: #e2e8f0;
+  border-color: var(--color-primary);
+}
+
+.proximity-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-main);
+  cursor: pointer;
+  user-select: none;
+}
+
+.proximity-radius-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-dark);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-main);
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.proximity-counter-text {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Badges de Proximidad Live en las Tarjetas */
+.badge-proximity-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.badge-prox-matched {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.badge-prox-out {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+/* Botón Desplegable e Interfaz Compacta de Filtros */
+.btn-filter-dropdown-toggle {
+  background: #ffffff;
+  color: var(--color-text-main);
+  border: 1.5px solid var(--color-border-dark);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.btn-filter-dropdown-toggle:hover,
+.btn-filter-dropdown-toggle.active {
+  background: #f0fdf4;
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.badge-filter-count {
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 12px;
+  margin-left: 2px;
+}
+
+.filter-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 95;
+  margin-top: 8px;
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-lg);
+  min-width: 320px;
+  max-width: 520px;
+  width: max-content;
+  animation: fadeInDown 0.18s ease-out;
+}
+
+.filter-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.btn-clear-filters {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.btn-clear-filters:hover {
+  background: #fef2f2;
+}
+
+.filter-dropdown-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 576px) {
+  .filter-dropdown-menu {
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: 100%;
+  }
+  .filter-dropdown-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }

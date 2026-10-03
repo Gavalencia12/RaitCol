@@ -209,6 +209,12 @@ function addCustomMapboxMarkers(map) {
   if (originMarkerInstance) originMarkerInstance.remove();
   if (destinationMarkerInstance) destinationMarkerInstance.remove();
   if (liveDriverMarker) liveDriverMarker.remove();
+  if (pickupMarkerInstance) pickupMarkerInstance.remove();
+
+  if (Array.isArray(passengerPickupMarkers)) {
+    passengerPickupMarkers.forEach(m => m?.remove?.());
+  }
+  passengerPickupMarkers = [];
 
   const elOrigin = document.createElement('div');
   elOrigin.className = 'custom-map-pin origin-pin';
@@ -238,6 +244,100 @@ function addCustomMapboxMarkers(map) {
     </div>
   `;
   liveDriverMarker = new mapboxgl.Marker(elCar).setLngLat([driverLng, driverLat]).addTo(map);
+
+  // 1. Si es visitante (va a reservar), agregar Marcador de Punto de Encuentro Arrastrable
+  const isVisitor = !currentRideData.isDriver && !currentRideData.isPassenger;
+  if (isVisitor) {
+    setupDraggablePickupMarker(map, originLat, originLng);
+  }
+
+  // 2. Renderizar pines de abordaje de pasajeros confirmados en el mapa
+  if (Array.isArray(currentRideData.seats)) {
+    currentRideData.seats.forEach(seat => {
+      if (seat.isTaken && seat.pickupLat && seat.pickupLng) {
+        const pLat = parseCoord(seat.pickupLat, null);
+        const pLng = parseCoord(seat.pickupLng, null);
+        if (pLat !== null && pLng !== null) {
+          const elPass = document.createElement('div');
+          elPass.className = 'custom-map-pin passenger-pickup-pin';
+          elPass.innerHTML = `
+            <div style="background:#0284c7; color:#ffffff; padding:4px 10px; border-radius:14px; font-size:11px; font-weight:bold; box-shadow:0 2px 8px rgba(0,0,0,0.25); display:flex; align-items:center; gap:6px;" title="Punto de abordaje: ${seat.passengerName}">
+              <i class="fas fa-street-view"></i> ${seat.passengerName}
+            </div>
+          `;
+          const passMarker = new mapboxgl.Marker(elPass).setLngLat([pLng, pLat]).addTo(map);
+          passengerPickupMarkers.push(passMarker);
+        }
+      }
+    });
+  }
+}
+
+function setupDraggablePickupMarker(map, defaultLat, defaultLng) {
+  if (!map || typeof mapboxgl === 'undefined') return;
+
+  const latInput = document.getElementById('inputPickupLat');
+  const lngInput = document.getElementById('inputPickupLng');
+  const nameInput = document.getElementById('inputPickupPointName');
+
+  let initLat = defaultLat;
+  let initLng = defaultLng;
+
+  if (latInput) latInput.value = initLat;
+  if (lngInput) lngInput.value = initLng;
+
+  const elPickup = document.createElement('div');
+  elPickup.className = 'custom-map-pin pickup-draggable-pin';
+  elPickup.innerHTML = `
+    <div style="background: linear-gradient(135deg, #00b865 0%, #10b981 100%); color:#ffffff; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:800; box-shadow:0 4px 14px rgba(0,184,101,0.45); border:2.5px solid #ffffff; cursor:grab; display:flex; align-items:center; gap:6px;">
+      <i class="fas fa-street-view" style="font-size:14px;"></i> 
+    </div>
+  `;
+
+  pickupMarkerInstance = new mapboxgl.Marker({ element: elPickup, draggable: true })
+    .setLngLat([initLng, initLat])
+    .addTo(map);
+
+  const reverseGeocodePickup = (lat, lng) => {
+    let token = '';
+    const tokenElement = document.getElementById('mapbox-token-data');
+    if (tokenElement && tokenElement.textContent) {
+      try { token = JSON.parse(tokenElement.textContent); } catch (e) { }
+    }
+    if (!token) return;
+
+    const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng.toFixed(6)},${lat.toFixed(6)}.json?access_token=${token}&language=es&types=address,poi,neighborhood,locality`;
+    fetch(geocodeUrl)
+      .then(res => res.json())
+      .then(data => {
+        if (data.features && data.features.length > 0) {
+          const placeName = data.features[0].place_name_es || data.features[0].place_name;
+          if (nameInput) nameInput.value = placeName;
+        }
+      })
+      .catch(err => console.warn('Error al reverse-geocodificar punto de encuentro:', err));
+  };
+
+  const onPickupPositionUpdate = (lngLat) => {
+    if (latInput) latInput.value = lngLat.lat;
+    if (lngInput) lngInput.value = lngLat.lng;
+    reverseGeocodePickup(lngLat.lat, lngLat.lng);
+  };
+
+  pickupMarkerInstance.on('dragend', () => {
+    const lngLat = pickupMarkerInstance.getLngLat();
+    onPickupPositionUpdate(lngLat);
+  });
+
+  map.on('click', (e) => {
+    const isVisitor = !currentRideData.isDriver && !currentRideData.isPassenger;
+    if (isVisitor && pickupMarkerInstance) {
+      pickupMarkerInstance.setLngLat(e.lngLat);
+      onPickupPositionUpdate(e.lngLat);
+    }
+  });
+
+  reverseGeocodePickup(initLat, initLng);
 }
 
 function renderFallbackVectorMap(container) {
