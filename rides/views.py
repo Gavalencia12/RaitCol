@@ -242,9 +242,9 @@ def journey_detail_api(request, journey_id):
                 'passengerId': passenger.id,
                 'passengerName': p_name,
                 'passengerAccount': getattr(passenger, 'no_cuenta_v', ''),
-                'pickupName': res.pickup_name_v or 'Punto de encuentro asignado',
-                'pickupLat': float(res.pickup_lat) if res.pickup_lat else None,
-                'pickupLng': float(res.pickup_lng) if res.pickup_lng else None,
+                'pickupName': getattr(res, 'pickup_name_v', None) or 'Punto de encuentro asignado',
+                'pickupLat': float(res.pickup_lat) if getattr(res, 'pickup_lat', None) else None,
+                'pickupLng': float(res.pickup_lng) if getattr(res, 'pickup_lng', None) else None,
                 'isCurrentUser': (passenger.id == request.user.id)
             })
         else:
