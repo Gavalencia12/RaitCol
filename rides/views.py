@@ -235,13 +235,13 @@ def journey_detail_api(request, journey_id):
 
         if res:
             passenger = res.id_user_passenger_reservation_i
-            p_name = f"{passenger.first_name} {passenger.last_name}".strip() or passenger.username
+            p_name = f"{passenger.first_name} {passenger.last_name}".strip() or passenger.username or passenger.email
             seats_list.append({
                 'seatNumber': s,
                 'isTaken': True,
                 'passengerId': passenger.id,
                 'passengerName': p_name,
-                'passengerAccount': getattr(passenger, 'no_cuenta_v', ''),
+                'passengerAccount': getattr(passenger, 'no_cuenta_v', '') or '',
                 'pickupName': getattr(res, 'pickup_name_v', None) or 'Punto de encuentro asignado',
                 'pickupLat': float(res.pickup_lat) if getattr(res, 'pickup_lat', None) else None,
                 'pickupLng': float(res.pickup_lng) if getattr(res, 'pickup_lng', None) else None,

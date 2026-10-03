@@ -140,7 +140,11 @@ async function handleReserveAction() {
           const freshData = await freshResp.json();
           if (freshData.seats) {
             currentRideData.seats = freshData.seats;
-            renderSeatsGrid(currentRideData.seats, 'passenger');
+            const currentRole = currentRideData.isDriver ? 'driver' : (currentRideData.isPassenger ? 'passenger' : 'visitor');
+            renderSeatsGrid(currentRideData.seats, currentRole);
+            if (currentRole === 'driver' && typeof renderDriverPassengersList === 'function') {
+              renderDriverPassengersList(currentRideData.seats);
+            }
           }
         }
       } catch (e) { }
