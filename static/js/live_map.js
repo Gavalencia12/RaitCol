@@ -287,6 +287,11 @@ function updateModalRideDetails(rideData) {
     setElementText('driverCardInitials', initials);
   }
 
+  const timeElem = document.getElementById('liveTripDepartureTime');
+  if (timeElem) {
+    timeElem.textContent = rideData.departureTime || '--:--';
+  }
+
   if (rideData.carModel || rideData.carPlates) {
     const carInfo = [rideData.carModel, rideData.carColor, rideData.carPlates ? `(${rideData.carPlates})` : ''].filter(Boolean).join(' • ');
     setElementText('liveModalCarText', carInfo);
