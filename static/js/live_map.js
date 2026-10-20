@@ -65,9 +65,6 @@ function initLiveModalControls() {
   const btnCancelAction = document.getElementById('btnCancelReservationAction');
   if (btnCancelAction) btnCancelAction.addEventListener('click', handleCancelAction);
 
-  const btnFinishRideAction = document.getElementById('btnFinishRideAction');
-  if (btnFinishRideAction) btnFinishRideAction.addEventListener('click', handleFinishRide);
-
   const btnCenterOrigin = document.getElementById('btnCenterOnOrigin');
   if (btnCenterOrigin) {
     btnCenterOrigin.addEventListener('click', () => {
@@ -216,13 +213,32 @@ async function handleCancelAction() {
   }
 }
 
+//confirmar finalizacion de viaje
+function confirmFinishRide() {
+  const modal = document.getElementById('modalConfirmation');
+  if (modal) {
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
+  }
+}
+
+function closeConfirmFinishModal() {
+  const modal = document.getElementById('modalConfirmation');
+  if (modal) {
+    modal.classList.remove('active');
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 250);
+  }
+}
+
 // Finalizar viaje
 async function handleFinishRide() {
   if (!currentRideData.id) return;
-  const btn = document.getElementById('btnFinishRideAction');
+  const btn = document.getElementById('btnModalFinishConfirm') || document.getElementById('btnFinishRideAction');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalizando viaje...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalizando...';
   }
 
   try {
@@ -236,7 +252,7 @@ async function handleFinishRide() {
     const data = await resp.json();
 
     if (data.success) {
-      alert(data.message || '¡El viaje ha sido finalizado con éxito!');
+      closeConfirmFinishModal();
       if (typeof closeLiveRideModal === 'function') {
         closeLiveRideModal();
       }
@@ -265,10 +281,12 @@ async function handleFinishRide() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-flag-checkered"></i> Finalizar este Viaje';
+      btn.innerHTML = '<i class="fas fa-flag-checkered"></i> Sí, finalizar';
     }
   }
 }
+window.confirmFinishRide = confirmFinishRide;
+window.closeConfirmFinishModal = closeConfirmFinishModal;
 window.handleFinishRide = handleFinishRide;
 
 function updateModalRideDetails(rideData) {

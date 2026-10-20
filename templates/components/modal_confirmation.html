@@ -1,0 +1,21 @@
+<!-- Modal Emergente de Confirmación -->
+<div class="confirm-modal-backdrop" id="modalConfirmation" style="display: none;">
+  <div class="confirm-modal-box">
+    <div class="confirm-modal-icon">
+      <i class="fas fa-triangle-exclamation"></i>
+    </div>
+    <h3 class="confirm-modal-title">¿Finalizar viaje?</h3>
+    <p class="confirm-modal-desc">
+      Esta acción marcará el viaje como completado. Los pasajeros ya no podrán ver tu ruta ni el seguimiento en vivo.
+    </p>
+
+    <div class="confirm-modal-actions">
+      <button type="button" class="btn-confirm-cancel" onclick="closeConfirmFinishModal()">
+        Volver
+      </button>
+      <button type="button" class="btn-confirm-accept" id="btnModalFinishConfirm" onclick="handleFinishRide()">
+        <i class="fas fa-flag-checkered"></i> Sí, finalizar
+      </button>
+    </div>
+  </div>
+</div>

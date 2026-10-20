@@ -341,3 +341,114 @@ a:hover {
 
 
 
+/* Backdrop semitransparente con desenfoque */
+.confirm-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999; /* Por encima del modal principal */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.confirm-modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Tarjeta centrada emergente */
+.confirm-modal-box {
+  background: #ffffff;
+  border-radius: 18px;
+  width: 90%;
+  max-width: 380px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+  transform: scale(0.92);
+  transition: transform 0.25s ease;
+}
+
+.confirm-modal-backdrop.active .confirm-modal-box {
+  transform: scale(1);
+}
+
+/* Icono de advertencia */
+.confirm-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #ef4444;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+}
+
+.confirm-modal-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+}
+
+.confirm-modal-desc {
+  font-size: 13.5px;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0 0 22px 0;
+}
+
+/* Botones de acción */
+.confirm-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-confirm-cancel {
+  flex: 1;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-confirm-cancel:hover {
+  background: #e2e8f0;
+}
+
+.btn-confirm-accept {
+  flex: 1.2;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.btn-confirm-accept:hover {
+  background: #dc2626;
+}
