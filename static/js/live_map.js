@@ -301,8 +301,18 @@ function updateModalRideDetails(rideData) {
     const initials = rideData.driverName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '--';
     setElementText('liveModalDriverName', rideData.driverName);
     setElementText('driverCardName', rideData.driverName);
-    setElementText('liveModalDriverAvatar', initials);
-    setElementText('driverCardInitials', initials);
+
+    const modalAvatar = document.getElementById('liveModalDriverAvatar');
+    const cardAvatar = document.getElementById('driverCardInitials');
+
+    if (rideData.driverImage) {
+      const imgHTML = `<img src="${rideData.driverImage}" alt="Conductor" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+      if (modalAvatar) modalAvatar.innerHTML = imgHTML;
+      if (cardAvatar) cardAvatar.innerHTML = imgHTML;
+    } else {
+      if (modalAvatar) modalAvatar.textContent = initials;
+      if (cardAvatar) cardAvatar.textContent = initials;
+    }
   }
 
   const timeElem = document.getElementById('liveTripDepartureTime');

@@ -57,15 +57,10 @@ def profile_view(request):
         form = UserProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             user = form.save(commit=False)
-            uploaded_file = request.FILES.get('credential_udc_img')
-            if uploaded_file:
-                content_type = uploaded_file.content_type or 'image/png'
-                file_bytes = uploaded_file.read()
-                uploaded_file.seek(0)
-                base64_encoded = base64.b64encode(file_bytes).decode('utf-8')
-                user.credential_udc_base64 = f"data:{content_type};base64,{base64_encoded}"
-            elif request.POST.get('credential_udc_base64'):
+            if request.POST.get('credential_udc_base64'):
                 user.credential_udc_base64 = request.POST.get('credential_udc_base64')
+            if request.POST.get('user_udc_img'):
+                user.user_udc_img = request.POST.get('user_udc_img')
             user.save()
             form.save_m2m()
             messages.success(request, "¡Tu perfil ha sido actualizado correctamente!")
@@ -224,6 +219,7 @@ def register_user_api(request):
     no_cuenta_v = data.get('no_cuenta_v')
     password = data.get('password')
     credential_udc_base64 = data.get('credential_udc_base64')
+    user_udc_img = data.get('user_udc_img')
 
     if not all([first_name, last_name, username, email, no_cuenta_v, password]):
         return JsonResponse({'message': 'Todos los campos son obligatorios', 'success': False}, status=400)
@@ -257,6 +253,7 @@ def register_user_api(request):
             last_name=last_name,
             no_cuenta_v=no_cuenta_v,
             credential_udc_base64=credential_udc_base64,
+            user_udc_img=user_udc_img,
             is_active=False
         )
     except Exception as e:
@@ -331,6 +328,9 @@ def verify_code_api(request):
 
     if verification.code != code:
         return JsonResponse({'message': 'El código de verificación es incorrecto', 'success': False}, status=400)
+    
+    if not user.user_udc_img:
+        return JsonResponse({'message': 'Tu foto no ha sido verificada, por favor sube una.', 'success': False}, status=400)
 
     # Activar usuario
     user.is_active = True
@@ -347,7 +347,8 @@ def verify_code_api(request):
             'email': user.email,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'no_cuenta_v': user.no_cuenta_v
+            'no_cuenta_v': user.no_cuenta_v,
+            'user_udc_img': user.user_udc_img
         }
     }, status=200)
 

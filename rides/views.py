@@ -313,6 +313,7 @@ def journey_detail_api(request, journey_id):
         'currentUserId': request.user.id,
         'driverName': f"{driver.first_name} {driver.last_name} ({driver.no_cuenta_v})",
         'driverEmail': driver.email,
+        'driverImage': getattr(driver, 'credential_udc_base64', None),
         'carModel': f"{car.mark_car_v} {car.model_car_v}",
         'carMark': car.mark_car_v,
         'carColor': car.color_car_v,
