@@ -8,6 +8,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UniRide</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <!-- Iconos de FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
@@ -21,41 +23,42 @@
       <div class="register-grid">
         <div class="input-field">
           <input type="text" id="first_name" required>
-          <label>Nombre</label>
+          <label><i class="fa-solid fa-user"></i> Nombre</label>
         </div>
         <div class="input-field">
           <input type="text" id="last_name" required>
-          <label>Apellido</label>
+          <label><i class="fa-solid fa-user"></i> Apellido</label>
         </div>
         <div class="input-field">
           <input type="text" id="username" required>
-          <label>Usuario</label>
+          <label><i class="fa-solid fa-at"></i> Usuario</label>
         </div>
         <div class="input-field">
-          <input type="text" id="no_cuenta_v" required pattern="\d+"
+          <input type="text" id="no_cuenta_v" maxlength="8" required pattern="\d+" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
             title="El número de cuenta solo debe contener dígitos">
-          <label>Nº Cuenta</label>
+          <label> <i class="fa-solid fa-id-card"></i> Nº Cuenta</label>
         </div>
       </div>
 
       <div class="input-field">
         <input type="email" id="email" required>
-        <label>Correo institucional (@ucol.mx)</label>
+        <label><i class="fa-solid fa-envelope"></i> Correo institucional (@ucol.mx)</label>
       </div>
 
       <div class="input-field">
         <input type="password" id="password" required>
-        <label>Contraseña</label>
+        <label><i class="fa-solid fa-key"></i> Contraseña</label>
       </div>
 
       <div class="input-field file-input-field" style="margin-top: 15px; margin-bottom: 20px;">
-        <label for="credential_udc_file" class="static-label" style="display: block; font-size: 12px; color: rgba(255, 255, 255, 0.8); margin-bottom: 6px;">
-          Credencial UDEC (Foto/Imagen)
-        </label>
+        
         <input type="file" id="credential_udc_file" accept="image/*" style="width: 100%; color: #fff; font-size: 13px;">
         <div id="registerCredentialPreviewContainer" style="display: none; margin-top: 10px; text-align: center;">
           <img id="registerCredentialPreviewImg" src="" alt="Vista previa credencial" style="max-height: 110px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.3); object-fit: cover;">
         </div>
+        <label for="credential_udc_file" class="static-label" style="display: block; font-size: 16px; color: black; margin-bottom: 6px;">
+          <i class="fa-solid fa-id-card"></i> Credencial UDEC (Foto/Imagen)
+        </label>
       </div>
 
       <button type="submit">Registrarse</button>
