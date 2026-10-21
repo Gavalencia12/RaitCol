@@ -16,8 +16,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, validators=[validate_ucol_email], db_column='email_user_v')
     is_active = models.BooleanField(default=True, db_column='is_active_b')
     no_cuenta_v = models.CharField(max_length=10, unique=True, db_column='no_cuenta_v')
-    user_udc_img = models.FileField(blank=True, db_column='user_udc_img')
-    credential_udc_base64 = models.FileField(null=True, blank=True, db_column='credential_udc_base64')
+    user_udc_img = models.TextField(blank=True, db_column='user_udc_img')
+    credential_udc_base64 = models.TextField(null=True, blank=True, db_column='credential_udc_base64')
     date_create_t = models.DateTimeField(auto_now_add=True, db_column='date_create_t')
     date_update_t = models.DateTimeField(auto_now=True, db_column='date_update_t')
 
