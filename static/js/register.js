@@ -17,10 +17,37 @@ document.addEventListener('DOMContentLoaded', () => {
   let registeredEmail = '';
   let countdownInterval = null;
   let credentialBase64 = null;
+  let userImgBase64 = null;
 
   const credentialFileInput = document.getElementById('credential_udc_file');
   const registerCredentialPreviewContainer = document.getElementById('registerCredentialPreviewContainer');
   const registerCredentialPreviewImg = document.getElementById('registerCredentialPreviewImg');
+
+  const userUdcFileInput = document.getElementById('user_udc_file');
+  const registerUserImgPreviewContainer = document.getElementById('registerUserImgPreviewContainer');
+  const registerUserImgPreview = document.getElementById('registerUserImgPreview');
+
+  if (userUdcFileInput) {
+    userUdcFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          userImgBase64 = event.target.result;
+          if (registerUserImgPreview && registerUserImgPreviewContainer) {
+            registerUserImgPreview.src = userImgBase64;
+            registerUserImgPreviewContainer.style.display = 'block';
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        userImgBase64 = null;
+        if (registerUserImgPreviewContainer) {
+          registerUserImgPreviewContainer.style.display = 'none';
+        }
+      }
+    });
+  }
 
   if (credentialFileInput) {
     credentialFileInput.addEventListener('change', (e) => {
@@ -169,7 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
           no_cuenta_v,
           email,
           password,
-          credential_udc_base64: credentialBase64
+          credential_udc_base64: credentialBase64,
+          user_udc_img: userImgBase64
         })
       });
 
