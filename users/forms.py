@@ -4,7 +4,7 @@ from .models import User
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'credential_udc_img']
+        fields = ['first_name', 'last_name', 'user_udc_img']
         widgets = {
             'first_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -18,9 +18,6 @@ class UserProfileForm(forms.ModelForm):
                 'placeholder': 'Tus apellidos',
                 'required': True
             }),
-            'credential_udc_img': forms.FileInput(attrs={
-                'class': 'form-control',
-                'id': 'credential_udc_img',
-                'accept': 'image/*,.pdf'
-            }),
+            'user_udc_img': forms.HiddenInput(attrs={
+                'id': 'user_udc_img_base64'}),
         }

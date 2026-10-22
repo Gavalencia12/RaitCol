@@ -218,7 +218,7 @@ function addCustomMapboxMarkers(map) {
 
   const elOrigin = document.createElement('div');
   elOrigin.className = 'custom-map-pin origin-pin';
-  elOrigin.innerHTML = `<span style="background:#00b865; color:white; padding:4px 10px; border-radius:14px; font-size:11px; font-weight:bold; box-shadow:0 2px 8px rgba(0,0,0,0.2);" title="Origen: ${originName}">📍 ${originName}</span>`;
+  elOrigin.innerHTML = `<span style="background:#00b865; color:white; padding:4px 10px; border-radius:14px; font-size:11px; font-weight:bold; box-shadow:0 2px 8px rgba(0,0,0,0.2);">📍 origen </span>`;
 
   originMarkerInstance = new mapboxgl.Marker({ element: elOrigin, draggable: false })
     .setLngLat([originLng, originLat])

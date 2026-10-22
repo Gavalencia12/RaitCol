@@ -4,7 +4,7 @@
     <!-- Encabezado del Modal -->
     <header class="live-ride-header">
       <div class="live-ride-header-left">
-        <div class="driver-avatar-circle" id="liveModalDriverAvatar">--</div>
+        <div class="driver-avatar-circle" id="liveModalDriverAvatar" style="overflow: hidden; padding: 0;">--</div>
         <div class="driver-title-info">
           <h3 id="liveModalDriverName">Conductor</h3>
           <p id="liveModalRouteTitle">
@@ -66,6 +66,16 @@
             </div>
             <div style="font-size: 13px; color: #475569;" id="visitorSeatsDisplay"><i class="fas fa-chair"
                 style="color: #00b865;"></i> 0 asientos libres disponibles</div>
+          </div>
+
+          <div class="waypoints-timeline" style="margin-top: 16px;">
+            <div class="timeline-step">
+              <div class="timeline-icon-check" id="liveOriginPin"><i class="fas fa-clock"></i></div>
+              <div class="timeline-step-info">
+                <h4 id="liveTripDepartureTime">00:00</h4>
+                <p id="liveTimelineOriginSub">Hora de salida</p>
+              </div>
+            </div>
           </div>
 
           <div class="seats-status-section"
@@ -162,7 +172,7 @@
             </div>
           </div>
 
-          <button class="btn-end-journey" type="button" id="btnFinishRideAction" onclick="handleFinishRide()"
+          <button class="btn-end-journey" type="button" id="btnFinishRideAction" onclick="confirmFinishRide()"
             style="width: 100%; padding: 11px; background: #ef4444; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer;">
             <i class="fas fa-flag-checkered"></i> Finalizar este Viaje
           </button>
@@ -202,7 +212,7 @@
         <!-- Ficha del Conductor -->
         <div class="driver-card-panel">
           <div class="driver-card-header">
-            <div class="driver-card-avatar" id="driverCardInitials">--</div>
+            <div class="driver-card-avatar" id="driverCardInitials" style="overflow: hidden; padding: 0;">--</div>
             <div class="driver-card-details">
               <h4 id="driverCardName">Conductor</h4>
               <!--<p><i class="fas fa-star" style="color: #f59e0b;"></i> 4.8 • Conductor verificado</p>-->

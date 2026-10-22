@@ -65,9 +65,6 @@ function initLiveModalControls() {
   const btnCancelAction = document.getElementById('btnCancelReservationAction');
   if (btnCancelAction) btnCancelAction.addEventListener('click', handleCancelAction);
 
-  const btnFinishRideAction = document.getElementById('btnFinishRideAction');
-  if (btnFinishRideAction) btnFinishRideAction.addEventListener('click', handleFinishRide);
-
   const btnCenterOrigin = document.getElementById('btnCenterOnOrigin');
   if (btnCenterOrigin) {
     btnCenterOrigin.addEventListener('click', () => {
@@ -216,13 +213,32 @@ async function handleCancelAction() {
   }
 }
 
+//confirmar finalizacion de viaje
+function confirmFinishRide() {
+  const modal = document.getElementById('modalConfirmation');
+  if (modal) {
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
+  }
+}
+
+function closeConfirmFinishModal() {
+  const modal = document.getElementById('modalConfirmation');
+  if (modal) {
+    modal.classList.remove('active');
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 250);
+  }
+}
+
 // Finalizar viaje
 async function handleFinishRide() {
   if (!currentRideData.id) return;
-  const btn = document.getElementById('btnFinishRideAction');
+  const btn = document.getElementById('btnModalFinishConfirm') || document.getElementById('btnFinishRideAction');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalizando viaje...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalizando...';
   }
 
   try {
@@ -236,7 +252,7 @@ async function handleFinishRide() {
     const data = await resp.json();
 
     if (data.success) {
-      alert(data.message || '¡El viaje ha sido finalizado con éxito!');
+      closeConfirmFinishModal();
       if (typeof closeLiveRideModal === 'function') {
         closeLiveRideModal();
       }
@@ -265,10 +281,12 @@ async function handleFinishRide() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-flag-checkered"></i> Finalizar este Viaje';
+      btn.innerHTML = '<i class="fas fa-flag-checkered"></i> Sí, finalizar';
     }
   }
 }
+window.confirmFinishRide = confirmFinishRide;
+window.closeConfirmFinishModal = closeConfirmFinishModal;
 window.handleFinishRide = handleFinishRide;
 
 function updateModalRideDetails(rideData) {
@@ -283,8 +301,23 @@ function updateModalRideDetails(rideData) {
     const initials = rideData.driverName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '--';
     setElementText('liveModalDriverName', rideData.driverName);
     setElementText('driverCardName', rideData.driverName);
-    setElementText('liveModalDriverAvatar', initials);
-    setElementText('driverCardInitials', initials);
+
+    const modalAvatar = document.getElementById('liveModalDriverAvatar');
+    const cardAvatar = document.getElementById('driverCardInitials');
+
+    if (rideData.driverImage) {
+      const imgHTML = `<img src="${rideData.driverImage}" alt="Conductor" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+      if (modalAvatar) modalAvatar.innerHTML = imgHTML;
+      if (cardAvatar) cardAvatar.innerHTML = imgHTML;
+    } else {
+      if (modalAvatar) modalAvatar.textContent = initials;
+      if (cardAvatar) cardAvatar.textContent = initials;
+    }
+  }
+
+  const timeElem = document.getElementById('liveTripDepartureTime');
+  if (timeElem) {
+    timeElem.textContent = rideData.departureTime || '--:--';
   }
 
   if (rideData.carModel || rideData.carPlates) {

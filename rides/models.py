@@ -70,6 +70,8 @@ class Journey(models.Model):
     cost_journey_d = models.DecimalField(max_digits=10, decimal_places=2, db_column='cost_journey_d')
     available_seats_i = models.IntegerField(db_column='available_seats_i')
     status_v = models.CharField(max_length=20, db_column='status_v')
+    date_journey_d = models.DateField(null=True, blank=True, db_column='date_journey_d')
+    time_journey_init_t = models.TimeField(null=True, blank=True, db_column='time_journey_t')
     date_create_t = models.DateTimeField(auto_now_add=True, db_column='date_create_t')
     date_update_t = models.DateTimeField(auto_now=True, db_column='date_update_t')
     is_active_b = models.BooleanField(default=True, db_column='is_active_b')

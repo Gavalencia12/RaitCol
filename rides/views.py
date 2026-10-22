@@ -1,4 +1,5 @@
 import base64
+from datetime import date, datetime, time as dtime
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
@@ -27,7 +28,8 @@ def home(request):
         origen_name = request.POST.get('origen', '').strip()
         destino_name = request.POST.get('destino', '').strip()
         horario = request.POST.get('horario', '').strip()
-        
+        fecha_str = request.POST.get('fecha', '').strip()
+
         try:
             asientos = int(request.POST.get('asientos', 3))
         except (ValueError, TypeError):
@@ -37,6 +39,34 @@ def home(request):
             precio = float(request.POST.get('precio', 25))
         except (ValueError, TypeError):
             precio = 25.0
+
+        # ── Validación 1: La fecha del viaje no puede ser en el pasado ─────────
+        fecha_viaje = None
+        if fecha_str:
+            try:
+                fecha_viaje = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+                if fecha_viaje < date.today():
+                    messages.error(request, "No puedes publicar un viaje en una fecha que ya pasó. Elige una fecha de hoy en adelante.")
+                    return redirect('home')
+            except ValueError:
+                messages.error(request, "El formato de fecha no es válido.")
+                return redirect('home')
+        else:
+            messages.error(request, "Debes indicar la fecha del viaje.")
+            return redirect('home')
+
+        # ── Validación 2: No puede haber 2 viajes activos a la misma fecha y hora ──
+        driver_car = user_cars.first()
+        viaje_duplicado = Journey.objects.filter(
+            id_user_car_journey_i__id_user_car_i=request.user,
+            is_active_b=True,
+            status_v='active',
+            date_journey_d=fecha_viaje,
+            id_address_journey_i__hour_init_t=horario if horario else None,
+        ).exists()
+        if viaje_duplicado:
+            messages.error(request, "Ya tienes un viaje activo publicado para esa misma fecha y hora. No puedes crear dos viajes iguales.")
+            return redirect('home')
 
         if not origen_name or not destino_name:
             messages.error(request, "Por favor proporciona un origen y destino válidos.")
@@ -79,7 +109,14 @@ def home(request):
             is_active_b=True
         )
 
-        driver_car = user_cars.first()
+        horario = request.POST.get('horario', '').strip()
+        hora_salida = None
+        if horario:
+            try:
+                hora_salida = datetime.strptime(horario, '%H:%M').time()
+            except ValueError:
+                hora_salida = None
+
         Journey.objects.create(
             id_user_car_journey_i=driver_car,
             id_route_journey_i=route,
@@ -87,6 +124,8 @@ def home(request):
             cost_journey_d=precio,
             available_seats_i=asientos,
             status_v='active',
+            time_journey_init_t=hora_salida,
+            date_journey_d=fecha_viaje,
             is_active_b=True
         )
 
@@ -274,6 +313,7 @@ def journey_detail_api(request, journey_id):
         'currentUserId': request.user.id,
         'driverName': f"{driver.first_name} {driver.last_name} ({driver.no_cuenta_v})",
         'driverEmail': driver.email,
+        'driverImage': getattr(driver, 'user_udc_img', None),
         'carModel': f"{car.mark_car_v} {car.model_car_v}",
         'carMark': car.mark_car_v,
         'carColor': car.color_car_v,
@@ -291,6 +331,8 @@ def journey_detail_api(request, journey_id):
         'destLng': float(dest.longitude_d),
         'driverLat': driver_lat,
         'driverLng': driver_lng,
+        'dateJourney': journey.date_journey_d.strftime('%d/%m/%y') if journey.date_journey_d else 'hoy',
+        'departureTime': journey.time_journey_init_t.strftime('%H:%M') if journey.time_journey_init_t else (origin.hour_init_t or 'Por definir')
     })
 
 @csrf_exempt

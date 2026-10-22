@@ -116,6 +116,21 @@
                 <div class="input-wrapper">
                   <i class="fas fa-calendar-day"></i>
                   <input class="form-control" id="fecha_pro" name="fecha" type="date" required />
+                  <script>
+                    (function() {
+                      const now = new Date();
+                      const year = now.getFullYear();
+                      const month = String(now.getMonth() + 1).padStart(2, '0');
+                      const day = String(now.getDate()).padStart(2, '0');
+                      const hoyString = `${year}-${month}-${day}`;
+                      
+                      const fechaInput = document.getElementById('fecha_pro');
+                      fechaInput.min = hoyString;
+                      if (!fechaInput.value) {
+                        fechaInput.value = hoyString;
+                      }
+                    })();
+                  </script>
                 </div>
               </div>
 
@@ -281,6 +296,13 @@
             <div class="driver-info-row">
               <i class="fas fa-id-card driver-icon" style="color: #00b865;"></i>
               <strong style="color: #1e293b;">{{ viaje.id_user_car_journey_i.id_user_car_i.first_name }} {{ viaje.id_user_car_journey_i.id_user_car_i.last_name }}</strong>
+
+              <div style="font-size: 12px; color: #475569; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                <span><i class="fas fa-calendar-day" style="color: #00b865;"></i> {{ viaje.date_journey_d|date:"d/m/Y" }}</span>
+                {% if viaje.time_journey_init_t %}
+                <span><i class="fas fa-clock" style="color: #00b865;"></i> {{ viaje.time_journey_init_t|time:"H:i" }}</span>
+                {% endif %}
+              </div>
             </div>
 
             <div class="vehicle-info-row">
@@ -318,8 +340,7 @@
           </div>
           <h3 style="font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">No hay viajes activos en
             este momento</h3>
-          <p style="font-size: 14px; color: #6b7280; max-width: 480px; margin: 0 auto;">Los viajes registrados y activos
-            en la base de datos aparecerán aquí automáticamente.</p>
+          <p style="font-size: 14px; color: #6b7280; max-width: 480px; margin: 0 auto;">Los viajes registrados y activos aparecerán aquí automáticamente.</p>
         </article>
         {% endfor %}
       </div>
@@ -327,6 +348,7 @@
   </main>
 
   {% include 'components/live_ride_modal.html' %}
+  {% include 'components/modals_confirmation.html' %}
 
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
 
