@@ -50,7 +50,8 @@
 }
 
 .segmented-btn:hover {
-  color: #111827;
+  color: #ffffff;
+  background-color: #000;
 }
 
 .segmented-btn.active {
