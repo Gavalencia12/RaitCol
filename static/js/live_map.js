@@ -369,15 +369,21 @@ function updateModalRideDetails(rideData) {
     setElementText('driverCardName', rideData.driverName);
 
     const modalAvatar = document.getElementById('liveModalDriverAvatar');
-    const cardAvatar = document.getElementById('driverCardInitials');
+    if (modalAvatar) {
+      if (rideData.driverImage) {
+        modalAvatar.innerHTML = `<img src="${rideData.driverImage}" alt="Conductor" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+      } else {
+        modalAvatar.textContent = initials;
+      }
+    }
 
-    if (rideData.driverImage) {
-      const imgHTML = `<img src="${rideData.driverImage}" alt="Conductor" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-      if (modalAvatar) modalAvatar.innerHTML = imgHTML;
-      if (cardAvatar) cardAvatar.innerHTML = imgHTML;
-    } else {
-      if (modalAvatar) modalAvatar.textContent = initials;
-      if (cardAvatar) cardAvatar.textContent = initials;
+    const cardAvatar = document.getElementById('driverCardInitials');
+    if (cardAvatar) {
+      if (rideData.carImage) {
+        cardAvatar.innerHTML = `<img src="${rideData.carImage}" alt="Auto" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+      } else {
+        cardAvatar.innerHTML = '<i class="fas fa-car" style="color: #64748b; font-size: 16px; margin-top: 12px;"></i>';
+      }
     }
   }
 
