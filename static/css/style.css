@@ -372,6 +372,13 @@ a:hover {
   z-index: -1 !important;
 }
 
+.form-car {
+  margin-bottom: 14px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 /* Backdrop semitransparente con desenfoque */
 .confirm-modal-backdrop {

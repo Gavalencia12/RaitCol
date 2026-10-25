@@ -8,4 +8,5 @@ urlpatterns = [
     path('api/journey/<int:journey_id>/reserve/', views.reserve_journey_api, name='reserve_journey_api'),
     path('api/journey/<int:journey_id>/cancel-reservation/', views.cancel_reservation_api, name='cancel_reservation_api'),
     path('api/journey/<int:journey_id>/finish-ride/', views.finish_ride_api, name='finish_ride_api'),
+    path('api/journeys/updates/', views.feed_updates_api, name='feed_updates_api'),
 ]

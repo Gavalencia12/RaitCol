@@ -56,7 +56,13 @@ def home(request):
             return redirect('home')
 
         # ── Validación 2: No puede haber 2 viajes activos a la misma fecha y hora ──
-        driver_car = user_cars.first()
+        car_id = request.POST.get('coche')
+        driver_car = user_cars.filter(id_car_i=car_id).first()
+        
+        if not driver_car:
+            messages.error(request, "Por favor selecciona un vehículo válido de tu lista.")
+            return redirect('home')
+            
         viaje_duplicado = Journey.objects.filter(
             id_user_car_journey_i__id_user_car_i=request.user,
             is_active_b=True,
@@ -421,12 +427,12 @@ def reserve_journey_api(request, journey_id):
         car = journey.id_user_car_journey_i
 
         # 1. Correo para el Conductor
-        driver_subject = "🚘 ¡Nuevo pasajero en tu viaje UniRide!"
+        driver_subject = "¡Nuevo pasajero en tu viaje UniRide!"
         driver_msg_text = f"El usuario {request.user.first_name} {request.user.last_name} ({request.user.email}) ha reservado el Asiento #{requested_seat}.\nPunto de encuentro: {pickup_name}"
         driver_html = f"""
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
             <div style="background-color: #15803d; color: white; padding: 20px; text-align: center;">
-                <h2 style="margin:0;">🚘 ¡Nuevo Pasajero en tu Viaje!</h2>
+                <h2 style="margin:0;">¡Nuevo Pasajero en tu Viaje!</h2>
                 <p style="margin: 5px 0 0 0; opacity: 0.9;">Sistema de Carpooling Universitario UniRide</p>
             </div>
             <div style="padding: 24px; color: #1e293b;">
@@ -452,12 +458,12 @@ def reserve_journey_api(request, journey_id):
         send_custom_email(driver_subject, driver_msg_text, [driver.email], html_content=driver_html)
 
         # 2. Correo para el Pasajero
-        passenger_subject = "✅ ¡Reserva Confirmada en UniRide!"
+        passenger_subject = "¡Reserva Confirmada en UniRide!"
         passenger_msg_text = f"Tu reserva del Asiento #{requested_seat} ha sido confirmada con el conductor {driver.first_name} {driver.last_name}.\nPunto de encuentro: {pickup_name}"
         passenger_html = f"""
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
             <div style="background-color: #00b865; color: white; padding: 20px; text-align: center;">
-                <h2 style="margin:0;">✅ ¡Reserva Confirmada!</h2>
+                <h2 style="margin:0;">¡Reserva Confirmada!</h2>
                 <p style="margin: 5px 0 0 0; opacity: 0.9;">Tu viaje universitario en UniRide</p>
             </div>
             <div style="padding: 24px; color: #1e293b;">
@@ -648,16 +654,11 @@ def register_car_view(request):
             car.id_user_car_i = request.user
             car.is_active_b = True
 
-            uploaded_file = request.FILES.get('lic_user_car_v')
-            if uploaded_file:
-                content_type = uploaded_file.content_type or 'image/png'
-                file_bytes = uploaded_file.read()
-                base64_encoded = base64.b64encode(file_bytes).decode('utf-8')
-                car.lic_user_car_base64 = f"data:{content_type};base64,{base64_encoded}"
-                car.lic_user_car_v = None
-            elif request.POST.get('lic_user_car_base64'):
+            if request.POST.get('lic_user_car_base64'):
                 car.lic_user_car_base64 = request.POST.get('lic_user_car_base64')
-                car.lic_user_car_v = None
+                
+            if request.POST.get('img_car_base64'):
+                car.img_car_v = request.POST.get('img_car_base64')
 
             car.save()
             form.save_m2m()
@@ -687,3 +688,28 @@ def finish_journey_api(request, journey_id):
         except Journey.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Viaje no encontrado'})
     return JsonResponse({'success': False, 'message': 'Método no permitido'})
+
+@login_required(login_url='login_page')
+@require_http_methods(["GET"])
+def feed_updates_api(request):
+    """ API Bulk para actualizar miles de tarjetas con 1 sola petición """
+    ids_param = request.GET.get('ids', '')
+    if not ids_param:
+        return JsonResponse({'updates': {}})
+
+    ride_ids = [int(x) for x in ids_param.split(',') if x.isdigit()]
+
+    journeys = Journey.objects.filter(
+        id_journey_i__in=ride_ids,
+        is_active_b=True,
+        status_v='active'
+    )
+
+    updates = {}
+    for j in journeys:
+        updates[j.id_journey_i] = {
+            'availableSeats': j.available_seats_i,
+            'cost': float(j.cost_journey_d)
+        }
+
+    return JsonResponse({'success': True, 'updates': updates})

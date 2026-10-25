@@ -163,6 +163,18 @@
               </div>
             </div>
 
+            <div class="form-group" style="margin-bottom: 14px;">
+              <div class="input-wrapper" style="position: relative;">
+                <i class="fa-solid fa-car" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #00b865; z-index: 10; pointer-events: none;"></i>
+                <select class="form-control" id="car" name="coche" required style="font-weight: 600; color: var(--color-text-main); padding-left: 36px;">
+                  <option value="" selected>Selecciona tu coche</option>
+                  {% for car in user_cars %}
+                  <option value="{{ car.id_car_i }}">{{ car.mark_car_v }} {{ car.model_car_v }} - {{ car.color_car_v }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            
             <div class="form-group" style="margin-bottom: 20px;">
               <label for="message">Mensaje / Notas adicionales</label>
               <textarea class="form-control" id="message" name="message"

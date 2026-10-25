@@ -6,25 +6,91 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+let globalPollInterval = null;
+
 function startGlobalFeedPolling() {
-  setInterval(() => {
-    if (document.hidden) return;
+  if (globalPollInterval) clearInterval(globalPollInterval);
+
+  globalPollInterval = setInterval(async () => {
+    const backdrop = document.getElementById('liveRideModalBackdrop');
+    if (document.hidden || (backdrop && backdrop.classList.contains('active'))) return;
+
     const rideBtns = document.querySelectorAll('button[data-ride-id]');
-    const processedIds = new Set();
-    rideBtns.forEach(async (btn) => {
-      const rideId = btn.dataset.rideId;
-      if (!rideId || processedIds.has(rideId)) return;
-      processedIds.add(rideId);
-      try {
-        const resp = await fetch(`/api/journey/${rideId}/`);
-        if (resp.ok) {
-          const data = await resp.json();
-          const role = data.isDriver ? 'driver' : (data.isPassenger ? 'passenger' : 'visitor');
-          updateFeedCardRoleUI(rideId, role, data.availableSeats, data.cost);
+    const uniqueIds = Array.from(new Set(Array.from(rideBtns).map(btn => btn.dataset.rideId).filter(Boolean)));
+
+    if (uniqueIds.length === 0) return;
+
+    try {
+      const resp = await fetch(`/api/journeys/updates/?ids=${uniqueIds.join(',')}`);
+      
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.success) {
+          uniqueIds.forEach(id => {
+            const update = data.updates[id];
+            
+            if (update) {
+              updateFeedCardSeats(id, update.availableSeats, update.cost);
+            } else {
+              removeRideCard(id);
+            }
+          });
         }
-      } catch (e) { }
-    });
-  }, 10000);
+      }
+    } catch (e) {
+      console.warn('Error en bulk polling:', e);
+    }
+  }, 10000); 
+}
+
+function updateFeedCardSeats(rideId, seats, cost) {
+  const btn = document.querySelector(`button[data-ride-id="${rideId}"]`);
+  if (!btn) return;
+  const card = btn.closest('.ride-card');
+  if (!card) return;
+
+  card.dataset.seats = seats;
+  if (cost !== undefined) card.dataset.cost = cost;
+
+  if (btn.classList.contains('btn-role-visitor')) {
+    const badgesContainer = card.querySelector('.ride-badges');
+    if (badgesContainer) {
+      badgesContainer.innerHTML = `
+        <span class="badge badge-success">${seats} Lugares libres</span>
+        <span class="badge badge-secondary">$${parseFloat(cost).toFixed(2)}</span>
+      `;
+    }
+  }
+}
+
+function removeRideCard(rideId) {
+  const btn = document.querySelector(`button[data-ride-id="${rideId}"]`);
+  if (!btn) return;
+  const card = btn.closest('.ride-card');
+  if (card) {
+    card.style.transition = 'all 0.5s ease';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      card.remove();
+      if (typeof updateProximityUIFilter === 'function') updateProximityUIFilter();
+    }, 500);
+  }
+}
+
+function removeRideCard(rideId) {
+  const btn = document.querySelector(`button[data-ride-id="${rideId}"]`);
+  if (!btn) return;
+  const card = btn.closest('.ride-card');
+  if (card) {
+    card.style.transition = 'all 0.5s ease';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      card.remove();
+      if (typeof updateProximityUIFilter === 'function') updateProximityUIFilter();
+    }, 500);
+  }
 }
 
 function switchModalRoleView(role = 'visitor') {
@@ -333,6 +399,12 @@ function updateModalRideDetails(rideData) {
 }
 
 function openLiveRideModal(rideData = {}) {
+
+  if (globalPollInterval) {
+    clearInterval(globalPollInterval);
+    globalPollInterval = null;
+  }
+
   currentRideData = Object.assign(currentRideData || {}, rideData);
   const backdrop = document.getElementById('liveRideModalBackdrop');
   if (!backdrop) return;
@@ -369,10 +441,11 @@ function closeLiveRideModal() {
 
   stopDriverGpsWatch();
   if (typeof stopDriverPolling === 'function') stopDriverPolling();
-  stopPassengerPolling();
+  if (typeof stopPassengerPolling === 'function') stopPassengerPolling();
 
   backdrop.classList.remove('active');
   document.body.style.overflow = '';
+  startGlobalFeedPolling();
 }
 
 function updateFeedCardRoleUI(rideId, role, availableSeats, cost) {

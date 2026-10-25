@@ -109,29 +109,44 @@ document.addEventListener('DOMContentLoaded', () => {
     setVal('car_id', 'new');
 
     const formHeader = $('formAddVehicleHeader');
-    if (formHeader) {
-      formHeader.innerHTML = '<i class="fa-solid fa-plus" style="color: #16a34a;"></i> Registrar Datos del Auto';
-    }
+    if (formHeader) formHeader.innerHTML = '<i class="fa-solid fa-plus" style="color: #16a34a;"></i> Registrar Datos del Auto';
 
-    ['type_car_v', 'mark_car_v', 'model_car_v', 'year_car_i', 'color_car_v', 'plates_car_v', 'seating_car_i', 'lic_user_car_v', 'lic_user_car_base64'].forEach(id => {
+    // Limpiar todos los campos
+    ['type_car_v', 'mark_car_v', 'model_car_v', 'year_car_i', 'color_car_v', 'plates_car_v', 'seating_car_i', 'lic_user_car_v', 'lic_user_car_base64', 'img_car_file', 'img_car_base64'].forEach(id => {
       const el = $(id);
       if (el) {
         if (el.type === 'file') el.value = '';
-        else if (el.type !== 'hidden' || id === 'lic_user_car_base64') el.value = '';
+        else if (el.type !== 'hidden' || id.includes('base64')) el.value = '';
       }
     });
 
+    const btnWithLicence = document.querySelector('.btn-edit-car[data-licence^="data:image"]');
     const licenceFileInput = $('lic_user_car_v');
-    if (licenceFileInput) licenceFileInput.setAttribute('required', 'required');
 
-    const badge = $('licenceStatusBadge');
-    if (badge) badge.innerHTML = '<i class="fa-solid fa-file-image"></i> Licencia Seleccionada';
+    if (btnWithLicence && btnWithLicence.dataset.licence) {
+      const existingLicence = btnWithLicence.dataset.licence;
+      setVal('lic_user_car_base64', existingLicence);
+      if ($('licencePreviewImg')) $('licencePreviewImg').src = existingLicence;
+      if (licenceFileInput) licenceFileInput.removeAttribute('required'); 
+      setDisplay('formGroupLicence', 'none'); 
+    } else {
+      setDisplay('formGroupLicence', 'flex');
+      setDisplay('licenceActionBar', 'none');
+      if (licenceFileInput) {
+        licenceFileInput.setAttribute('required', 'required');
+        licenceFileInput.parentElement.style.display = 'flex'; 
+      }
+    }
 
-    setDisplay('licenceActionBar', 'none');
+    const carFileInput = $('img_car_file');
+    if (carFileInput) {
+      carFileInput.setAttribute('required', 'required');
+      carFileInput.parentElement.style.display = 'flex'; 
+    }
+
+    setDisplay('carImgActionBar', 'none');
     setDisplay('licencePreviewCardContainer', 'none');
-    setDisplay('licenceHint', 'block');
-    const lblToggle = $('lblToggleLicence');
-    if (lblToggle) lblToggle.textContent = 'Ver Licencia';
+    setDisplay('carImgPreviewCardContainer', 'none');
 
     if (formAddVehicle) {
       formAddVehicle.scrollIntoView({ behavior: 'smooth' });
@@ -146,9 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setVal('car_id', btn.dataset.id);
 
       const formHeader = $('formAddVehicleHeader');
-      if (formHeader) {
-        formHeader.innerHTML = '<i class="fa-solid fa-pen" style="color: #16a34a;"></i> Actualizar Datos del Auto';
-      }
+      if (formHeader) formHeader.innerHTML = '<i class="fa-solid fa-pen" style="color: #16a34a;"></i> Actualizar Datos del Auto';
 
       setVal('type_car_v', btn.dataset.type);
       setVal('mark_car_v', btn.dataset.mark);
@@ -158,21 +171,42 @@ document.addEventListener('DOMContentLoaded', () => {
       setVal('plates_car_v', btn.dataset.plates);
       setVal('seating_car_i', btn.dataset.seating);
 
-      const licencePreviewImg = $('licencePreviewImg');
-      const licenceFileInput = $('lic_user_car_v');
+      setDisplay('formGroupLicence', 'block'); 
 
-      if (btn.dataset.licence) {
+      const licenceFileInput = $('lic_user_car_v');
+      if (btn.dataset.licence && btn.dataset.licence.trim() !== '') {
         setVal('lic_user_car_base64', btn.dataset.licence);
-        if (licencePreviewImg) licencePreviewImg.src = btn.dataset.licence;
-        const badge = $('licenceStatusBadge');
-        if (badge) badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Licencia Guardada';
-        setDisplay('licenceActionBar', 'block');
-        setDisplay('licenceHint', 'none');
-        if (licenceFileInput) licenceFileInput.removeAttribute('required');
+        if ($('licencePreviewImg')) $('licencePreviewImg').src = btn.dataset.licence;
+        
+        setDisplay('licenceActionBar', 'flex');
+        if (licenceFileInput) {
+          licenceFileInput.removeAttribute('required'); 
+          licenceFileInput.parentElement.style.display = 'none';
+        }
       } else {
         setDisplay('licenceActionBar', 'none');
-        setDisplay('licenceHint', 'block');
-        if (licenceFileInput) licenceFileInput.setAttribute('required', 'required');
+        if (licenceFileInput) {
+          licenceFileInput.setAttribute('required', 'required');
+          licenceFileInput.parentElement.style.display = 'block'; 
+        }
+      }
+
+      const carFileInput = $('img_car_file');
+      if (btn.dataset.img && btn.dataset.img.trim() !== '') {
+        setVal('img_car_base64', btn.dataset.img);
+        if ($('carPreviewImg')) $('carPreviewImg').src = btn.dataset.img;
+        
+        setDisplay('carImgActionBar', 'flex');
+        if (carFileInput) {
+          carFileInput.removeAttribute('required'); 
+          carFileInput.parentElement.style.display = 'none';
+        }
+      } else {
+        setDisplay('carImgActionBar', 'none');
+        if (carFileInput) {
+          carFileInput.setAttribute('required', 'required');
+          carFileInput.parentElement.style.display = 'flex'; 
+        }
       }
 
       if (formAddVehicle) formAddVehicle.scrollIntoView({ behavior: 'smooth' });
@@ -188,39 +222,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Credential Base64 Upload & Live Preview
-  on('credential_udc_img', 'change', (e) => {
+ on('img_car_file', 'change', (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64String = event.target.result;
-        setVal('credential_udc_base64', base64String);
-
-        const img = $('credentialPreviewImg');
-        if (img) img.src = base64String;
-
-        const badge = $('credentialStatusBadge');
-        if (badge) badge.innerHTML = '<i class="fa-solid fa-file-image"></i> Credencial Seleccionada';
-
-        setDisplay('credentialActionBar', 'block');
-        setDisplay('credentialHint', 'none');
-
-        const avatar = $('profileHeaderAvatar');
-        if (avatar) {
-          avatar.src = base64String;
-          avatar.classList.remove('d-none');
+        setVal('img_car_base64', base64String);
+        if ($('carPreviewImg')) $('carPreviewImg').src = base64String;
+        
+        const badge = $('carImgStatusBadge');
+        if (badge) badge.innerHTML = '<i class="fa-solid fa-file-image"></i> Foto de auto lista para guardar';
+        
+        setDisplay('carImgActionBar', 'flex');
+        
+        const carFileInput = $('img_car_file');
+        if (carFileInput) {
+            carFileInput.removeAttribute('required');
+            carFileInput.parentElement.style.display = 'none'; 
         }
-        const icon = $('profileHeaderIcon');
-        if (icon) icon.classList.add('d-none');
       };
       reader.readAsDataURL(file);
     }
   });
 
-  on('btnToggleCredentialCard', 'click', (e) => {
+  on('btnToggleCarImgCard', 'click', (e) => {
     e.preventDefault();
-    toggleVisibility('credentialPreviewCardContainer', 'lblToggleCredential', 'Ver Credencial', 'Ocultar Credencial');
+    toggleVisibility('carImgPreviewCardContainer', 'lblToggleCarImg', 'Ver Foto', 'Ocultar Foto');
   });
 
   // Driver Licence Base64 Upload & Live Preview
@@ -236,10 +264,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (img) img.src = base64String;
 
         const badge = $('licenceStatusBadge');
-        if (badge) badge.innerHTML = '<i class="fa-solid fa-file-image"></i> Licencia Seleccionada';
+        if (badge) badge.innerHTML = '<i class="fa-solid fa-file-image"></i> Licencia lista para guardar';
 
-        setDisplay('licenceActionBar', 'block');
-        setDisplay('licenceHint', 'none');
+        setDisplay('licenceActionBar', 'flex');
+        
+        // Ocultar el input y quitar required porque ya cargamos la foto
+        const licenceFileInput = $('lic_user_car_v');
+        if (licenceFileInput) {
+            licenceFileInput.removeAttribute('required');
+            licenceFileInput.parentElement.style.display = 'none'; 
+        }
       };
       reader.readAsDataURL(file);
     }

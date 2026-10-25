@@ -245,7 +245,8 @@
                     data-model="{{ car_item.model_car_v }}" data-year="{{ car_item.year_car_i }}"
                     data-color="{{ car_item.color_car_v }}" data-plates="{{ car_item.plates_car_v }}"
                     data-seating="{{ car_item.seating_car_i }}"
-                    data-licence="{{ car_item.get_licence_display|default:'' }}" style="font-size: 13px;">
+                    data-licence="{{ car_item.get_licence_display|default:'' }}"
+                    data-img="{{ car_item.img_car_v|default:'' }}" style="font-size: 13px;">
                     <i class="fa-solid fa-pen-to-square"></i> Editar Datos
                   </button>
                 </div>
@@ -349,33 +350,64 @@
                       value="{{ car.seating_car_i|default:'' }}" required placeholder="Ej. 4">
                   </div>
                 </div>
-                <div class="form-group">
+               <div class="form-group" id="formGroupLicence">
                   <label for="lic_user_car_v"><i class="fa-solid fa-id-card"></i> Licencia de Conducir (Foto)</label>
+                  
                   <div class="input-wrapper">
                     <i class="fa-solid fa-file-image"></i>
-                    <input type="file" id="lic_user_car_v" name="lic_user_car_v" class="form-control" accept="image/*"
-                      {% if not car or not car.get_licence_display %}required{% endif %}>
-                    <input type="hidden" id="lic_user_car_base64" name="lic_user_car_base64"
-                      value="{{ car.lic_user_car_base64|default:'' }}">
+                    <input type="file" id="lic_user_car_v" class="form-control" accept="image/*" {% if not car or not car.get_licence_display %}required{% endif %} style="padding-left: 40px;">
+                    <input type="hidden" id="lic_user_car_base64" name="lic_user_car_base64" value="{{ car.get_licence_display|default:'' }}">
                   </div>
 
-                  <div id="licenceActionBar" class="{% if not car or not car.get_licence_display %}d-none{% endif %}"
-                    style="margin-top: 8px;">
-                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                      <span class="credential-status-badge" id="licenceStatusBadge">
-                        {% if car and car.get_licence_display %}
-                        <i class="fa-solid fa-circle-check"></i> Licencia Guardada
-                        {% else %}
-                        <i class="fa-solid fa-file-image"></i> Licencia Seleccionada
-                        {% endif %}
-                      </span>
-                      <button type="button" class="btn-doc-preview" id="btnToggleLicenceCard">
-                        <i class="fa-solid fa-eye"></i> <span id="lblToggleLicence">Ver Licencia</span>
-                      </button>
+                  <div id="licenceActionBar" class="{% if not car or not car.get_licence_display %}d-none{% endif %}" style="display: flex; align-items: center; justify-content: space-between; border: 1px solid #d1d5db; border-radius: 8px; padding: 7px 12px; background-color: #f8fafc;">
+                    <span class="credential-status-badge" id="licenceStatusBadge" style="color: #16a34a; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                      <i class="fa-solid fa-circle-check"></i> Licencia Vinculada
+                    </span>
+                    <button type="button" class="btn-doc-preview" id="btnToggleLicenceCard" style="font-size: 12px; padding: 4px 10px; margin: 0; background: white; border: 1px solid #16a34a; color: #16a34a;">
+                      <i class="fa-solid fa-eye"></i> <span id="lblToggleLicence">Ver Licencia</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="img_car_file"><i class="fa-solid fa-car"></i> Foto del Auto</label>
+                  
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-file-image"></i>
+                    <input type="file" id="img_car_file" class="form-control" accept="image/*" {% if not car or not car.img_car_v %}required{% endif %} style="padding-left: 40px;">
+                    <input type="hidden" id="img_car_base64" name="img_car_base64" value="{{ car.img_car_v|default:'' }}">
+                  </div>
+
+                  <div id="carImgActionBar" class="{% if not car or not car.get_img_display %}d-none{% endif %}" style="display: flex; align-items: center; justify-content: space-between; border: 1px solid #d1d5db; border-radius: 8px; padding: 7px 12px; background-color: #f8fafc;">
+                    <span class="credential-status-badge" id="carImgStatusBadge" style="color: #16a34a; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                      <i class="fa-solid fa-circle-check"></i> Foto Guardada
+                    </span>
+                    <button type="button" class="btn-doc-preview" id="btnToggleCarImgCard" style="font-size: 12px; padding: 4px 10px; margin: 0; background: white; border: 1px solid #16a34a; color: #16a34a;">
+                      <i class="fa-solid fa-eye"></i> <span id="lblToggleCarImg">Ver Foto</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Contenedores de Vista Previa -->
+                <div class="form-group" style="grid-column: 1 / -1; margin-top: 4px;">
+                  
+                  <div class="credential-preview-card" id="licencePreviewCardContainer" style="display: none; margin-top: 8px;">
+                    <div class="credential-preview-header">
+                      <span class="credential-card-title"><i class="fa-solid fa-id-card"></i> Vista Previa Licencia</span>
+                    </div>
+                    <div class="credential-img-wrapper">
+                      <img id="licencePreviewImg" src="{{ car.get_licence_display|default:'' }}" alt="Licencia">
                     </div>
                   </div>
 
-                  <span class="form-hint {% if car and car.get_licence_display %}d-none{% endif %}" id="licenceHint">Sube la foto de tu licencia de conducir.</span>
+                  <div class="credential-preview-card" id="carImgPreviewCardContainer" style="display: none; margin-top: 8px;">
+                    <div class="credential-preview-header">
+                      <span class="credential-card-title"><i class="fa-solid fa-car"></i> Vista Previa Auto</span>
+                    </div>
+                    <div class="credential-img-wrapper">
+                      <img id="carPreviewImg" src="{{ car.get_img_display|default:'' }}" alt="Auto">
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Vista previa desplegable abajo en la misma página (Formato grande full-width) -->
