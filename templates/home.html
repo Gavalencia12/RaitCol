@@ -26,16 +26,25 @@
 
   <main class="main-container">
     <div class="welcome-header">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-        <div>
-          <h1>{{ title|default:"¡Bienvenido a UniRide!" }}</h1>
-          <p>{{ description|default:"Encuentra o publica tu viaje universitario de forma segura." }}</p>
+      {% if request.user.groups.all.0.name == 'Conductor' %}
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h1>{{ title|default:"¡Bienvenido a UniRide!" }}</h1>
+            <p>{{ description|default:"Encuentra o publica tu viaje universitario de forma segura." }}</p>
+          </div>
+          <!-- Botón para Conductor -->
+            <button type="button" class="btn-submit" id="myBtn" style="width: auto; padding: 10px 20px;">
+              <i class="fas fa-car"></i> Publicar viaje
+            </button>
         </div>
-        <!-- Botón para Conductor -->
-        <button type="button" class="btn-submit" id="myBtn" style="width: auto; padding: 10px 20px;">
-          <i class="fas fa-car"></i> Publicar viaje
-        </button>
-      </div>
+      {% else %}
+        <div style="display: block; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h1>{{ title|default:"¡Bienvenido a UniRide!" }}</h1>
+            <p>{{ description|default:"Encuentra o publica tu viaje universitario de forma segura." }}</p>
+          </div>
+        </div>
+      {% endif %}
 
       <!-- The Modal -->
       <div id="myModal" class="modal">
