@@ -229,12 +229,29 @@ function closeConfirmFinishModal() {
     setTimeout(() => {
       modal.style.display = 'none';
     }, 250);
+    
+  }
+}
+// Función usando classList.add()
+function abrirModal(miModal) {
+  const modal1 = document.getElementById("miModal");
+  if (modal1) {
+    modal1.style.display = 'flex';
+    setTimeout(() => modal1.classList.add('active'), 10);
+   modal1.showModal();
+  }
+  
+}
+function cerrarModal(miModal) {
+  const modal1 = document.getElementById("miModal");
+  if (modal1) {
+    modal1.close();
   }
 }
 
 // Finalizar viaje
 async function handleFinishRide() {
-  if (!currentRideData.id) return;
+  if (!currentRideData.id) return;  
   const btn = document.getElementById('btnModalFinishConfirm') || document.getElementById('btnFinishRideAction');
   if (btn) {
     btn.disabled = true;

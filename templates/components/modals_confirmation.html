@@ -13,9 +13,50 @@
       <button type="button" class="btn-confirm-cancel" onclick="closeConfirmFinishModal()">
         Volver
       </button>
-      <button type="button" class="btn-confirm-accept" id="btnModalFinishConfirm" onclick="handleFinishRide()">
+     <!-- <button type="button" class="btn-confirm-accept" id="btnModalFinishConfirm" onclick="handleFinishRide()">
+        <i class="fas fa-flag-checkered"></i> Sí, finalizar
+      </button>-->
+      <button type="button" class="btn-confirm-accept" id="btnModalFinishConfirm2" onclick="abrirModal()">
         <i class="fas fa-flag-checkered"></i> Sí, finalizar
       </button>
+      
     </div>
   </div>
 </div>
+<!-- Modal calificaciónes y comentarios (despues de confirmar finalizacion de viaje)-->
+ <dialog  id="miModal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content modal-content-publish">
+         
+          
+          <form  method="POST"  id="RatingForm">
+            {% csrf_token %}
+            
+            <div class="modal-header modal-header-publish">
+            <h2 class="modal-header-title"><i class="fas fa-car"></i>Déjanos tu opinión</h2>
+            <span class="close" onclick="cerrarModal('miModal')">&times;</span>
+          </div>
+          
+            <div class="form-group1">
+                <label>Calificación para Brenda</label>
+                <div class="rating">
+                    <input type="radio" id="star5" name="rating" value="5"><label for="star5">★</label>
+                    <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
+                    <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
+                    <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
+                    <input type="radio" id="star1" name="rating" value="1" required><label for="star1">★</label>
+                </div>
+            </div>
+
+            <div class="form-group1" style="margin-bottom: 20px;">
+              <label for="message">Comentarios:</label>
+              <textarea class="form-control" id="message" name="message"
+                placeholder="¿Qué te pareció nuestro servicio?"
+                style="height: 4rem; padding-left: 14px;"></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Enviar Comentario</button>
+        </form>
+        
+        </div>
+        
+</dialog>
