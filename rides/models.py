@@ -116,3 +116,29 @@ class Rating(models.Model):
     
     def __str__(self):
         return f"Rating {self.id_rating_i} - Calificación: {self.rating_f}"
+
+
+class Report(models.Model):
+    REASON_CHOICES = [
+        (1, 'Incumplimiento de ruta'),
+        (2, 'Comportamiento irrespetuoso'),
+        (3, 'Retraso excesivo'),
+        (4, 'Exceso de pasajeros'),
+        (5, 'Otros'),
+    ]
+
+    id_report_i = models.AutoField(primary_key=True, db_column='id_report_i')
+    id_journey_report_i = models.ForeignKey(Journey, on_delete=models.CASCADE, db_column='id_journey_report_i', related_name='reports')
+    id_reporter_i = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_column='id_reporter_i', related_name='reports_made')
+    id_reported_user_i = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_column='id_reported_user_i', related_name='reports_received')
+    reason_i = models.IntegerField(choices=REASON_CHOICES, db_column='reason_i')
+    description_v = models.TextField(blank=True, db_column='description_v')
+    date_create_t = models.DateTimeField(auto_now_add=True, db_column='date_create_t')
+
+    class Meta:
+        db_table = 'report'
+        unique_together = ('id_journey_report_i', 'id_reporter_i')
+
+    def __str__(self):
+        return f"Reporte {self.id_report_i} - Viaje {self.id_journey_report_i_id} - Razón: {self.get_reason_i_display()}"
+

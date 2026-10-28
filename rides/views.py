@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .models import Journey, Car, Reservation, Address, Route
+from .models import Journey, Car, Reservation, Address, Route, Report
 from .forms import CarForm
 
 from django.conf import settings
@@ -714,3 +714,34 @@ def feed_updates_api(request):
         }
 
     return JsonResponse({'success': True, 'updates': updates})
+
+@login_required(login_url='login_page')
+@require_http_methods(["POST"])
+def report_user_api(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Datos inválidos'}, status=400)
+
+    journey_id = data.get('report_ride_id')
+    reported_user_id = data.get('report_user_id')
+    reason = data.get('report_reason')
+    description = data.get('description', '')
+
+    if not all([journey_id, reported_user_id, reason]):
+        return JsonResponse({'success': False, 'message': 'Faltan campos requeridos'}, status=400)
+
+    if Report.objects.filter(id_journey_report_i_id=journey_id, id_reporter_i=request.user).exists():
+        return JsonResponse({'success': False, 'message': 'Ya has reportado este viaje anteriormente'})
+
+    try:
+        Report.objects.create(
+            id_journey_report_i_id=journey_id,
+            id_reporter_i=request.user,
+            id_reported_user_i_id=reported_user_id,
+            reason_i=int(reason),
+            description_v=description,
+        )
+        return JsonResponse({'success': True, 'message': 'Reporte enviado exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'}, status=500)
