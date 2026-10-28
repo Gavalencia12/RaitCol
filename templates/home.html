@@ -299,7 +299,7 @@
       </div>
 
       <div class="rides-grid" style="margin-top: 16px;">
-        {% for viaje in viajes %}
+        {% for viaje in viajes reversed %}
         <article class="ride-card" data-cost="{{ viaje.cost_journey_d }}" data-seats="{{ viaje.available_seats_i }}"
           data-is-passenger="{{ viaje.is_passenger|yesno:'true,false' }}"
           data-is-driver="{{ viaje.is_driver|yesno:'true,false' }}"
