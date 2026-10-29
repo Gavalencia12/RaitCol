@@ -112,7 +112,14 @@ function switchModalRoleView(role = 'visitor') {
   if (role === 'driver') {
     renderDriverPassengersList(currentRideData.seats || []);
   }
+
+  // Reportar solo lo ven los pasajeros confirmados
+  const reportBtn = document.getElementById('reportUserButtonWrapper');
+  if (reportBtn) {
+    reportBtn.style.display = (role === 'passenger') ? 'block' : 'none';
+  }
 }
+
 
 function initLiveModalControls() {
   const backdrop = document.getElementById('liveRideModalBackdrop');
