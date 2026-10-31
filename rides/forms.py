@@ -1,5 +1,5 @@
 from django import forms
-from .models import Car
+from .models import Car, Rating
 from datetime import datetime
 
 class CarForm(forms.ModelForm):
@@ -37,3 +37,33 @@ class CarForm(forms.ModelForm):
             raise forms.ValidationError("La cantidad de asientos debe estar entre 1 y 20.")
         return seating
 
+    def clean_lic_user_car_v(self):
+        lic_file = self.cleaned_data.get('lic_user_car_v')
+        has_existing_lic = bool(
+            (self.instance and self.instance.pk and (self.instance.lic_user_car_v or self.instance.lic_user_car_base64)) or
+            self.data.get('lic_user_car_base64')
+        )
+        if not lic_file and not has_existing_lic:
+            raise forms.ValidationError("Es obligatorio subir la foto o archivo de tu licencia de conducir para registrar un vehículo y ser Conductor.")
+        return lic_file
+
+
+class RatingForm(forms.ModelForm):
+
+    class Meta:
+        model = Rating
+        fields = ['rating_f', 'comment_user_v']
+        widgets = {
+            'rating_f': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.5',
+                'min': '1',
+                'max': '5',
+                'placeholder': 'Ej. 5.0'
+            }),
+            'comment_user_v': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Escribe tu comentario sobre el viaje...'
+            }),
+        }

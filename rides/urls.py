@@ -10,4 +10,5 @@ urlpatterns = [
     path('api/journey/<int:journey_id>/finish-ride/', views.finish_ride_api, name='finish_ride_api'),
     path('api/journeys/updates/', views.feed_updates_api, name='feed_updates_api'),
     path('api/report-user/', views.report_user_api, name='report_user_api'),
+    path('journey/<int:journey_id>/rate/modal/', views.create_rating_modal, name='create_rating_modal'),
 ]

@@ -1,4 +1,5 @@
 <!-- Modal Emergente de Confirmación (finalizacion de viaje)-->
+<body>
 <div class="confirm-modal-backdrop" id="modalConfirmation" style="display: none;">
   <div class="confirm-modal-box">
     <div class="confirm-modal-icon">
@@ -8,14 +9,171 @@
     <p class="confirm-modal-desc">
       Esta acción marcará el viaje como completado. Los pasajeros ya no podrán ver tu ruta ni el seguimiento en vivo.
     </p>
-
-    <div class="confirm-modal-actions">
+      <div class="confirm-modal-actions">
       <button type="button" class="btn-confirm-cancel" onclick="closeConfirmFinishModal()">
         Volver
       </button>
-      <button type="button" class="btn-confirm-accept" id="btnModalFinishConfirm" onclick="handleFinishRide()">
+     <!-- <button type="button" class="btn-confirm-accept" id="btnModalFinishConfirm" onclick="handleFinishRide()">
+        <i class="fas fa-flag-checkered"></i> Sí, finalizar
+      </button>-->
+      <button type="button" class="btn-confirm-accept" id="btnModalFinishConfirm2" onclick="abrirModal('miModal')">
         <i class="fas fa-flag-checkered"></i> Sí, finalizar
       </button>
+      
+<!-- Si tu variable en el bucle se llama journey: -->
+<button type="button" class="open-modal-btn" data-journey-id="{{ apiData.id}}">
+    Calificar Viaje
+</button>
+
+
+      
     </div>
   </div>
 </div>
+
+
+
+
+<!-- Estructura del Modal Personalizado -->
+<div class="custom-modal" id="ratingModal">
+    <div class="custom-modal-content">
+         <div class="modal-header modal-header-publish">
+            <h2 class="modal-header-title"><i class="fas fa-car"></i>Déjanos tu opinión</h2>
+            <button type="button" class="close-modal-btn">&times;</button>
+          </div>
+        <form id="ratingForm" method="POST">
+            {% csrf_token %}
+            <div id="modalAlerts"></div>
+            <!-- Campo para la puntuación (puede ser un input numérico, un select o estrellas) -->
+              
+              <label>Calificación:</label>
+              <div class="rating">
+                    <input type="radio" id="star5" name="rating_f" value="5"><label for="star5">★</label>
+                    <input type="radio" id="star4" name="rating_f" value="4"><label for="star4">★</label>
+                    <input type="radio" id="star3" name="rating_f" value="3"><label for="star3">★</label>
+                    <input type="radio" id="star2" name="rating_f" value="2"><label for="star2">★</label>
+                    <input type="radio" id="star1" name="rating_f" value="1" required><label for="star1">★</label>
+                </div>
+              <!-- Campo para el comentario -->
+              <div class="mb-3">
+                  <label for="comment_user_v" class="form-label">Comentarios:</label>
+                  <textarea id="comment_user_v" name="comment_user_v" class="form-control" rows="2"  placeholder="¿Qué te pareció nuestro servicio?" required></textarea>
+                  <!-- Nota: El name="comment" debe coincidir con el campo de texto de tu formulario en Django -->
+              </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar Calificación</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+ <style>
+    /* Forzamos los estilos directamente en el HTML para evitar problemas de carga CSS 
+    Detalle de doble modal abierto o quedar detras del modal principal*/
+    #ratingModal {
+        display: none !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background-color: rgba(0, 0, 0, 0.6) !important;
+        z-index: 99999 !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    #ratingModal.is-open {
+        display: flex !important;
+    }
+
+    .custom-modal-content {
+        background: #ffffff !important;
+        padding: 30px !important;
+        border-radius: 10px !important;
+        width: 100% !important;
+        max-width: 450px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+        z-index: 100000 !important;
+    }
+</style>
+    
+<script>
+    // 1. Escuchar clics para abrir y cerrar el modal
+    document.addEventListener('click', function (e) {
+        const modal = document.getElementById('ratingModal');
+        const form = document.getElementById('ratingForm');
+
+        const openBtn = e.target.closest('.open-modal-btn');
+        const closeBtn = e.target.closest('.close-modal-btn');
+
+        // Abrir modal
+        if (openBtn) {
+            const journeyId = openBtn.getAttribute('data-journey-id');
+            console.log("ID capturado correctamente:", journeyId);
+
+            if (form && journeyId) {
+                form.action = `/journey/${journeyId}/rate/modal/`;
+            }
+            if (modal) {
+                modal.classList.add('is-open');
+            }
+        }
+
+        // Cerrar modal
+        if (closeBtn || (modal && e.target === modal)) {
+            modal.classList.remove('is-open');
+        }
+    });
+
+    // 2. Manejar el envío del formulario por AJAX
+    document.addEventListener('submit', function (e) {
+        if (e.target && e.target.id === 'ratingForm') {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const actionUrl = form.action;
+            const csrfInput = form.querySelector('[name=csrfmiddlewaretoken]');
+            const csrfToken = csrfInput ? csrfInput.value : '';
+
+            fetch(actionUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(res => {
+                if (res.status === 200 && res.body.success) {
+                    const modal = document.getElementById('ratingModal');
+                    if (modal) modal.classList.remove('is-open');
+                    location.reload();
+                } else {
+                    const alerts = document.getElementById('modalAlerts');
+                    if (alerts) {
+                        let errorHtml = '<div style="color: red; margin-bottom: 10px; background: #ffe6e6; padding: 8px; border-radius: 4px;">';
+                        errorHtml += '<strong>Por favor corrige los siguientes errores:</strong><ul>';
+                        if (res.body.errors) {
+                            for (let field in res.body.errors) {
+                                errorHtml += `<li>${res.body.errors[field]}</li>`;
+                            }
+                        } else {
+                            errorHtml += '<li>Ocurrió un error al procesar el formulario.</li>';
+                        }
+                        errorHtml += '</ul></div>';
+                        alerts.innerHTML = errorHtml;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error en la petición:', error);
+            });
+        }
+    });
+</script>
+
+
+</body>
