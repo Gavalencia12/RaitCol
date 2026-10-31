@@ -17,10 +17,7 @@ document.getElementById('passwordForm').addEventListener('submit', async functio
                 'X-CSRFToken': formData.get('csrfmiddlewaretoken')
             }
         });
-        //alert('O1.');
         const texto = await response.text();
-        //const data = await response.json();
-        console.log("Respuesta en texto:", texto);
 
         // Intenta parsear solo si hay contenido
         const data = texto ? JSON.parse(texto) : {};

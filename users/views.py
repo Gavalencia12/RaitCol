@@ -113,7 +113,6 @@ def change_pass_view(request):
     # ESTA LÍNEA ES CLAVE: Si falla el POST o es un GET, vuelve a pintar el formulario
     return render(request, 'users/change_password.html', {'form': form})
     
-@csrf_exempt
 @require_http_methods(["POST"])
 def login_view(request):
     email = None
@@ -160,13 +159,11 @@ def login_view(request):
                     'message': 'Tu cuenta no está activa. Por favor, verifica tu correo.',
                     'success': False,
                     'inactive': True,
-                    'email': email
                 }, status=403)
         except User.DoesNotExist:
             pass
         return JsonResponse({'message': 'Correo o contraseña incorrectos', 'success': False}, status=401)
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def logout_view(request):
     if request.user.is_authenticated:
@@ -200,7 +197,6 @@ def status_view(request):
         }, status=200)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def register_user_api(request):
     data = {}
@@ -274,14 +270,11 @@ def register_user_api(request):
         )
     except Exception as e:
         logger.error(f"Error al enviar correo de verificación: {e}")
-        print(f"\n======================================")
-        print(f"CÓDIGO DE VERIFICACIÓN PARA {email}: {verification.code}")
-        print(f"======================================\n")
+        logger.warning(f"Código de verificación generado para {email} — revisar logs del servidor (SMTP no disponible)")
         return JsonResponse({
-            'message': 'Registro exitoso. No se pudo enviar el correo, pero puedes usar el código en consola.',
+            'message': 'Registro exitoso. Hubo un problema al enviar el correo de verificación. Por favor contacta a soporte si no recibes el código.',
             'success': True,
-            'email': email,
-            'debug_code': verification.code
+            'email': email
         }, status=201)
 
     return JsonResponse({
@@ -291,7 +284,6 @@ def register_user_api(request):
     }, status=201)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def verify_code_api(request):
     data = {}
@@ -353,7 +345,6 @@ def verify_code_api(request):
     }, status=200)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def resend_code_api(request):
     data = {}
@@ -391,14 +382,11 @@ def resend_code_api(request):
         )
     except Exception as e:
         logger.error(f"Error al reenviar correo de verificación: {e}")
-        print(f"\n======================================")
-        print(f"NUEVO CÓDIGO DE VERIFICACIÓN PARA {email}: {verification.code}")
-        print(f"======================================\n")
+        logger.warning(f"Nuevo código generado para {email} — revisar logs del servidor (SMTP no disponible)")
         return JsonResponse({
-            'message': 'Se ha generado un nuevo código de verificación (ver consola si falla SMTP).',
+            'message': 'Se ha generado un nuevo código de verificación. Si no lo recibes, contacta a soporte.',
             'success': True,
-            'email': email,
-            'debug_code': verification.code
+            'email': email
         }, status=200)
 
     return JsonResponse({

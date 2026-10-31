@@ -1,4 +1,5 @@
 import base64
+import logging
 from datetime import date, datetime, time as dtime
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -12,6 +13,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 @login_required(login_url='login_page')
@@ -308,7 +311,30 @@ def journey_detail_api(request, journey_id):
     driver_lat = float(journey.id_address_journey_i.latitude_d) if journey.id_address_journey_i else float(origin.latitude_d)
     driver_lng = float(journey.id_address_journey_i.longitude_d) if journey.id_address_journey_i else float(origin.longitude_d)
 
-    return JsonResponse({
+    # Construir lista de asientos filtrando PII según rol
+    seats_sanitized = []
+    for seat in seats_list:
+        if seat['isTaken']:
+            if is_driver or seat.get('isCurrentUser'):
+                # Conductor y el propio pasajero ven todo
+                seats_sanitized.append(seat)
+            else:
+                # Otros pasajeros/visitantes: solo ven que el asiento está ocupado
+                seats_sanitized.append({
+                    'seatNumber': seat['seatNumber'],
+                    'isTaken': True,
+                    'passengerId': None,
+                    'passengerName': 'Ocupado',
+                    'passengerAccount': None,
+                    'pickupName': None,
+                    'pickupLat': None,
+                    'pickupLng': None,
+                    'isCurrentUser': False
+                })
+        else:
+            seats_sanitized.append(seat)
+
+    response_data = {
         'id': journey.id_journey_i,
         'routeId': route.id_route_i,
         'polyline': route.map_polyline_v or '',
@@ -317,16 +343,19 @@ def journey_detail_api(request, journey_id):
         'isPassenger': is_passenger,
         'isVisitor': is_visitor,
         'currentUserId': request.user.id,
-        'driverName': f"{driver.first_name} {driver.last_name} ({driver.no_cuenta_v})",
-        'driverEmail': driver.email,
+        # Nombre del conductor visible para todos (contexto de seguridad)
+        'driverName': f"{driver.first_name} {driver.last_name}",
+        # Email y número de cuenta del conductor solo para pasajeros y conductor
+        'driverEmail': driver.email if (is_driver or is_passenger) else None,
+        'driverAccount': driver.no_cuenta_v if (is_driver or is_passenger) else None,
         'driverImage': getattr(driver, 'user_udc_img', None),
         'carImage': getattr(car, 'img_car_v', None),
         'carModel': f"{car.mark_car_v} {car.model_car_v}",
         'carMark': car.mark_car_v,
         'carColor': car.color_car_v,
-        'carPlates': car.plates_car_v,
+        'carPlates': car.plates_car_v if (is_driver or is_passenger) else None,
         'totalSeats': total_seats,
-        'seats': seats_list,
+        'seats': seats_sanitized,
         'cost': float(journey.cost_journey_d),
         'availableSeats': journey.available_seats_i,
         'passengersCount': passengers_count,
@@ -340,7 +369,8 @@ def journey_detail_api(request, journey_id):
         'driverLng': driver_lng,
         'dateJourney': journey.date_journey_d.strftime('%d/%m/%y') if journey.date_journey_d else 'hoy',
         'departureTime': journey.time_journey_init_t.strftime('%H:%M') if journey.time_journey_init_t else (origin.hour_init_t or 'Por definir')
-    })
+    }
+    return JsonResponse(response_data)
 
 @csrf_exempt
 @login_required(login_url='login_page')
@@ -492,8 +522,7 @@ def reserve_journey_api(request, journey_id):
         """
         send_custom_email(passenger_subject, passenger_msg_text, [request.user.email], html_content=passenger_html)
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).error(f"Error al enviar correos de reserva: {e}")
+        logger.error(f"Error al enviar correos de reserva: {e}")
 
     return JsonResponse({
         'success': True,
@@ -556,9 +585,6 @@ def finish_ride_api(request, journey_id):
         'availableSeats': journey.available_seats_i
     })
 
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
 
 @csrf_exempt
 @login_required(login_url='login_page')
@@ -574,12 +600,18 @@ def update_ride_location_api(request, journey_id):
         pk=journey_id,
         is_active_b=True
     ).select_related(
+        'id_user_car_journey_i__id_user_car_i',
         'id_route_journey_i__id_address_origin_i',
         'id_route_journey_i__id_address_destiny_i'
     ).first()
 
     if not journey:
         return JsonResponse({'success': False, 'message': 'Viaje no encontrado'}, status=404)
+
+    # Verificar que solo el conductor del viaje puede actualizar la ubicación
+    conductor_real = journey.id_user_car_journey_i.id_user_car_i
+    if request.user.id != conductor_real.id:
+        return JsonResponse({'success': False, 'message': 'Solo el conductor del viaje puede actualizar su ubicación.'}, status=403)
 
     route = journey.id_route_journey_i
     origin = route.id_address_origin_i
@@ -678,10 +710,16 @@ def register_car_view(request):
     else:
         return redirect('profile')
 
+@login_required(login_url='login_page')
 def finish_journey_api(request, journey_id):
     if request.method == 'POST':
         try:
-            journey = Journey.objects.get(pk=journey_id, id_user_car_journey_i=request.user)
+            # Verificar que el usuario autenticado es el conductor del viaje
+            journey = Journey.objects.select_related('id_user_car_journey_i__id_user_car_i').get(
+                pk=journey_id
+            )
+            if journey.id_user_car_journey_i.id_user_car_i != request.user:
+                return JsonResponse({'success': False, 'message': 'No autorizado'}, status=403)
             journey.status_v = 'Finalizado'
             journey.is_active_b = False
             journey.save()
@@ -744,4 +782,5 @@ def report_user_api(request):
         )
         return JsonResponse({'success': True, 'message': 'Reporte enviado exitosamente'})
     except Exception as e:
-        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'}, status=500)
+        logger.error(f"Error al crear reporte: {e}")
+        return JsonResponse({'success': False, 'message': 'Error interno al procesar el reporte. Inténtalo de nuevo.'}, status=500)
