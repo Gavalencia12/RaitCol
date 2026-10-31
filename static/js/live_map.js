@@ -229,12 +229,26 @@ function closeConfirmFinishModal() {
     setTimeout(() => {
       modal.style.display = 'none';
     }, 250);
+    
+  }
+}
+// Función usando classList.add()
+function abrirModal(miModal) {
+  const modal1 = document.getElementById(miModal);
+  if (modal1) {
+    modal1.showModal();
+  }
+}
+function cerrarModal(miModal) {
+  const modal1 = document.getElementById(miModal);
+  if (modal1) {
+    modal1.close();
   }
 }
 
 // Finalizar viaje
 async function handleFinishRide() {
-  if (!currentRideData.id) return;
+  if (!currentRideData.id) return;  
   const btn = document.getElementById('btnModalFinishConfirm') || document.getElementById('btnFinishRideAction');
   if (btn) {
     btn.disabled = true;
@@ -433,6 +447,16 @@ function openLiveRideFromBtn(btn) {
     .then(resp => resp.ok ? resp.json() : null)
     .then(apiData => {
       if (apiData) openLiveRideModal(apiData);
+       //desde aqui tomo el ID del viaje desde el fech de la API
+        // Como el modal ya se abrió y tenemos el apiData.id (ej. 22), 
+        // se lo inyectamos al botón de calificación:
+        const ratingBtn = document.querySelector('.open-modal-btn'); // Ajusta el selector si tu botón tiene otra clase o ID
+        if (ratingBtn && apiData.id) {
+          ratingBtn.setAttribute('data-journey-id', apiData.id);
+          console.log("¡ID asignado con éxito al botón de calificación:", apiData.id);
+        }
+        // Fin de romar el ID par aabrir el modal
+      
     })
     .catch(e => console.warn('Error al cargar detalle del viaje:', e));
 }
