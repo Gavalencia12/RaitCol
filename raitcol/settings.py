@@ -12,10 +12,12 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+import warnings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Soporte para conexión con MySQL puro mediante PyMySQL
 try:
     import pymysql
     pymysql.install_as_MySQLdb()
@@ -38,20 +40,44 @@ if env_file.exists():
                 k, v = line.split('=', 1)
                 os.environ.setdefault(k.strip(), v.strip().strip("'\""))
 
-
+# Configuración de SECRET_KEY
 _secret = os.getenv('SECRET_KEY', '')
 if not _secret or _secret.startswith('django-insecure'):
-    import warnings
     warnings.warn(
         "SECRET_KEY no está configurada correctamente. Genera una clave segura para producción.",
         stacklevel=2
     )
 SECRET_KEY = _secret or 'django-insecure-fallback-local-only'
 
+# Modo DEBUG
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
 
+# Configuración de dominios permitidos (ALLOWED_HOSTS)
 _allowed = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
 ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
+
+# Detección automática del hostname en Render
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# Inclusión de respaldo para subdominios de Render y dominio institucional
+for domain in ['uniride-o0d4.onrender.com', '.onrender.com', 'uniride.ucol.mx']:
+    if domain not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(domain)
+
+# Orígenes confiables para CSRF (requerido para formularios en HTTPS en Django 4.2+)
+_csrf = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = [c.strip() for c in _csrf.split(',') if c.strip()]
+
+if RENDER_EXTERNAL_HOSTNAME:
+    origin = f'https://{RENDER_EXTERNAL_HOSTNAME}'
+    if origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(origin)
+
+for trusted_origin in ['https://uniride-o0d4.onrender.com', 'https://*.onrender.com', 'https://uniride.ucol.mx']:
+    if trusted_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(trusted_origin)
 
 
 # Application definition
@@ -64,12 +90,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users',
-    'rides'
+    'rides',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise para servir archivos estáticos
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -149,15 +175,27 @@ AUTH_USER_MODEL = 'users.User'
 
 MAPBOX_ACCESS_TOKEN = os.getenv('MAPBOX_ACCESS_TOKEN')
 
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Almacenamiento optimizado y con compresión de WhiteNoise
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
@@ -180,14 +218,5 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'raitcol41@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'raitcol41@gmail.com')
 EMAIL_TIMEOUT = 10
-
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 
