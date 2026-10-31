@@ -1,5 +1,5 @@
 from django import forms
-from .models import Car
+from .models import Car, Rating
 from datetime import datetime
 
 class CarForm(forms.ModelForm):
@@ -49,3 +49,22 @@ class CarForm(forms.ModelForm):
             raise forms.ValidationError("Es obligatorio subir la foto o archivo de tu licencia de conducir para registrar un vehículo y ser Conductor.")
         return lic_file
 
+class RatingForm(forms.ModelForm):
+
+  class Meta:
+    model = Rating
+    fields = ['rating_f', 'comment_user_v']
+    widgets = {
+        'rating_f': forms.NumberInput(attrs={
+                'class': 'form-control', 
+                'step': '0.5', 
+                'min': '1', 
+                'max': '5',
+                'placeholder': 'Ej. 5.0'
+            }),
+            'comment_user_v': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3,
+                'placeholder': 'Escribe tu comentario sobre el viaje...'
+            }),
+    }

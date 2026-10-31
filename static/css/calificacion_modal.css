@@ -56,14 +56,4 @@
         .submit-btn:hover {
             background-color: black;
         }
-dialog {
-  border: none;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-
-/* Para cambiar el fondo oscuro detrás de cada modal activo */
-dialog::backdrop {
-  background-color: rgba(0, 0, 0, 0.5);
-}
+        
