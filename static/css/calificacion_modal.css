@@ -1,0 +1,59 @@
+
+       
+        .form-group1 label {
+            display: flex;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555555;
+            
+        }
+        .form-group1 input, 
+        .form-group1 textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .form-group1 textarea {
+            resize: vertical;
+            height: 100px;
+        }
+        /* Estilo para las estrellas (orden inverso para selector CSS) */
+        .rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+        .rating input {
+            display: none;
+            
+        }
+        .rating label {
+            font-size: 24px;
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .rating input:checked ~ label,
+        .rating label:hover,
+        .rating label:hover ~ label {
+            color: #f39c12;
+        }
+        .submit-btn {
+            background-color: #15803d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            width: 100%;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .submit-btn:hover {
+            background-color: black;
+        }
+        

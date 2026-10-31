@@ -1,11 +1,11 @@
 import base64
 from datetime import date, datetime, time as dtime
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .models import Journey, Car, Reservation, Address, Route
-from .forms import CarForm
+from .models import Journey, Car, Reservation, Address, Route, Rating
+from .forms import CarForm, RatingForm
 
 from django.conf import settings
 from django.http import JsonResponse
@@ -687,3 +687,36 @@ def finish_journey_api(request, journey_id):
         except Journey.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Viaje no encontrado'})
     return JsonResponse({'success': False, 'message': 'Método no permitido'})
+
+
+@login_required
+def create_rating_modal(request, journey_id):
+    # 1. Buscamos el viaje usando el ID que viaja en la URL
+    journey = get_object_or_404(Journey, pk=journey_id)
+    
+    # 2. Validamos que la petición sea POST (cuando el usuario le da "Guardar" en el modal)
+    if request.method == 'POST':
+        form = RatingForm(request.POST)
+        
+        if form.is_valid():
+            # 3. Como el formulario solo tiene el rating y el comentario, 
+            # usamos commit=False para inyectar el viaje y el usuario faltantes.
+            rating = form.save(commit=False)
+            rating.id_journey_rating_i = journey
+            rating.id_user_rating_i = request.user
+            rating.save() # Guardado definitivo en la base de datos
+            
+            # 4. Devolvemos una respuesta de éxito en formato JSON para que el JS cierre el modal
+            return JsonResponse({
+                'success': True,
+                'message': '¡Calificación guardada con éxito!'
+            })
+        else:
+            # Si el usuario puso un número inválido o dejó campos vacíos, devolvemos los errores
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors
+            }, status=400)
+            
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
