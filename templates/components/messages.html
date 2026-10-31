@@ -1,34 +1,32 @@
 {% if messages %}
-  <div class="messages-container" id="messagesContainer">
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags|default:'info' }} auto-dismiss-alert">
-        <div class="alert-content">
-          <span>{{ message }}</span>
-        </div>
-        <button type="button" class="alert-close-btn" onclick="dismissAlert(this.closest('.alert'))" aria-label="Cerrar">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    {% endfor %}
-  </div>
+  {% for message in messages %}
+    <div class="app-toast app-toast--{{ message.tags|default:'info' }} app-toast--show" role="alert">
+      {% if message.tags == 'success' %}
+        <i class="fas fa-circle-check app-toast__icon"></i>
+      {% elif message.tags == 'error' %}
+        <i class="fas fa-circle-exclamation app-toast__icon"></i>
+      {% elif message.tags == 'warning' %}
+        <i class="fas fa-triangle-exclamation app-toast__icon"></i>
+      {% else %}
+        <i class="fas fa-circle-info app-toast__icon"></i>
+      {% endif %}
+      <span class="app-toast__msg">{{ message }}</span>
+      <button class="app-toast__close" onclick="dismissAppToast(this.closest('.app-toast'))" aria-label="Cerrar">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+  {% endfor %}
 
   <script>
-    function dismissAlert(alertEl) {
-      if (!alertEl) return;
-      alertEl.classList.add('alert-fading-out');
-      setTimeout(() => {
-        if (alertEl && alertEl.parentNode) {
-          alertEl.remove();
-        }
-      }, 420);
+    function dismissAppToast(el) {
+      if (!el) return;
+      el.classList.remove('app-toast--show');
+      el.addEventListener('transitionend', () => el.remove(), { once: true });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      const alerts = document.querySelectorAll('.auto-dismiss-alert');
-      alerts.forEach((alert, index) => {
-        setTimeout(() => {
-          dismissAlert(alert);
-        }, 4000 + (index * 300));
+      document.querySelectorAll('.app-toast').forEach((toast, i) => {
+        setTimeout(() => dismissAppToast(toast), 5000 + i * 400);
       });
     });
   </script>

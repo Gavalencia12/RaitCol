@@ -27,7 +27,7 @@ class Car(models.Model):
     color_car_v = models.CharField(max_length=50, db_column='color_car_v')
     seating_car_i = models.IntegerField(db_column='seating_car_i')
     plates_car_v = models.CharField(max_length=50, db_column='plates_car_v')
-    lic_user_car_v = models.FileField(upload_to='licenses/', max_length=255, null=True, blank=True, db_column='lic_user_car_v')
+    img_car_v = models.TextField(null=True, blank=True, db_column='img_car_v')
     lic_user_car_base64 = models.TextField(null=True, blank=True, db_column='lic_user_car_base64')
     date_create_t = models.DateTimeField(auto_now_add=True, db_column='date_create_t')
     date_update_t = models.DateTimeField(auto_now=True, db_column='date_update_t')
@@ -39,8 +39,8 @@ class Car(models.Model):
     def get_licence_display(self):
         if self.lic_user_car_base64:
             return self.lic_user_car_base64
-        if self.lic_user_car_v:
-            return self.lic_user_car_v.url
+        if self.img_car_v:
+            return self.img_car_v
         return None
     
     def __str__(self):
@@ -116,3 +116,29 @@ class Rating(models.Model):
     
     def __str__(self):
         return f"Rating {self.id_rating_i} - Calificación: {self.rating_f}"
+
+
+class Report(models.Model):
+    REASON_CHOICES = [
+        (1, 'Incumplimiento de ruta'),
+        (2, 'Comportamiento irrespetuoso'),
+        (3, 'Retraso excesivo'),
+        (4, 'Exceso de pasajeros'),
+        (5, 'Otros'),
+    ]
+
+    id_report_i = models.AutoField(primary_key=True, db_column='id_report_i')
+    id_journey_report_i = models.ForeignKey(Journey, on_delete=models.CASCADE, db_column='id_journey_report_i', related_name='reports')
+    id_reporter_i = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_column='id_reporter_i', related_name='reports_made')
+    id_reported_user_i = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_column='id_reported_user_i', related_name='reports_received')
+    reason_i = models.IntegerField(choices=REASON_CHOICES, db_column='reason_i')
+    description_v = models.TextField(blank=True, db_column='description_v')
+    date_create_t = models.DateTimeField(auto_now_add=True, db_column='date_create_t')
+
+    class Meta:
+        db_table = 'report'
+        unique_together = ('id_journey_report_i', 'id_reporter_i')
+
+    def __str__(self):
+        return f"Reporte {self.id_report_i} - Viaje {self.id_journey_report_i_id} - Razón: {self.get_reason_i_display()}"
+

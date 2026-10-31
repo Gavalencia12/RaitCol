@@ -207,13 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
         registeredEmail = email;
         sentEmailPlaceholder.textContent = email;
 
-        if (data.debug_code) {
-          const autoFill = String(data.debug_code);
-          if (autoFill.length === 6) {
-            codeInputs.forEach((input, idx) => input.value = autoFill[idx]);
-          }
-        }
-
         registerForm.style.display = 'none';
         verificationForm.style.display = 'block';
 
@@ -317,15 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
         verifySuccess.textContent = data.message || 'Se ha reenviado un nuevo código a tu correo.';
         verifySuccess.style.display = 'block';
 
-        if (data.debug_code) {
-          const autoFill = String(data.debug_code);
-          if (autoFill.length === 6) {
-            codeInputs.forEach((input, idx) => input.value = autoFill[idx]);
-          }
-        } else {
-          codeInputs.forEach(input => input.value = '');
-          codeInputs[0].focus();
-        }
+        codeInputs.forEach(input => input.value = '');
+        codeInputs[0].focus();
 
         startResendTimer();
       } else {

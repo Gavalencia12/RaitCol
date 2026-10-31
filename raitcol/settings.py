@@ -39,16 +39,19 @@ if env_file.exists():
                 os.environ.setdefault(k.strip(), v.strip().strip("'\""))
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+_secret = os.getenv('SECRET_KEY', '')
+if not _secret or _secret.startswith('django-insecure'):
+    import warnings
+    warnings.warn(
+        "SECRET_KEY no está configurada correctamente. Genera una clave segura para producción.",
+        stacklevel=2
+    )
+SECRET_KEY = _secret or 'django-insecure-fallback-local-only'
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key')
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+_allowed = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
 
 
 # Application definition

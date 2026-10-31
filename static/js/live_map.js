@@ -6,25 +6,91 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+let globalPollInterval = null;
+
 function startGlobalFeedPolling() {
-  setInterval(() => {
-    if (document.hidden) return;
+  if (globalPollInterval) clearInterval(globalPollInterval);
+
+  globalPollInterval = setInterval(async () => {
+    const backdrop = document.getElementById('liveRideModalBackdrop');
+    if (document.hidden || (backdrop && backdrop.classList.contains('active'))) return;
+
     const rideBtns = document.querySelectorAll('button[data-ride-id]');
-    const processedIds = new Set();
-    rideBtns.forEach(async (btn) => {
-      const rideId = btn.dataset.rideId;
-      if (!rideId || processedIds.has(rideId)) return;
-      processedIds.add(rideId);
-      try {
-        const resp = await fetch(`/api/journey/${rideId}/`);
-        if (resp.ok) {
-          const data = await resp.json();
-          const role = data.isDriver ? 'driver' : (data.isPassenger ? 'passenger' : 'visitor');
-          updateFeedCardRoleUI(rideId, role, data.availableSeats, data.cost);
+    const uniqueIds = Array.from(new Set(Array.from(rideBtns).map(btn => btn.dataset.rideId).filter(Boolean)));
+
+    if (uniqueIds.length === 0) return;
+
+    try {
+      const resp = await fetch(`/api/journeys/updates/?ids=${uniqueIds.join(',')}`);
+      
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.success) {
+          uniqueIds.forEach(id => {
+            const update = data.updates[id];
+            
+            if (update) {
+              updateFeedCardSeats(id, update.availableSeats, update.cost);
+            } else {
+              removeRideCard(id);
+            }
+          });
         }
-      } catch (e) { }
-    });
-  }, 10000);
+      }
+    } catch (e) {
+      console.warn('Error en bulk polling:', e);
+    }
+  }, 10000); 
+}
+
+function updateFeedCardSeats(rideId, seats, cost) {
+  const btn = document.querySelector(`button[data-ride-id="${rideId}"]`);
+  if (!btn) return;
+  const card = btn.closest('.ride-card');
+  if (!card) return;
+
+  card.dataset.seats = seats;
+  if (cost !== undefined) card.dataset.cost = cost;
+
+  if (btn.classList.contains('btn-role-visitor')) {
+    const badgesContainer = card.querySelector('.ride-badges');
+    if (badgesContainer) {
+      badgesContainer.innerHTML = `
+        <span class="badge badge-success">${seats} Lugares libres</span>
+        <span class="badge badge-secondary">$${parseFloat(cost).toFixed(2)}</span>
+      `;
+    }
+  }
+}
+
+function removeRideCard(rideId) {
+  const btn = document.querySelector(`button[data-ride-id="${rideId}"]`);
+  if (!btn) return;
+  const card = btn.closest('.ride-card');
+  if (card) {
+    card.style.transition = 'all 0.5s ease';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      card.remove();
+      if (typeof updateProximityUIFilter === 'function') updateProximityUIFilter();
+    }, 500);
+  }
+}
+
+function removeRideCard(rideId) {
+  const btn = document.querySelector(`button[data-ride-id="${rideId}"]`);
+  if (!btn) return;
+  const card = btn.closest('.ride-card');
+  if (card) {
+    card.style.transition = 'all 0.5s ease';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      card.remove();
+      if (typeof updateProximityUIFilter === 'function') updateProximityUIFilter();
+    }, 500);
+  }
 }
 
 function switchModalRoleView(role = 'visitor') {
@@ -46,7 +112,21 @@ function switchModalRoleView(role = 'visitor') {
   if (role === 'driver') {
     renderDriverPassengersList(currentRideData.seats || []);
   }
+
+  // Reportar solo lo ven los pasajeros confirmados
+  const reportBtn = document.getElementById('reportUserButtonWrapper');
+  if (reportBtn) {
+    reportBtn.style.display = (role === 'passenger') ? 'block' : 'none';
+  }
+
+  const rateBtn = document.getElementById('btnRateDriverPassenger');
+  if (rateBtn && role === 'passenger' && currentRideData.id) {
+    rateBtn.setAttribute('data-journey-id', currentRideData.id);
+    const isFinished = currentRideData.status === 'finished' || !currentRideData.isActive;
+    rateBtn.style.display = isFinished ? 'flex' : 'none';
+  }
 }
+
 
 function initLiveModalControls() {
   const backdrop = document.getElementById('liveRideModalBackdrop');
@@ -271,7 +351,6 @@ async function handleFinishRide() {
         closeLiveRideModal();
       }
 
-      // Remover o desvanecer la tarjeta del viaje en el feed principal
       const rideCard = document.querySelector(`.ride-card button[onclick*="${currentRideData.id}"]`)?.closest('.ride-card');
       if (rideCard) {
         rideCard.style.transition = 'all 0.3s ease';
@@ -317,15 +396,21 @@ function updateModalRideDetails(rideData) {
     setElementText('driverCardName', rideData.driverName);
 
     const modalAvatar = document.getElementById('liveModalDriverAvatar');
-    const cardAvatar = document.getElementById('driverCardInitials');
+    if (modalAvatar) {
+      if (rideData.driverImage) {
+        modalAvatar.innerHTML = `<img src="${rideData.driverImage}" alt="Conductor" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+      } else {
+        modalAvatar.textContent = initials;
+      }
+    }
 
-    if (rideData.driverImage) {
-      const imgHTML = `<img src="${rideData.driverImage}" alt="Conductor" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-      if (modalAvatar) modalAvatar.innerHTML = imgHTML;
-      if (cardAvatar) cardAvatar.innerHTML = imgHTML;
-    } else {
-      if (modalAvatar) modalAvatar.textContent = initials;
-      if (cardAvatar) cardAvatar.textContent = initials;
+    const cardAvatar = document.getElementById('driverCardInitials');
+    if (cardAvatar) {
+      if (rideData.carImage) {
+        cardAvatar.innerHTML = `<img src="${rideData.carImage}" alt="Auto" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+      } else {
+        cardAvatar.innerHTML = '<i class="fas fa-car" style="color: #64748b; font-size: 16px; margin-top: 12px;"></i>';
+      }
     }
   }
 
@@ -347,6 +432,12 @@ function updateModalRideDetails(rideData) {
 }
 
 function openLiveRideModal(rideData = {}) {
+
+  if (globalPollInterval) {
+    clearInterval(globalPollInterval);
+    globalPollInterval = null;
+  }
+
   currentRideData = Object.assign(currentRideData || {}, rideData);
   const backdrop = document.getElementById('liveRideModalBackdrop');
   if (!backdrop) return;
@@ -383,10 +474,11 @@ function closeLiveRideModal() {
 
   stopDriverGpsWatch();
   if (typeof stopDriverPolling === 'function') stopDriverPolling();
-  stopPassengerPolling();
+  if (typeof stopPassengerPolling === 'function') stopPassengerPolling();
 
   backdrop.classList.remove('active');
   document.body.style.overflow = '';
+  startGlobalFeedPolling();
 }
 
 function updateFeedCardRoleUI(rideId, role, availableSeats, cost) {

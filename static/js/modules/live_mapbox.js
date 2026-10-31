@@ -140,13 +140,18 @@ async function renderRoutePolyline(map, token) {
     if (data.routes && data.routes.length > 0) {
       routeGeoJSON = data.routes[0].geometry;
 
-      const distanceKm = (data.routes[0].distance / 1000).toFixed(1);
-      const durationMin = Math.round(data.routes[0].duration / 60);
+      const totalDistanceKm = (data.routes[0].distance / 1000).toFixed(1);
+      const totalDurationMin = Math.round(data.routes[0].duration / 60);
+
+      currentRideData._totalRouteDistanceKm = parseFloat(totalDistanceKm);
+      currentRideData._totalRouteDurationMin = totalDurationMin;
 
       const distanceEl = document.getElementById('liveDistanceProgress');
       const etaEl = document.getElementById('liveEtaMinutes');
-      if (distanceEl) distanceEl.textContent = `${distanceKm} km recorridos`;
-      if (etaEl) etaEl.innerHTML = `${durationMin} <span>min</span>`;
+      if (distanceEl) distanceEl.textContent = `${totalDistanceKm} km de ruta`;
+      if (etaEl) etaEl.innerHTML = `${totalDurationMin} <span>min</span>`;
+
+      updatePassengerETA();
     } else {
       routeGeoJSON = {
         'type': 'LineString',

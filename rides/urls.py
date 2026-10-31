@@ -8,7 +8,7 @@ urlpatterns = [
     path('api/journey/<int:journey_id>/reserve/', views.reserve_journey_api, name='reserve_journey_api'),
     path('api/journey/<int:journey_id>/cancel-reservation/', views.cancel_reservation_api, name='cancel_reservation_api'),
     path('api/journey/<int:journey_id>/finish-ride/', views.finish_ride_api, name='finish_ride_api'),
-    # Ruta para calificar un viaje específico
-   path('journey/<int:journey_id>/rate/modal/', views.create_rating_modal, name='create_rating_modal'),
-
+    path('api/journeys/updates/', views.feed_updates_api, name='feed_updates_api'),
+    path('api/report-user/', views.report_user_api, name='report_user_api'),
+    path('journey/<int:journey_id>/rate/modal/', views.create_rating_modal, name='create_rating_modal'),
 ]

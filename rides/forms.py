@@ -13,7 +13,6 @@ class CarForm(forms.ModelForm):
             'color_car_v',
             'seating_car_i',
             'plates_car_v',
-            'lic_user_car_v',
         ]
         widgets = {
             'type_car_v': forms.TextInput(attrs={'class': 'form-control', 'id': 'type_car_v', 'placeholder': 'Ej. Sedán, Hatchback, SUV'}),
@@ -23,7 +22,6 @@ class CarForm(forms.ModelForm):
             'color_car_v': forms.TextInput(attrs={'class': 'form-control', 'id': 'color_car_v', 'placeholder': 'Ej. Gris, Blanco'}),
             'seating_car_i': forms.NumberInput(attrs={'class': 'form-control', 'id': 'seating_car_i', 'placeholder': 'Ej. 4'}),
             'plates_car_v': forms.TextInput(attrs={'class': 'form-control', 'id': 'plates_car_v', 'placeholder': 'Ej. FGR-123'}),
-            'lic_user_car_v': forms.FileInput(attrs={'class': 'form-control', 'id': 'lic_user_car_v', 'accept': 'image/*,.pdf'}),
         }
 
     def clean_year_car_i(self):
@@ -49,22 +47,23 @@ class CarForm(forms.ModelForm):
             raise forms.ValidationError("Es obligatorio subir la foto o archivo de tu licencia de conducir para registrar un vehículo y ser Conductor.")
         return lic_file
 
+
 class RatingForm(forms.ModelForm):
 
-  class Meta:
-    model = Rating
-    fields = ['rating_f', 'comment_user_v']
-    widgets = {
-        'rating_f': forms.NumberInput(attrs={
-                'class': 'form-control', 
-                'step': '0.5', 
-                'min': '1', 
+    class Meta:
+        model = Rating
+        fields = ['rating_f', 'comment_user_v']
+        widgets = {
+            'rating_f': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.5',
+                'min': '1',
                 'max': '5',
                 'placeholder': 'Ej. 5.0'
             }),
             'comment_user_v': forms.Textarea(attrs={
-                'class': 'form-control', 
+                'class': 'form-control',
                 'rows': 3,
                 'placeholder': 'Escribe tu comentario sobre el viaje...'
             }),
-    }
+        }

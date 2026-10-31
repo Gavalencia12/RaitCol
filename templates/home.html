@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   <link rel="stylesheet" href="{% static 'css/live_ride.css' %}">
   <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+  <link rel="stylesheet" href="{% static 'css/reportuser.css' %}">
   <link rel="stylesheet" href="{% static 'css/calificacion_modal.css' %}">
   <!-- FontAwesome para iconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,19 +25,29 @@
 
   <!-- Navbar Global UniRide -->
   {% include 'components/navbar.html' %}
+  {% include 'components/messages.html' %}
 
   <main class="main-container">
     <div class="welcome-header">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-        <div>
-          <h1>{{ title|default:"¡Bienvenido a UniRide!" }}</h1>
-          <p>{{ description|default:"Encuentra o publica tu viaje universitario de forma segura." }}</p>
+      {% if request.user.groups.all.0.name == 'Conductor' %}
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h1>{{ title|default:"¡Bienvenido a UniRide!" }}</h1>
+            <p>{{ description|default:"Encuentra o publica tu viaje universitario de forma segura." }}</p>
+          </div>
+          <!-- Botón para Conductor -->
+            <button type="button" class="btn-submit" id="myBtn" style="width: auto; padding: 10px 20px;">
+              <i class="fas fa-car"></i> Publicar viaje
+            </button>
         </div>
-        <!-- Botón para Conductor -->
-        <button type="button" class="btn-submit" id="myBtn" style="width: auto; padding: 10px 20px;">
-          <i class="fas fa-car"></i> Publicar viaje
-        </button>
-      </div>
+      {% else %}
+        <div style="display: block; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h1>{{ title|default:"¡Bienvenido a UniRide!" }}</h1>
+            <p>{{ description|default:"Encuentra o publica tu viaje universitario de forma segura." }}</p>
+          </div>
+        </div>
+      {% endif %}
 
       <!-- The Modal -->
       <div id="myModal" class="modal">
@@ -164,6 +175,18 @@
               </div>
             </div>
 
+            <div class="form-group" style="margin-bottom: 14px;">
+              <div class="input-wrapper" style="position: relative;">
+                <i class="fa-solid fa-car" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #00b865; z-index: 10; pointer-events: none;"></i>
+                <select class="form-control" id="car" name="coche" required style="font-weight: 600; color: var(--color-text-main); padding-left: 36px;">
+                  <option value="" selected>Selecciona tu coche</option>
+                  {% for car in user_cars %}
+                  <option value="{{ car.id_car_i }}">{{ car.mark_car_v }} {{ car.model_car_v }} - {{ car.color_car_v }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            
             <div class="form-group" style="margin-bottom: 20px;">
               <label for="message">Mensaje / Notas adicionales</label>
               <textarea class="form-control" id="message" name="message"
@@ -277,7 +300,7 @@
       </div>
 
       <div class="rides-grid" style="margin-top: 16px;">
-        {% for viaje in viajes %}
+        {% for viaje in viajes reversed %}
         <article class="ride-card" data-cost="{{ viaje.cost_journey_d }}" data-seats="{{ viaje.available_seats_i }}"
           data-is-passenger="{{ viaje.is_passenger|yesno:'true,false' }}"
           data-is-driver="{{ viaje.is_driver|yesno:'true,false' }}"
@@ -350,6 +373,7 @@
 
   {% include 'components/live_ride_modal.html' %}
   {% include 'components/modals_confirmation.html' %}
+  {% include 'components/report_user_modal.html' %}
 
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
 
@@ -361,6 +385,7 @@
   <script src="{% static 'js/modules/live_driver.js' %}"></script>
   <script src="{% static 'js/modules/proximity_filter.js' %}"></script>
   <script src="{% static 'js/live_map.js' %}"></script>
+  <script src="{% static 'js/modules/live_report.js' %}"></script>
 </body>
 
 </html>

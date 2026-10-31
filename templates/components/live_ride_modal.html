@@ -141,6 +141,14 @@
             style="width: 100%; margin-top: 12px; padding: 10px; background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">
             <i class="fas fa-ban"></i> Cancelar mi Reserva
           </button>
+
+          <button type="button"
+            class="open-modal-btn"
+            id="btnRateDriverPassenger"
+            data-journey-id=""
+            style="display:none; width:100%; margin-top:10px; padding:10px; background:linear-gradient(135deg,#00b865,#008f4a); color:#fff; border:none; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; transition:all 0.2s; gap:6px; align-items:center; justify-content:center;">
+            <i class="fas fa-star"></i> Calificar al conductor
+          </button>
         </div>
 
         <div id="panelDriverRole" class="role-panel-block" style="display: none;">
@@ -223,6 +231,13 @@
             </div>
           </div>
         </div>
+
+        <div class="report-user-button" id="reportUserButtonWrapper" style="display: none;">
+          <button class="btn-report-user" type="button" onclick="openReportUserModal()">
+            <i class="fas fa-exclamation-triangle"></i> Reportar Conductor
+          </button>
+        </div>
+
 
       </aside>
 

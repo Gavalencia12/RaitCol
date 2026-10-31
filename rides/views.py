@@ -1,10 +1,11 @@
 import base64
+import logging
 from datetime import date, datetime, time as dtime
 from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .models import Journey, Car, Reservation, Address, Route, Rating
+from .models import Journey, Car, Reservation, Address, Route, Report, Rating
 from .forms import CarForm, RatingForm
 
 from django.conf import settings
@@ -12,6 +13,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 @login_required(login_url='login_page')
@@ -56,7 +59,13 @@ def home(request):
             return redirect('home')
 
         # ── Validación 2: No puede haber 2 viajes activos a la misma fecha y hora ──
-        driver_car = user_cars.first()
+        car_id = request.POST.get('coche')
+        driver_car = user_cars.filter(id_car_i=car_id).first()
+        
+        if not driver_car:
+            messages.error(request, "Por favor selecciona un vehículo válido de tu lista.")
+            return redirect('home')
+            
         viaje_duplicado = Journey.objects.filter(
             id_user_car_journey_i__id_user_car_i=request.user,
             is_active_b=True,
@@ -302,7 +311,30 @@ def journey_detail_api(request, journey_id):
     driver_lat = float(journey.id_address_journey_i.latitude_d) if journey.id_address_journey_i else float(origin.latitude_d)
     driver_lng = float(journey.id_address_journey_i.longitude_d) if journey.id_address_journey_i else float(origin.longitude_d)
 
-    return JsonResponse({
+    # Construir lista de asientos filtrando PII según rol
+    seats_sanitized = []
+    for seat in seats_list:
+        if seat['isTaken']:
+            if is_driver or seat.get('isCurrentUser'):
+                # Conductor y el propio pasajero ven todo
+                seats_sanitized.append(seat)
+            else:
+                # Otros pasajeros/visitantes: solo ven que el asiento está ocupado
+                seats_sanitized.append({
+                    'seatNumber': seat['seatNumber'],
+                    'isTaken': True,
+                    'passengerId': None,
+                    'passengerName': 'Ocupado',
+                    'passengerAccount': None,
+                    'pickupName': None,
+                    'pickupLat': None,
+                    'pickupLng': None,
+                    'isCurrentUser': False
+                })
+        else:
+            seats_sanitized.append(seat)
+
+    response_data = {
         'id': journey.id_journey_i,
         'routeId': route.id_route_i,
         'polyline': route.map_polyline_v or '',
@@ -311,15 +343,19 @@ def journey_detail_api(request, journey_id):
         'isPassenger': is_passenger,
         'isVisitor': is_visitor,
         'currentUserId': request.user.id,
-        'driverName': f"{driver.first_name} {driver.last_name} ({driver.no_cuenta_v})",
-        'driverEmail': driver.email,
+        # Nombre del conductor visible para todos (contexto de seguridad)
+        'driverName': f"{driver.first_name} {driver.last_name}",
+        # Email y número de cuenta del conductor solo para pasajeros y conductor
+        'driverEmail': driver.email if (is_driver or is_passenger) else None,
+        'driverAccount': driver.no_cuenta_v if (is_driver or is_passenger) else None,
         'driverImage': getattr(driver, 'user_udc_img', None),
+        'carImage': getattr(car, 'img_car_v', None),
         'carModel': f"{car.mark_car_v} {car.model_car_v}",
         'carMark': car.mark_car_v,
         'carColor': car.color_car_v,
-        'carPlates': car.plates_car_v,
+        'carPlates': car.plates_car_v if (is_driver or is_passenger) else None,
         'totalSeats': total_seats,
-        'seats': seats_list,
+        'seats': seats_sanitized,
         'cost': float(journey.cost_journey_d),
         'availableSeats': journey.available_seats_i,
         'passengersCount': passengers_count,
@@ -333,7 +369,8 @@ def journey_detail_api(request, journey_id):
         'driverLng': driver_lng,
         'dateJourney': journey.date_journey_d.strftime('%d/%m/%y') if journey.date_journey_d else 'hoy',
         'departureTime': journey.time_journey_init_t.strftime('%H:%M') if journey.time_journey_init_t else (origin.hour_init_t or 'Por definir')
-    })
+    }
+    return JsonResponse(response_data)
 
 @csrf_exempt
 @login_required(login_url='login_page')
@@ -421,12 +458,12 @@ def reserve_journey_api(request, journey_id):
         car = journey.id_user_car_journey_i
 
         # 1. Correo para el Conductor
-        driver_subject = "🚘 ¡Nuevo pasajero en tu viaje UniRide!"
+        driver_subject = "¡Nuevo pasajero en tu viaje UniRide!"
         driver_msg_text = f"El usuario {request.user.first_name} {request.user.last_name} ({request.user.email}) ha reservado el Asiento #{requested_seat}.\nPunto de encuentro: {pickup_name}"
         driver_html = f"""
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
             <div style="background-color: #15803d; color: white; padding: 20px; text-align: center;">
-                <h2 style="margin:0;">🚘 ¡Nuevo Pasajero en tu Viaje!</h2>
+                <h2 style="margin:0;">¡Nuevo Pasajero en tu Viaje!</h2>
                 <p style="margin: 5px 0 0 0; opacity: 0.9;">Sistema de Carpooling Universitario UniRide</p>
             </div>
             <div style="padding: 24px; color: #1e293b;">
@@ -452,12 +489,12 @@ def reserve_journey_api(request, journey_id):
         send_custom_email(driver_subject, driver_msg_text, [driver.email], html_content=driver_html)
 
         # 2. Correo para el Pasajero
-        passenger_subject = "✅ ¡Reserva Confirmada en UniRide!"
+        passenger_subject = "¡Reserva Confirmada en UniRide!"
         passenger_msg_text = f"Tu reserva del Asiento #{requested_seat} ha sido confirmada con el conductor {driver.first_name} {driver.last_name}.\nPunto de encuentro: {pickup_name}"
         passenger_html = f"""
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
             <div style="background-color: #00b865; color: white; padding: 20px; text-align: center;">
-                <h2 style="margin:0;">✅ ¡Reserva Confirmada!</h2>
+                <h2 style="margin:0;">¡Reserva Confirmada!</h2>
                 <p style="margin: 5px 0 0 0; opacity: 0.9;">Tu viaje universitario en UniRide</p>
             </div>
             <div style="padding: 24px; color: #1e293b;">
@@ -485,8 +522,7 @@ def reserve_journey_api(request, journey_id):
         """
         send_custom_email(passenger_subject, passenger_msg_text, [request.user.email], html_content=passenger_html)
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).error(f"Error al enviar correos de reserva: {e}")
+        logger.error(f"Error al enviar correos de reserva: {e}")
 
     return JsonResponse({
         'success': True,
@@ -526,11 +562,14 @@ def cancel_reservation_api(request, journey_id):
 @login_required(login_url='login_page')
 @require_http_methods(["POST"])
 def finish_ride_api(request, journey_id):
-    """ API backend para que el conductor finalice un viaje activo """
     journey = Journey.objects.filter(
         pk=journey_id,
         is_active_b=True
-    ).select_related('id_user_car_journey_i__id_user_car_i').first()
+    ).select_related(
+        'id_user_car_journey_i__id_user_car_i',
+        'id_route_journey_i__id_address_origin_i',
+        'id_route_journey_i__id_address_destiny_i'
+    ).first()
 
     if not journey:
         return JsonResponse({'success': False, 'message': 'No se encontró el viaje activo o ya ha finalizado.'}, status=404)
@@ -543,15 +582,88 @@ def finish_ride_api(request, journey_id):
     journey.is_active_b = False
     journey.save()
 
+    passengers = Reservation.objects.filter(
+        id_journey_reservation_i=journey,
+        is_active_b=True
+    ).select_related('id_user_passenger_reservation_i')
+
+    origin  = journey.id_route_journey_i.id_address_origin_i.name_address_v
+    destiny = journey.id_route_journey_i.id_address_destiny_i.name_address_v
+    rate_url = f'/journey/{journey.id_journey_i}/rate/modal/'
+
+    dest_lat = float(journey.id_route_journey_i.id_address_destiny_i.latitude_d)
+    dest_lng = float(journey.id_route_journey_i.id_address_destiny_i.longitude_d)
+
+    trip_completed = False
+    if journey.id_address_journey_i:
+        import math
+        d_lat = float(journey.id_address_journey_i.latitude_d)
+        d_lng = float(journey.id_address_journey_i.longitude_d)
+        R = 6371
+        dlat = math.radians(dest_lat - d_lat)
+        dlng = math.radians(dest_lng - d_lng)
+        a = math.sin(dlat/2)**2 + math.cos(math.radians(d_lat)) * math.cos(math.radians(dest_lat)) * math.sin(dlng/2)**2
+        km = R * 2 * math.asin(math.sqrt(a))
+        trip_completed = km <= 2.0
+
+    try:
+        from users.utils import send_custom_email
+        for reservation in passengers:
+            passenger = reservation.id_user_passenger_reservation_i
+            if trip_completed:
+                html = f"""
+                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                  <div style="background:linear-gradient(135deg,#00b865,#008f4a);color:#fff;padding:22px 24px;">
+                    <h2 style="margin:0;font-size:20px;">&#x1F3C1; Tu viaje ha finalizado</h2>
+                    <p style="margin:6px 0 0;opacity:0.9;font-size:13px;">UniRide &mdash; Universidad de Colima</p>
+                  </div>
+                  <div style="padding:24px;color:#1e293b;">
+                    <p style="font-size:15px;">Hola <strong>{passenger.first_name}</strong>,</p>
+                    <p style="font-size:14px;color:#475569;">El conductor <strong>{driver.first_name} {driver.last_name}</strong> ha finalizado el viaje de <strong>{origin}</strong> a <strong>{destiny}</strong>. Esperamos que hayas llegado bien.</p>
+                    <div style="background:#f0fdf4;border-left:4px solid #00b865;border-radius:8px;padding:16px;margin:20px 0;">
+                      <p style="margin:0;font-size:14px;color:#14532d;">&#x2B50; Tu opini&oacute;n ayuda a mejorar UniRide. &iquest;C&oacute;mo fue tu viaje con {driver.first_name}?</p>
+                    </div>
+                    <a href="{rate_url}" style="display:inline-block;background:linear-gradient(135deg,#00b865,#008f4a);color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;">&#x2B50; Calificar al conductor</a>
+                  </div>
+                  <div style="background:#f8fafc;padding:12px 24px;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">UniRide &mdash; Universidad de Colima</div>
+                </div>"""
+                send_custom_email(
+                    subject='\U0001F3C1 Tu viaje UniRide ha finalizado \u2014 \u00bfC\u00f3mo fue?',
+                    message=f'Hola {passenger.first_name}, el conductor {driver.first_name} {driver.last_name} ha finalizado el viaje de {origin} a {destiny}. Pu\u00e9des calificarlo en: {rate_url}',
+                    recipient_list=[passenger.email],
+                    html_content=html
+                )
+            else:
+                html = f"""
+                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                  <div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:22px 24px;">
+                    <h2 style="margin:0;font-size:20px;">&#x26A0;&#xFE0F; Tu viaje fue cancelado</h2>
+                    <p style="margin:6px 0 0;opacity:0.9;font-size:13px;">UniRide &mdash; Universidad de Colima</p>
+                  </div>
+                  <div style="padding:24px;color:#1e293b;">
+                    <p style="font-size:15px;">Hola <strong>{passenger.first_name}</strong>,</p>
+                    <p style="font-size:14px;color:#475569;">Te informamos que el viaje de <strong>{origin}</strong> a <strong>{destiny}</strong> con el conductor <strong>{driver.first_name} {driver.last_name}</strong> fue finalizado antes de llegar al destino.</p>
+                    <div style="background:#fffbeb;border-left:4px solid #f59e0b;border-radius:8px;padding:16px;margin:20px 0;">
+                      <p style="margin:0;font-size:14px;color:#92400e;">Si tuviste algún inconveniente con este viaje, puedes reportarlo desde la plataforma UniRide.</p>
+                    </div>
+                  </div>
+                  <div style="background:#f8fafc;padding:12px 24px;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">UniRide &mdash; Universidad de Colima</div>
+                </div>"""
+                send_custom_email(
+                    subject='\u26A0\uFE0F Tu viaje UniRide fue cancelado antes de llegar al destino',
+                    message=f'Hola {passenger.first_name}, el viaje de {origin} a {destiny} con {driver.first_name} {driver.last_name} fue finalizado antes de llegar al destino.',
+                    recipient_list=[passenger.email],
+                    html_content=html
+                )
+    except Exception as e:
+        logger.error(f'Error al enviar correos de finalizaci\u00f3n: {e}')
+
     return JsonResponse({
         'success': True,
         'message': '¡El viaje ha finalizado exitosamente!',
         'availableSeats': journey.available_seats_i
     })
 
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
 
 @csrf_exempt
 @login_required(login_url='login_page')
@@ -567,12 +679,18 @@ def update_ride_location_api(request, journey_id):
         pk=journey_id,
         is_active_b=True
     ).select_related(
+        'id_user_car_journey_i__id_user_car_i',
         'id_route_journey_i__id_address_origin_i',
         'id_route_journey_i__id_address_destiny_i'
     ).first()
 
     if not journey:
         return JsonResponse({'success': False, 'message': 'Viaje no encontrado'}, status=404)
+
+    # Verificar que solo el conductor del viaje puede actualizar la ubicación
+    conductor_real = journey.id_user_car_journey_i.id_user_car_i
+    if request.user.id != conductor_real.id:
+        return JsonResponse({'success': False, 'message': 'Solo el conductor del viaje puede actualizar su ubicación.'}, status=403)
 
     route = journey.id_route_journey_i
     origin = route.id_address_origin_i
@@ -648,16 +766,11 @@ def register_car_view(request):
             car.id_user_car_i = request.user
             car.is_active_b = True
 
-            uploaded_file = request.FILES.get('lic_user_car_v')
-            if uploaded_file:
-                content_type = uploaded_file.content_type or 'image/png'
-                file_bytes = uploaded_file.read()
-                base64_encoded = base64.b64encode(file_bytes).decode('utf-8')
-                car.lic_user_car_base64 = f"data:{content_type};base64,{base64_encoded}"
-                car.lic_user_car_v = None
-            elif request.POST.get('lic_user_car_base64'):
+            if request.POST.get('lic_user_car_base64'):
                 car.lic_user_car_base64 = request.POST.get('lic_user_car_base64')
-                car.lic_user_car_v = None
+                
+            if request.POST.get('img_car_base64'):
+                car.img_car_v = request.POST.get('img_car_base64')
 
             car.save()
             form.save_m2m()
@@ -676,10 +789,16 @@ def register_car_view(request):
     else:
         return redirect('profile')
 
+@login_required(login_url='login_page')
 def finish_journey_api(request, journey_id):
     if request.method == 'POST':
         try:
-            journey = Journey.objects.get(pk=journey_id, id_user_car_journey_i=request.user)
+            # Verificar que el usuario autenticado es el conductor del viaje
+            journey = Journey.objects.select_related('id_user_car_journey_i__id_user_car_i').get(
+                pk=journey_id
+            )
+            if journey.id_user_car_journey_i.id_user_car_i != request.user:
+                return JsonResponse({'success': False, 'message': 'No autorizado'}, status=403)
             journey.status_v = 'Finalizado'
             journey.is_active_b = False
             journey.save()
@@ -688,35 +807,88 @@ def finish_journey_api(request, journey_id):
             return JsonResponse({'success': False, 'message': 'Viaje no encontrado'})
     return JsonResponse({'success': False, 'message': 'Método no permitido'})
 
+@login_required(login_url='login_page')
+@require_http_methods(["GET"])
+def feed_updates_api(request):
+    """ API Bulk para actualizar miles de tarjetas con 1 sola petición """
+    ids_param = request.GET.get('ids', '')
+    if not ids_param:
+        return JsonResponse({'updates': {}})
+
+    ride_ids = [int(x) for x in ids_param.split(',') if x.isdigit()]
+
+    journeys = Journey.objects.filter(
+        id_journey_i__in=ride_ids,
+        is_active_b=True,
+        status_v='active'
+    )
+
+    updates = {}
+    for j in journeys:
+        updates[j.id_journey_i] = {
+            'availableSeats': j.available_seats_i,
+            'cost': float(j.cost_journey_d)
+        }
+
+    return JsonResponse({'success': True, 'updates': updates})
+
+@login_required(login_url='login_page')
+@require_http_methods(["POST"])
+def report_user_api(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Datos inválidos'}, status=400)
+
+    journey_id = data.get('report_ride_id')
+    reported_user_id = data.get('report_user_id')
+    reason = data.get('report_reason')
+    description = data.get('description', '')
+
+    if not all([journey_id, reported_user_id, reason]):
+        return JsonResponse({'success': False, 'message': 'Faltan campos requeridos'}, status=400)
+
+    if Report.objects.filter(id_journey_report_i_id=journey_id, id_reporter_i=request.user).exists():
+        return JsonResponse({'success': False, 'message': 'Ya has reportado este viaje anteriormente'})
+
+    try:
+        Report.objects.create(
+            id_journey_report_i_id=journey_id,
+            id_reporter_i=request.user,
+            id_reported_user_i_id=reported_user_id,
+            reason_i=int(reason),
+            description_v=description,
+        )
+        return JsonResponse({'success': True, 'message': 'Reporte enviado exitosamente'})
+    except Exception as e:
+        logger.error(f"Error al crear reporte: {e}")
+        return JsonResponse({'success': False, 'message': 'Error interno al procesar el reporte. Inténtalo de nuevo.'}, status=500)
+
 
 @login_required
 def create_rating_modal(request, journey_id):
-    # 1. Buscamos el viaje usando el ID que viaja en la URL
     journey = get_object_or_404(Journey, pk=journey_id)
-    
-    # 2. Validamos que la petición sea POST (cuando el usuario le da "Guardar" en el modal)
+
+    is_passenger = Reservation.objects.filter(
+        id_journey_reservation_i=journey,
+        id_user_passenger_reservation_i=request.user
+    ).exists()
+
+    if not is_passenger:
+        return JsonResponse({'success': False, 'error': 'Solo los pasajeros del viaje pueden calificar al conductor.'}, status=403)
+
+    if Rating.objects.filter(id_journey_rating_i=journey, id_user_rating_i=request.user).exists():
+        return JsonResponse({'success': False, 'error': 'Ya calificaste este viaje.'}, status=400)
+
     if request.method == 'POST':
         form = RatingForm(request.POST)
-        
         if form.is_valid():
-            # 3. Como el formulario solo tiene el rating y el comentario, 
-            # usamos commit=False para inyectar el viaje y el usuario faltantes.
             rating = form.save(commit=False)
             rating.id_journey_rating_i = journey
             rating.id_user_rating_i = request.user
-            rating.save() # Guardado definitivo en la base de datos
-            
-            # 4. Devolvemos una respuesta de éxito en formato JSON para que el JS cierre el modal
-            return JsonResponse({
-                'success': True,
-                'message': '¡Calificación guardada con éxito!'
-            })
+            rating.save()
+            return JsonResponse({'success': True, 'message': '¡Calificación guardada con éxito!'})
         else:
-            # Si el usuario puso un número inválido o dejó campos vacíos, devolvemos los errores
-            return JsonResponse({
-                'success': False,
-                'errors': form.errors
-            }, status=400)
-            
-    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)

@@ -23,9 +23,11 @@
         <a href="{% url 'profile' %}" class="dropdown-item">
           <i class="fa-solid fa-id-card"></i> Mi Perfil
         </a>
-        <a href="{% url 'profile' %}" class="dropdown-item">
-          <i class="fa-solid fa-car"></i> Cambiar Rol
-        </a>
+        {% if not request.user.groups.all.0.name == 'Conductor' %}
+          <a href="{% url 'profile' %}" class="dropdown-item">
+            <i class="fa-solid fa-car"></i> Cambiar Rol
+          </a>
+        {% endif %}
         <a href="{% url 'change_password' %}" class="dropdown-item">
           <i class="fa-solid fa-key"></i> Cambiar Contraseña
         </a>
