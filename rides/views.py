@@ -562,11 +562,14 @@ def cancel_reservation_api(request, journey_id):
 @login_required(login_url='login_page')
 @require_http_methods(["POST"])
 def finish_ride_api(request, journey_id):
-    """ API backend para que el conductor finalice un viaje activo """
     journey = Journey.objects.filter(
         pk=journey_id,
         is_active_b=True
-    ).select_related('id_user_car_journey_i__id_user_car_i').first()
+    ).select_related(
+        'id_user_car_journey_i__id_user_car_i',
+        'id_route_journey_i__id_address_origin_i',
+        'id_route_journey_i__id_address_destiny_i'
+    ).first()
 
     if not journey:
         return JsonResponse({'success': False, 'message': 'No se encontró el viaje activo o ya ha finalizado.'}, status=404)
@@ -578,6 +581,82 @@ def finish_ride_api(request, journey_id):
     journey.status_v = 'finished'
     journey.is_active_b = False
     journey.save()
+
+    passengers = Reservation.objects.filter(
+        id_journey_reservation_i=journey,
+        is_active_b=True
+    ).select_related('id_user_passenger_reservation_i')
+
+    origin  = journey.id_route_journey_i.id_address_origin_i.name_address_v
+    destiny = journey.id_route_journey_i.id_address_destiny_i.name_address_v
+    rate_url = f'/journey/{journey.id_journey_i}/rate/modal/'
+
+    dest_lat = float(journey.id_route_journey_i.id_address_destiny_i.latitude_d)
+    dest_lng = float(journey.id_route_journey_i.id_address_destiny_i.longitude_d)
+
+    trip_completed = False
+    if journey.id_address_journey_i:
+        import math
+        d_lat = float(journey.id_address_journey_i.latitude_d)
+        d_lng = float(journey.id_address_journey_i.longitude_d)
+        R = 6371
+        dlat = math.radians(dest_lat - d_lat)
+        dlng = math.radians(dest_lng - d_lng)
+        a = math.sin(dlat/2)**2 + math.cos(math.radians(d_lat)) * math.cos(math.radians(dest_lat)) * math.sin(dlng/2)**2
+        km = R * 2 * math.asin(math.sqrt(a))
+        trip_completed = km <= 2.0
+
+    try:
+        from users.utils import send_custom_email
+        for reservation in passengers:
+            passenger = reservation.id_user_passenger_reservation_i
+            if trip_completed:
+                html = f"""
+                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                  <div style="background:linear-gradient(135deg,#00b865,#008f4a);color:#fff;padding:22px 24px;">
+                    <h2 style="margin:0;font-size:20px;">&#x1F3C1; Tu viaje ha finalizado</h2>
+                    <p style="margin:6px 0 0;opacity:0.9;font-size:13px;">UniRide &mdash; Universidad de Colima</p>
+                  </div>
+                  <div style="padding:24px;color:#1e293b;">
+                    <p style="font-size:15px;">Hola <strong>{passenger.first_name}</strong>,</p>
+                    <p style="font-size:14px;color:#475569;">El conductor <strong>{driver.first_name} {driver.last_name}</strong> ha finalizado el viaje de <strong>{origin}</strong> a <strong>{destiny}</strong>. Esperamos que hayas llegado bien.</p>
+                    <div style="background:#f0fdf4;border-left:4px solid #00b865;border-radius:8px;padding:16px;margin:20px 0;">
+                      <p style="margin:0;font-size:14px;color:#14532d;">&#x2B50; Tu opini&oacute;n ayuda a mejorar UniRide. &iquest;C&oacute;mo fue tu viaje con {driver.first_name}?</p>
+                    </div>
+                    <a href="{rate_url}" style="display:inline-block;background:linear-gradient(135deg,#00b865,#008f4a);color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;">&#x2B50; Calificar al conductor</a>
+                  </div>
+                  <div style="background:#f8fafc;padding:12px 24px;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">UniRide &mdash; Universidad de Colima</div>
+                </div>"""
+                send_custom_email(
+                    subject='\U0001F3C1 Tu viaje UniRide ha finalizado \u2014 \u00bfC\u00f3mo fue?',
+                    message=f'Hola {passenger.first_name}, el conductor {driver.first_name} {driver.last_name} ha finalizado el viaje de {origin} a {destiny}. Pu\u00e9des calificarlo en: {rate_url}',
+                    recipient_list=[passenger.email],
+                    html_content=html
+                )
+            else:
+                html = f"""
+                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                  <div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:22px 24px;">
+                    <h2 style="margin:0;font-size:20px;">&#x26A0;&#xFE0F; Tu viaje fue cancelado</h2>
+                    <p style="margin:6px 0 0;opacity:0.9;font-size:13px;">UniRide &mdash; Universidad de Colima</p>
+                  </div>
+                  <div style="padding:24px;color:#1e293b;">
+                    <p style="font-size:15px;">Hola <strong>{passenger.first_name}</strong>,</p>
+                    <p style="font-size:14px;color:#475569;">Te informamos que el viaje de <strong>{origin}</strong> a <strong>{destiny}</strong> con el conductor <strong>{driver.first_name} {driver.last_name}</strong> fue finalizado antes de llegar al destino.</p>
+                    <div style="background:#fffbeb;border-left:4px solid #f59e0b;border-radius:8px;padding:16px;margin:20px 0;">
+                      <p style="margin:0;font-size:14px;color:#92400e;">Si tuviste algún inconveniente con este viaje, puedes reportarlo desde la plataforma UniRide.</p>
+                    </div>
+                  </div>
+                  <div style="background:#f8fafc;padding:12px 24px;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">UniRide &mdash; Universidad de Colima</div>
+                </div>"""
+                send_custom_email(
+                    subject='\u26A0\uFE0F Tu viaje UniRide fue cancelado antes de llegar al destino',
+                    message=f'Hola {passenger.first_name}, el viaje de {origin} a {destiny} con {driver.first_name} {driver.last_name} fue finalizado antes de llegar al destino.',
+                    recipient_list=[passenger.email],
+                    html_content=html
+                )
+    except Exception as e:
+        logger.error(f'Error al enviar correos de finalizaci\u00f3n: {e}')
 
     return JsonResponse({
         'success': True,
@@ -788,31 +867,28 @@ def report_user_api(request):
 
 @login_required
 def create_rating_modal(request, journey_id):
-    # 1. Buscamos el viaje usando el ID que viaja en la URL
     journey = get_object_or_404(Journey, pk=journey_id)
 
-    # 2. Validamos que la petición sea POST (cuando el usuario le da "Guardar" en el modal)
+    is_passenger = Reservation.objects.filter(
+        id_journey_reservation_i=journey,
+        id_user_passenger_reservation_i=request.user
+    ).exists()
+
+    if not is_passenger:
+        return JsonResponse({'success': False, 'error': 'Solo los pasajeros del viaje pueden calificar al conductor.'}, status=403)
+
+    if Rating.objects.filter(id_journey_rating_i=journey, id_user_rating_i=request.user).exists():
+        return JsonResponse({'success': False, 'error': 'Ya calificaste este viaje.'}, status=400)
+
     if request.method == 'POST':
         form = RatingForm(request.POST)
-
         if form.is_valid():
-            # 3. Como el formulario solo tiene el rating y el comentario,
-            # usamos commit=False para inyectar el viaje y el usuario faltantes.
             rating = form.save(commit=False)
             rating.id_journey_rating_i = journey
             rating.id_user_rating_i = request.user
-            rating.save()  # Guardado definitivo en la base de datos
-
-            # 4. Devolvemos una respuesta de éxito en formato JSON para que el JS cierre el modal
-            return JsonResponse({
-                'success': True,
-                'message': '¡Calificación guardada con éxito!'
-            })
+            rating.save()
+            return JsonResponse({'success': True, 'message': '¡Calificación guardada con éxito!'})
         else:
-            # Si el usuario puso un número inválido o dejó campos vacíos, devolvemos los errores
-            return JsonResponse({
-                'success': False,
-                'errors': form.errors
-            }, status=400)
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)

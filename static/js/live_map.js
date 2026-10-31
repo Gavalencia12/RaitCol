@@ -118,6 +118,13 @@ function switchModalRoleView(role = 'visitor') {
   if (reportBtn) {
     reportBtn.style.display = (role === 'passenger') ? 'block' : 'none';
   }
+
+  const rateBtn = document.getElementById('btnRateDriverPassenger');
+  if (rateBtn && role === 'passenger' && currentRideData.id) {
+    rateBtn.setAttribute('data-journey-id', currentRideData.id);
+    const isFinished = currentRideData.status === 'finished' || !currentRideData.isActive;
+    rateBtn.style.display = isFinished ? 'flex' : 'none';
+  }
 }
 
 
@@ -344,14 +351,6 @@ async function handleFinishRide() {
         closeLiveRideModal();
       }
 
-      // Abrir modal de calificación con el journey_id correcto
-      const ratingTrigger = document.getElementById('hiddenRatingTrigger');
-      if (ratingTrigger && currentRideData.id) {
-        ratingTrigger.setAttribute('data-journey-id', currentRideData.id);
-        ratingTrigger.click();
-      }
-
-      // Remover tarjeta del feed (si aún está visible en el DOM)
       const rideCard = document.querySelector(`.ride-card button[onclick*="${currentRideData.id}"]`)?.closest('.ride-card');
       if (rideCard) {
         rideCard.style.transition = 'all 0.3s ease';
@@ -363,6 +362,8 @@ async function handleFinishRide() {
             updateProximityUIFilter();
           }
         }, 300);
+      } else {
+        window.location.reload();
       }
     } else {
       alert(data.message || 'No se pudo finalizar el viaje.');
