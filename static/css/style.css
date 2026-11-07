@@ -181,30 +181,51 @@ a:hover {
 }
 
 .code-inputs-wrapper {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin: 25px 0;
+  display: grid !important;
+  /*  3 columnas iguales para movil*/
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 12px !important; /* Espacio pa'los inputs */
+  margin: 25px auto !important;
+  width: 100% !important;
+  max-width: 240px !important; /* Limita el ancho en móvil para que queden juntos y centrados */
+  box-sizing: border-box !important;
 }
 
 .code-input {
-  width: 55px;
-  height: 60px;
-  font-size: 24px;
-  font-weight: 600;
-  text-align: center;
+  
+  width: 100% !important;
+  height: 60px !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  text-align: center !important;
   border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  border-radius: 8px;
+  border-radius: 8px !important;
   background: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
-  outline: none;
-  transition: all 0.2s ease;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
 }
 
 .code-input:focus {
   border-color: #fff !important;
   background: rgba(255, 255, 255, 0.2) !important;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* EN PANTALLAS GRANDES (Computadoras y Tablets) */
+@media (min-width: 480px) {
+  .code-inputs-wrapper {
+    /*  fila de 6 columnas */
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 8px !important;
+    max-width: 370px !important; 
+  }
+  
+  .code-input {
+    max-width: 55px !important; 
+  }
 }
 
 .timer-text {

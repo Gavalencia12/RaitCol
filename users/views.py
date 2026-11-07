@@ -308,7 +308,7 @@ def verify_code_api(request):
 
     if user.is_active:
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        return JsonResponse({'message': 'Esta cuenta ya está activa. Iniciando sesión.', 'success': True, 'already_active': True}, status=200)
+        return JsonResponse({'message': 'Esta cuenta ya está activa1. Iniciando sesión.', 'success': True, 'already_active': True}, status=200)
 
     try:
         verification = user.verification
@@ -367,7 +367,7 @@ def resend_code_api(request):
         return JsonResponse({'message': 'Usuario no encontrado', 'success': False}, status=404)
 
     if user.is_active:
-        return JsonResponse({'message': 'Esta cuenta ya está activa', 'success': True, 'already_active': True}, status=200)
+        return JsonResponse({'message': 'Esta cuenta ya está activa2', 'success': True, 'already_active': True}, status=200)
 
     verification, created = EmailVerification.objects.get_or_create(user=user)
     verification.generate_code()
@@ -394,4 +394,165 @@ def resend_code_api(request):
         'success': True,
         'email': email
     }, status=200)
+#Olvidar contraseña
+def forgot_password(request):
+    return render(request, 'users/forgot_password.html')
 
+@require_http_methods(["POST"])
+def forgot_user_api(request):
+    data = {}
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'message': 'JSON inválido', 'success': False}, status=400)
+    else:
+        data = request.POST
+
+    email = data.get('email')
+ 
+
+    if not all([email]):
+        return JsonResponse({'message': 'Todos los campos son obligatorios', 'success': False}, status=400)
+
+    # Validar correo institucional
+    if not email.endswith('@ucol.mx'):
+        return JsonResponse({'message': 'El correo debe pertenecer al dominio institucional (@ucol.mx)', 'success': False}, status=400)
+
+    try:
+            user = User.objects.filter(email=email).exists()
+    except Exception as e:
+            logger.error(f"Error al crear usuario: {e}")
+            return JsonResponse({'message': 'NO EXISTE EL CORREO', 'success': False}, status=500)
+
+    
+
+    #if user = User.objects.get(email=email)
+    #user = User.objects.filter(email=email).exists()
+    # Generar código de verificación
+    verification, created = EmailVerification.objects.get_or_create(user=user)
+    verification.generate_code()
+
+    # Enviar correo
+    try:
+        send_custom_email(
+            subject='Verifica tu cuenta en UniRide',
+            message=f'Hola {user},\n\nTu código de verificación para registrarte en UniRide es: {verification.code}\n\nEste código expirará en 15 minutos.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+        )
+    except Exception as e:
+        logger.error(f"Error al enviar correo de verificación: {e}")
+        logger.warning(f"Código de verificación generado para {email} — revisar logs del servidor (SMTP no disponible)")
+        return JsonResponse({
+            'message': 'Registro exitoso. Hubo un problema al enviar el correo de verificación. Por favor contacta a soporte si no recibes el código.',
+            'success': True,
+            'email': email
+        }, status=201)
+
+    return JsonResponse({
+        'message': 'Registro exitoso. Se ha enviado un código de verificación a tu correo.',
+        'success': True,
+        'email': email
+    }, status=201)
+
+@require_http_methods(["POST"])
+def forgot_verify_code_api(request):
+    data = {}
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'message': 'JSON inválido', 'success': False}, status=400)
+    else:
+        data = request.POST
+
+    email = data.get('email')
+    code = data.get('code')
+
+    if not email or not code:
+        return JsonResponse({'message': 'El correo y el código son obligatorios', 'success': False}, status=400)
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return JsonResponse({'message': 'Usuario no encontrado', 'success': False}, status=404)
+
+   # if user.is_active:
+    #    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+     #   return JsonResponse({'message': 'Esta cuenta ya está activa. Iniciando sesión.', 'success': True, 'already_active': True}, status=200)
+
+    try:
+        verification = user.verification
+    except EmailVerification.DoesNotExist:
+        return JsonResponse({'message': 'No se encontró un código de verificación para este correo. Solicita uno nuevo.', 'success': False}, status=400)
+
+    if verification.is_expired():
+        return JsonResponse({'message': 'El código de verificación ha expirado. Solicita uno nuevo.', 'success': False, 'expired': True}, status=400)
+
+    if verification.code != code:
+        return JsonResponse({'message': 'El código de verificación es incorrecto', 'success': False}, status=400)
+    
+   
+    # Activar usuario
+    user.is_active = True
+    user.save()
+    #verification.delete()
+
+    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+    return JsonResponse({
+        'message': 'Cuenta verificada con éxito. Sesión iniciada.',
+        'success': True,
+        'user': {
+            'email': email
+        }
+    }, status=200)
+
+@require_http_methods(["POST"])
+def forgot_resend_code_api(request):
+    data = {}
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'message': 'JSON inválido', 'success': False}, status=400)
+    else:
+        data = request.POST
+
+    email = data.get('email')
+
+    if not email:
+        return JsonResponse({'message': 'El correo es obligatorio', 'success': False}, status=400)
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return JsonResponse({'message': 'Usuario no encontrado', 'success': False}, status=404)
+
+   
+    verification, created = EmailVerification.objects.get_or_create(user=user)
+    verification.generate_code()
+
+    # Enviar correo
+    try:
+        send_custom_email(
+            subject='Nuevo código de verificación - UniRide',
+            message=f'Hola {user.first_name},\n\nTu nuevo código de verificación es: {verification.code}\n\nEste código expirará en 15 minutos.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+        )
+    except Exception as e:
+        logger.error(f"Error al reenviar correo de verificación: {e}")
+        logger.warning(f"Nuevo código generado para {email} — revisar logs del servidor (SMTP no disponible)")
+        return JsonResponse({
+            'message': 'Se ha generado un nuevo código de verificación. Si no lo recibes, contacta a soporte.',
+            'success': True,
+            'email': email
+        }, status=200)
+
+    return JsonResponse({
+        'message': 'Se ha enviado un nuevo código de verificación a tu correo.',
+        'success': True,
+        'email': email
+    }, status=200)
