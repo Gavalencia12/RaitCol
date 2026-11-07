@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+from datetime import timedelta
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
@@ -19,9 +20,13 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from .utils import send_custom_email
 from django.contrib import messages
+from django.db import transaction
+from django.utils import timezone
 from .forms import UserProfileForm
-from rides.models import Car
+from .models import PasswordResetVerification
+from rides.models import Car, DriverModerationStatus, Report
 from rides.forms import CarForm
+from rides.moderation import confirmed_report_count
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +39,29 @@ def login_page(request):
 def register_view(request):
     return render(request, 'users/register.html')
 
+def terms_view(request):
+    return render(request, 'users/terms.html')
+
 @login_required(login_url='login_page')
 def profile_view(request):
     if not request.user.is_authenticated:
         return redirect('login_page')
       
     cars = Car.objects.filter(id_user_car_i=request.user, is_active_b=True)
+    received_reports = Report.objects.filter(
+        id_reported_user_i=request.user,
+    ).select_related(
+        'id_journey_report_i__id_route_journey_i__id_address_origin_i',
+        'id_journey_report_i__id_route_journey_i__id_address_destiny_i',
+    ).order_by('-date_create_t')
+    confirmed_reports_count = confirmed_report_count(request.user)
+    pending_reports_count = received_reports.filter(status=Report.STATUS_PENDING).count()
+    moderation_status = DriverModerationStatus.objects.filter(user=request.user).first()
+    publication_suspended_until = (
+        moderation_status.publish_suspended_until
+        if moderation_status and moderation_status.is_publish_suspended()
+        else None
+    )
 
     is_conductor = request.user.groups.filter(name='Conductor').exists() or cars.exists()
 
@@ -85,6 +107,11 @@ def profile_view(request):
         'car_form_title': car_form_title,
         'car_form': car_form,
         'is_conductor': is_conductor,
+        'confirmed_reports_count': confirmed_reports_count,
+        'pending_reports_count': pending_reports_count,
+        'received_reports': received_reports[:10],
+        'publication_suspended_until': publication_suspended_until,
+        'publication_permanently_blocked': confirmed_reports_count >= 6,
     }
     return render(request, 'users/profile.html', context)
 
@@ -112,6 +139,188 @@ def change_pass_view(request):
     
     # ESTA LÍNEA ES CLAVE: Si falla el POST o es un GET, vuelve a pintar el formulario
     return render(request, 'users/change_password.html', {'form': form})
+
+
+def forgot_password(request):
+    return render(request, 'users/forgot_password.html')
+
+
+def _password_reset_request_data(request):
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return None
+        return data if isinstance(data, dict) else None
+    return request.POST
+
+
+def _request_password_reset_code(email):
+    generic_response = {
+        'success': True,
+        'message': 'Si la cuenta existe y está activa, recibirás un código de recuperación en tu correo.',
+    }
+    user = User.objects.filter(email__iexact=email, is_active=True).first()
+    if user is None:
+        return JsonResponse(generic_response)
+
+    verification, created = PasswordResetVerification.objects.get_or_create(user=user)
+    if not created and verification.created_at > timezone.now() - timedelta(seconds=60):
+        return JsonResponse(generic_response)
+
+    code = verification.generate_code()
+    try:
+        send_custom_email(
+            subject='Código para recuperar tu contraseña | UniRide',
+            message=(
+                f'Hola {user.first_name},\n\n'
+                f'Tu código para recuperar la contraseña es: {code}\n'
+                'El código vence en 10 minutos. Si no solicitaste este cambio, ignora este correo.'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
+    except Exception:
+        verification.delete()
+        logger.exception('Error al enviar el código de recuperación de contraseña.')
+        return JsonResponse({
+            'success': False,
+            'message': 'No se pudo enviar el código. Intenta de nuevo más tarde.',
+        }, status=503)
+
+    return JsonResponse(generic_response)
+
+
+@require_http_methods(["POST"])
+def forgot_user_api(request):
+    data = _password_reset_request_data(request)
+    if data is None:
+        return JsonResponse({'success': False, 'message': 'La solicitud no tiene un formato válido.'}, status=400)
+
+    email = str(data.get('email', '')).strip().lower()
+    if not email or not email.endswith('@ucol.mx'):
+        return JsonResponse({
+            'success': False,
+            'message': 'Ingresa un correo institucional válido (@ucol.mx).',
+        }, status=400)
+
+    return _request_password_reset_code(email)
+
+
+@require_http_methods(["POST"])
+def forgot_resend_code_api(request):
+    data = _password_reset_request_data(request)
+    if data is None:
+        return JsonResponse({'success': False, 'message': 'La solicitud no tiene un formato válido.'}, status=400)
+
+    email = str(data.get('email', '')).strip().lower()
+    if not email or not email.endswith('@ucol.mx'):
+        return JsonResponse({
+            'success': False,
+            'message': 'Ingresa un correo institucional válido (@ucol.mx).',
+        }, status=400)
+
+    return _request_password_reset_code(email)
+
+
+@require_http_methods(["POST"])
+def forgot_verify_code_api(request):
+    data = _password_reset_request_data(request)
+    if data is None:
+        return JsonResponse({'success': False, 'message': 'La solicitud no tiene un formato válido.'}, status=400)
+
+    email = str(data.get('email', '')).strip().lower()
+    code = str(data.get('code', '')).strip()
+    if not email or len(code) != 6 or not code.isdigit():
+        return JsonResponse({
+            'success': False,
+            'message': 'Ingresa el correo y el código de seis dígitos.',
+        }, status=400)
+
+    with transaction.atomic():
+        user = User.objects.select_for_update().filter(email__iexact=email, is_active=True).first()
+        if user is None:
+            return JsonResponse({'success': False, 'message': 'El código no es válido o ha vencido.'}, status=400)
+
+        verification = PasswordResetVerification.objects.select_for_update().filter(user=user).first()
+        if verification is None or verification.is_expired() or verification.attempts >= 5:
+            return JsonResponse({'success': False, 'message': 'El código no es válido o ha vencido.'}, status=400)
+
+        verification.attempts += 1
+        if not verification.check_code(code):
+            verification.save(update_fields=['attempts'])
+            return JsonResponse({'success': False, 'message': 'El código no es válido o ha vencido.'}, status=400)
+
+        verification.verified_at = timezone.now()
+        verification.save(update_fields=['attempts', 'verified_at'])
+        request.session['password_reset_user_id'] = user.pk
+        request.session.set_expiry(10 * 60)
+
+    return JsonResponse({'success': True, 'message': 'Código confirmado. Ahora puedes crear una contraseña nueva.'})
+
+
+@require_http_methods(["POST"])
+def forgot_reset_password_api(request):
+    data = _password_reset_request_data(request)
+    if data is None:
+        return JsonResponse({'success': False, 'message': 'La solicitud no tiene un formato válido.'}, status=400)
+
+    user_id = request.session.get('password_reset_user_id')
+    if not user_id:
+        return JsonResponse({
+            'success': False,
+            'message': 'Verifica primero el código enviado a tu correo.',
+        }, status=403)
+
+    with transaction.atomic():
+        user = User.objects.select_for_update().filter(pk=user_id, is_active=True).first()
+        verification = PasswordResetVerification.objects.select_for_update().filter(
+            user_id=user_id,
+            verified_at__isnull=False,
+        ).first()
+        if user is None or verification is None or verification.is_expired():
+            request.session.pop('password_reset_user_id', None)
+            return JsonResponse({
+                'success': False,
+                'message': 'La verificación venció. Solicita un nuevo código.',
+            }, status=403)
+
+        password = str(data.get('password', ''))
+        password_confirmation = str(data.get('password_confirmation', ''))
+        if not password or password != password_confirmation:
+            return JsonResponse({
+                'success': False,
+                'message': 'Las contraseñas no coinciden.',
+            }, status=400)
+
+        try:
+            validate_password(password, user=user)
+        except ValidationError as error:
+            return JsonResponse({
+                'success': False,
+                'message': ' '.join(error.messages),
+            }, status=400)
+
+        user.set_password(password)
+        user.save(update_fields=['password'])
+        verification.delete()
+        request.session.pop('password_reset_user_id', None)
+
+    try:
+        send_custom_email(
+            subject='Tu contraseña de UniRide fue actualizada',
+            message=(
+                f'Hola {user.first_name},\n\n'
+                'La contraseña de tu cuenta de UniRide se actualizó correctamente. '
+                'Si no realizaste este cambio, comunícate con soporte.'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
+    except Exception:
+        logger.exception('No se pudo enviar la notificación de cambio de contraseña.')
+
+    return JsonResponse({'success': True, 'message': 'Tu contraseña se actualizó correctamente.'})
     
 @require_http_methods(["POST"])
 def login_view(request):
@@ -394,4 +603,3 @@ def resend_code_api(request):
         'success': True,
         'email': email
     }, status=200)
-

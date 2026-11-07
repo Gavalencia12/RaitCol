@@ -132,6 +132,428 @@ button:hover {
   margin-top: 30px;
   color: #fff;
 }
+
+body.login-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 24px 16px;
+  overflow-x: hidden;
+  background: #16a34a;
+}
+
+body.register-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 24px 10px;
+  overflow-x: hidden;
+  background: #16a34a;
+}
+
+body.register-page::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  width: auto;
+  height: auto;
+  background: #16a34a;
+}
+
+body.login-page::before {
+  z-index: -1;
+  background: #16a34a;
+}
+
+.login-page .wrapper.login-wrapper {
+  width: min(440px, 100%);
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 46px rgba(15, 23, 42, 0.2);
+  animation: login-card-enter 650ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+}
+
+.login-page .login-form {
+  display: block;
+}
+
+.login-page .login-hero {
+  position: relative;
+  height: 210px;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(155deg, #22c55e 0%, #16a34a 48%, #15803d 100%);
+}
+
+.login-page .login-hero::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.48) 1px, transparent 1.5px);
+  background-position: 16px 18px;
+  background-size: 42px 38px;
+  content: "";
+  opacity: 0.48;
+}
+
+.login-page .hero-copy {
+  position: absolute;
+  z-index: 3;
+  top: 27px;
+  left: 28px;
+  max-width: 65%;
+  color: #fff;
+  text-align: left;
+  text-shadow: 0 2px 12px rgba(20, 83, 45, 0.22);
+}
+
+.login-page .hero-kicker {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.login-page .hero-copy h1 {
+  color: #fff;
+  font-size: clamp(1.2rem, 4vw, 1.65rem);
+  line-height: 1.15;
+}
+
+.login-page .hero-copy p {
+  max-width: 185px;
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.82rem;
+}
+
+.login-page .scene-cloud {
+  position: absolute;
+  z-index: 1;
+  width: 42px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(240, 253, 244, 0.66);
+  animation: cloud-drift 7s ease-in-out infinite alternate;
+}
+
+.login-page .scene-cloud::before,
+.login-page .scene-cloud::after {
+  position: absolute;
+  bottom: 3px;
+  border-radius: 50%;
+  background: inherit;
+  content: "";
+}
+
+.login-page .scene-cloud::before {
+  left: 8px;
+  width: 19px;
+  height: 19px;
+}
+
+.login-page .scene-cloud::after {
+  right: 7px;
+  width: 15px;
+  height: 15px;
+}
+
+.login-page .scene-cloud-one {
+  top: 43px;
+  right: 40px;
+}
+
+.login-page .scene-cloud-two {
+  top: 91px;
+  right: 160px;
+  transform: scale(0.68);
+  animation-delay: -3s;
+}
+
+.login-page .scene-hill {
+  position: absolute;
+  z-index: 0;
+  bottom: 35px;
+  width: 76%;
+  height: 88px;
+  border-radius: 50% 50% 0 0 / 80% 75% 0 0;
+}
+
+.login-page .scene-hill-back {
+  right: -15%;
+  background: #4ade80;
+  transform: rotate(-8deg);
+}
+
+.login-page .scene-hill-front {
+  bottom: 14px;
+  left: -18%;
+  width: 86%;
+  height: 82px;
+  background: #22c55e;
+  transform: rotate(7deg);
+}
+
+.login-page .scene-tree {
+  position: absolute;
+  z-index: 2;
+  bottom: 55px;
+  width: 4px;
+  height: 29px;
+  border-radius: 4px;
+  background: #358351;
+}
+
+.login-page .scene-tree::before {
+  position: absolute;
+  top: -17px;
+  left: -8px;
+  width: 20px;
+  height: 26px;
+  border-radius: 50% 50% 42% 42%;
+  background: #15803d;
+  content: "";
+}
+
+.login-page .scene-tree-one {
+  left: 18%;
+  transform: scale(0.8);
+}
+
+.login-page .scene-tree-two {
+  right: 10%;
+  bottom: 59px;
+  transform: scale(1.15);
+}
+
+.login-page .scene-tree-three {
+  right: 25%;
+  bottom: 48px;
+  transform: scale(0.65);
+}
+
+.login-page .scene-road {
+  position: absolute;
+  z-index: 2;
+  right: -7%;
+  bottom: -34px;
+  width: 77%;
+  height: 76px;
+  border: 2px solid rgba(240, 253, 244, 0.58);
+  border-bottom: 0;
+  border-radius: 55% 0 0;
+  transform: rotate(-8deg);
+}
+
+.login-page .scene-road::after {
+  position: absolute;
+  top: 29px;
+  left: 25%;
+  width: 42%;
+  border-top: 2px dashed rgba(240, 253, 244, 0.78);
+  content: "";
+  animation: road-dash 5s linear infinite;
+}
+
+.login-page .login-illustration {
+  position: absolute;
+  z-index: 4;
+  right: 10px;
+  bottom: 0;
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 8px rgba(20, 83, 45, 0.16));
+  animation: car-float 2.8s ease-in-out infinite;
+}
+
+.login-page .scene-sparkle {
+  position: absolute;
+  z-index: 2;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f0fdf4;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+  animation: sparkle 2.2s ease-in-out infinite;
+}
+
+.login-page .sparkle-one {
+  top: 26px;
+  right: 150px;
+}
+
+.login-page .sparkle-two {
+  top: 83px;
+  right: 27px;
+  animation-delay: -1s;
+}
+
+.login-page .login-content {
+  padding: 26px 34px 30px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.login-page .login-content > h1 {
+  color: #fff;
+  font-size: 1.75rem;
+  letter-spacing: -0.035em;
+}
+
+.login-page .login-content > .register {
+  margin: 5px 0 24px;
+  color: #f0fdf4;
+  font-size: 0.92rem;
+}
+
+.login-page .input-field {
+  margin: 18px 0;
+  border-bottom-color: rgba(255, 255, 255, 0.65);
+}
+
+.login-page .input-field label {
+  color: #fff;
+  font-size: 0.92rem;
+}
+
+.login-page .input-field label i {
+  color: #dcfce7;
+}
+
+.login-page .input-field input {
+  color: #fff;
+}
+
+.login-page .input-field:focus-within {
+  border-bottom-color: #fff;
+}
+
+.login-page .login-form button {
+  width: 100%;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+  color: #14532d;
+  box-shadow: 0 8px 18px rgba(20, 83, 45, 0.2);
+  transition: background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.login-page .login-form button:hover {
+  transform: translateY(-2px);
+  background: #14532d;
+  color: #fff;
+  box-shadow: 0 12px 22px rgba(20, 83, 45, 0.3);
+}
+
+.login-page .login-content .register {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px 18px;
+  margin: 20px 0 0;
+  color: #f0fdf4;
+  font-size: 0.86rem;
+}
+
+.login-page .wrapper a {
+  color: #f0fdf4;
+}
+
+.login-page .wrapper a:hover {
+  color: #fff;
+}
+
+.login-page .input-field input::placeholder {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+@keyframes login-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes car-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes cloud-drift {
+  from { translate: -5px 0; }
+  to { translate: 8px 0; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.35; scale: 0.8; }
+  50% { opacity: 1; scale: 1.25; }
+}
+
+@keyframes road-dash {
+  to { transform: translateX(18px); }
+}
+
+@media (max-width: 480px) {
+  body.login-page {
+    padding: 14px;
+  }
+
+  .login-page .login-hero {
+    height: 180px;
+  }
+
+  .login-page .hero-copy {
+    top: 23px;
+    left: 22px;
+    max-width: 63%;
+  }
+
+  .login-page .hero-copy p {
+    max-width: 135px;
+  }
+
+  .login-page .hero-kicker {
+    font-size: 0.48rem;
+    letter-spacing: 0.08em;
+  }
+
+  .login-page .login-illustration {
+    right: 2px;
+    bottom: 0;
+    width: 96px;
+    height: 96px;
+  }
+
+  .login-page .login-content {
+    padding: 24px 23px 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page .login-wrapper,
+  .login-page .scene-cloud,
+  .login-page .login-illustration,
+  .login-page .scene-sparkle,
+  .login-page .scene-road::after {
+    animation: none;
+  }
+}
+
 a:hover {
   color: black;
   cursor: pointer;
@@ -144,16 +566,277 @@ a:hover {
   transition: all 0.3s ease-in-out;
 }
 
+.forgot-page .forgot-wrapper {
+  width: min(460px, 100%);
+  max-width: 100%;
+  padding: clamp(24px, 6vw, 36px);
+}
+
+.forgot-page .forgot-heading {
+  margin-bottom: 24px;
+}
+
+.forgot-page .forgot-icon,
+.forgot-page .forgot-complete-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  margin: 0 auto 15px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 1.3rem;
+}
+
+.forgot-page .forgot-heading h1 {
+  color: #fff;
+  font-size: clamp(1.45rem, 5vw, 1.8rem);
+}
+
+.forgot-page .forgot-heading p,
+.forgot-page .forgot-step-copy,
+.forgot-page .forgot-hint {
+  margin-top: 8px;
+  color: #f0fdf4;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.forgot-page .forgot-wrapper form {
+  width: 100%;
+}
+
+.forgot-page .forgot-wrapper .input-field {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+
+.forgot-page .forgot-label {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  color: #fff;
+  font-size: 0.92rem;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: 0.15s ease;
+}
+
+.forgot-page .input-field input:focus ~ .forgot-label,
+.forgot-page .input-field input:valid ~ .forgot-label {
+  top: 10px;
+  font-size: 0.8rem;
+  transform: translateY(-120%);
+}
+
+.forgot-page .forgot-label i {
+  color: #dcfce7;
+}
+
+.forgot-page .forgot-wrapper .input-field input {
+  color: #fff;
+}
+
+.forgot-page .forgot-wrapper .input-field input:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+.forgot-page .forgot-code-inputs {
+  width: 100%;
+  max-width: 360px;
+}
+
+.forgot-page .forgot-step-copy {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.forgot-page .forgot-resend-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 18px;
+  color: #f0fdf4;
+  font-size: 0.86rem;
+}
+
+.forgot-page .forgot-text-button {
+  width: auto;
+  margin: 0;
+  padding: 2px 4px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #fff;
+  font-size: inherit;
+  text-decoration: underline;
+}
+
+.forgot-page .forgot-text-button:hover,
+.forgot-page .forgot-text-button:disabled {
+  transform: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  box-shadow: none;
+}
+
+.forgot-page .forgot-text-button:disabled {
+  cursor: wait;
+}
+
+.forgot-page .forgot-resend-row .timer-text {
+  flex-basis: 100%;
+  margin-top: 4px;
+}
+
+.forgot-page .forgot-hint {
+  margin: -4px 0 6px;
+  font-size: 0.82rem;
+}
+
+.forgot-page .forgot-complete {
+  color: #fff;
+  line-height: 1.6;
+}
+
+.forgot-page .forgot-complete-icon {
+  color: #dcfce7;
+}
+
+.forgot-page .forgot-complete a,
+.forgot-page .forgot-back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.forgot-page .forgot-back-link {
+  margin-top: 22px;
+  font-size: 0.9rem;
+}
+
+.forgot-page .forgot-complete a:hover,
+.forgot-page .forgot-back-link:hover {
+  color: #dcfce7;
+  text-decoration: underline;
+}
+
+.forgot-page .error-message {
+  color: #fee2e2;
+  background: rgba(127, 29, 29, 0.28);
+  border-color: rgba(254, 202, 202, 0.38);
+}
+
+.forgot-page .success-message {
+  color: #f0fdf4;
+}
+
+.register-page .register-wrapper {
+  border: 5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  background: rgba(22, 163, 74, 0.2);
+  box-shadow: 0 20px 46px rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+}
+
+.register-page #registerForm h2,
+.register-page #verificationForm h2 {
+  color: #fff;
+}
+
 .register-subtitle {
-  color: #f3f4f6;
+  color: #f0fdf4;
   font-size: 14px;
   margin-bottom: 20px;
+}
+
+.register-page .input-field label {
+  color: #fff;
+}
+
+.register-page .input-field label i {
+  color: #dcfce7;
+}
+
+.register-page .input-field {
+  border-bottom-color: rgba(255, 255, 255, 0.65);
+}
+
+.register-page .input-field:focus-within {
+  border-bottom-color: #fff;
+}
+
+.register-page .custom-file-upload .file-upload-label {
+  color: #fff;
+}
+
+.register-page .terms-consent,
+.register-page .terms-consent label {
+  color: #f0fdf4;
+}
+
+.register-page .terms-consent a {
+  color: #fff;
+  font-weight: 700;
+}
+
+.register-page .register-wrapper button {
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+  color: #14532d;
+  transition: background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.register-page .register-wrapper button:hover {
+  transform: translateY(-2px);
+  background: #14532d;
+  color: #fff;
+  box-shadow: 0 12px 22px rgba(20, 83, 45, 0.3);
+}
+
+.register-page .register-wrapper a:hover {
+  color: #fff;
 }
 
 .register-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 15px;
+}
+
+@media (max-width: 480px) {
+  .register-page .register-wrapper {
+    width: 100%;
+    max-width: 100%;
+    padding: 24px 18px;
+  }
+
+  .register-page .register-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .register-page .code-inputs-wrapper {
+    gap: 6px;
+  }
+
+  .register-page .code-input {
+    flex: 1;
+    min-width: 0;
+    max-width: 55px;
+  }
 }
 
 .error-message {
@@ -169,15 +852,15 @@ a:hover {
 }
 
 .success-message {
-  color: #22c55e;
+  color: #f0fdf4;
   font-weight: 500;
   font-size: 14px;
   margin: 15px 0;
   text-align: center;
-  background: rgba(34, 197, 94, 0.15);
+  background: rgba(20, 83, 45, 0.24);
   padding: 10px;
   border-radius: 6px;
-  border: 1px solid rgba(34, 197, 94, 0.25);
+  border: 1px solid rgba(220, 252, 231, 0.35);
 }
 
 .code-inputs-wrapper {
@@ -193,9 +876,9 @@ a:hover {
   font-size: 24px;
   font-weight: 600;
   text-align: center;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1) !important;
+  border: 2px solid rgba(255, 255, 255, 0.65) !important;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12) !important;
   color: #fff !important;
   outline: none;
   transition: all 0.2s ease;
@@ -203,12 +886,12 @@ a:hover {
 
 .code-input:focus {
   border-color: #fff !important;
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.24) !important;
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 .timer-text {
-  color: #d1d5db;
+  color: #f0fdf4;
   font-size: 14px;
   margin-top: 10px;
 }

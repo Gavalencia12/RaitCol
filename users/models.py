@@ -1,7 +1,9 @@
 import random
+import secrets
 import string
 from datetime import timedelta
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -56,3 +58,36 @@ class EmailVerification(models.Model):
     def __str__(self):
         return f"Código {self.code} para {self.user.email}"
 
+
+class PasswordResetVerification(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='password_reset_verification',
+        db_column='user_id',
+    )
+    code_hash = models.CharField(max_length=128)
+    created_at = models.DateTimeField(default=timezone.now)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    verified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'password_reset_verification'
+
+    def generate_code(self):
+        code = f'{secrets.randbelow(1_000_000):06d}'
+        self.code_hash = make_password(code)
+        self.created_at = timezone.now()
+        self.attempts = 0
+        self.verified_at = None
+        self.save()
+        return code
+
+    def check_code(self, code):
+        return check_password(code, self.code_hash)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+
+    def __str__(self):
+        return f"Código de recuperación para {self.user.email}"

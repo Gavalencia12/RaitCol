@@ -37,7 +37,8 @@ function setupMapboxGLMap() {
         const geolocateControl = new mapboxgl.GeolocateControl({
           positionOptions: { enableHighAccuracy: true },
           trackUserLocation: true,
-          showUserHeading: true
+          showUserHeading: true,
+          showUserLocation: true
         });
         liveMapInstance.addControl(geolocateControl, 'bottom-left');
 
@@ -249,6 +250,7 @@ function addCustomMapboxMarkers(map) {
     </div>
   `;
   liveDriverMarker = new mapboxgl.Marker(elCar).setLngLat([driverLng, driverLat]).addTo(map);
+  updatePassengerRideMarker(map);
 
   // 1. Si es visitante (va a reservar), agregar Marcador de Punto de Encuentro Arrastrable
   const isVisitor = !currentRideData.isDriver && !currentRideData.isPassenger;
@@ -259,7 +261,7 @@ function addCustomMapboxMarkers(map) {
   // 2. Renderizar pines de abordaje de pasajeros confirmados en el mapa
   if (Array.isArray(currentRideData.seats)) {
     currentRideData.seats.forEach(seat => {
-      if (seat.isTaken && seat.pickupLat && seat.pickupLng) {
+      if (seat.isTaken && !(seat.isCurrentUser && seat.isPickedUp) && seat.pickupLat && seat.pickupLng) {
         const pLat = parseCoord(seat.pickupLat, null);
         const pLng = parseCoord(seat.pickupLng, null);
         if (pLat !== null && pLng !== null) {
@@ -275,6 +277,46 @@ function addCustomMapboxMarkers(map) {
         }
       }
     });
+  }
+}
+
+function updatePassengerRideMarker(map = liveMapInstance) {
+  if (!map || !currentRideData.isPassenger) return;
+
+  const mySeat = Array.isArray(currentRideData.seats)
+    ? currentRideData.seats.find(seat => seat.isCurrentUser && seat.isTaken)
+    : null;
+  const mapContainer = map.getContainer();
+
+  if (!mySeat?.isPickedUp) {
+    livePassengerMarker?.remove();
+    livePassengerMarker = null;
+    mapContainer.classList.remove('passenger-picked-up');
+    return;
+  }
+
+  const driverLat = parseCoord(currentRideData.driverLat, null);
+  const driverLng = parseCoord(currentRideData.driverLng, null);
+  if (driverLat === null || driverLng === null) return;
+
+  mapContainer.classList.add('passenger-picked-up');
+  if (!livePassengerMarker) {
+    const passengerElement = document.createElement('div');
+    passengerElement.className = 'custom-map-pin passenger-riding-pin';
+    const passengerLabel = document.createElement('span');
+    passengerLabel.className = 'passenger-riding-label';
+    passengerLabel.textContent = `${mySeat.passengerName || 'Tú'} · viaja aquí`;
+    const passengerIcon = document.createElement('span');
+    passengerIcon.className = 'passenger-riding-icon';
+    passengerIcon.innerHTML = '<i class="fas fa-user"></i>';
+    passengerElement.append(passengerIcon, passengerLabel);
+    livePassengerMarker = new mapboxgl.Marker({
+      element: passengerElement,
+      anchor: 'center',
+      offset: [34, 0],
+    }).setLngLat([driverLng, driverLat]).addTo(map);
+  } else {
+    livePassengerMarker.setLngLat([driverLng, driverLat]);
   }
 }
 

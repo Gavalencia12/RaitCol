@@ -18,6 +18,9 @@ function renderDriverPassengersList(seatsList = []) {
   takenSeats.forEach(seat => {
     const el = document.createElement('div');
     el.style.cssText = 'padding: 10px 12px; border-radius: 10px; background: #ffffff; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px;';
+    const pickupStatus = seat.isPickedUp
+      ? '<span style="font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:6px 10px;border-radius:12px;white-space:nowrap;"><i class="fas fa-check"></i> Recogido</span>'
+      : `<button type="button" class="mark-passenger-picked-up" data-reservation-id="${seat.reservationId}" onclick="markPassengerPickedUp(this)"><i class="fas fa-person-circle-check"></i> Marcar recogido</button>`;
 
     el.innerHTML = `
       <div style="display: flex; align-items: center; gap: 10px;">
@@ -29,13 +32,46 @@ function renderDriverPassengersList(seatsList = []) {
           <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Asiento #${seat.seatNumber} • ${seat.passengerAccount ? `Cuenta: ${seat.passengerAccount}` : 'Confirmado'}</span>
         </div>
       </div>
-      <span style="font-size: 11px; font-weight: 700; color: #15803d; background: #dcfce7; padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
-        <i class="fas fa-location-dot"></i> En Ubicación
-      </span>
+      ${pickupStatus}
     `;
 
     container.appendChild(el);
   });
+}
+
+async function markPassengerPickedUp(button) {
+  const reservationId = button?.dataset.reservationId;
+  if (!reservationId || !currentRideData.id) return;
+
+  button.disabled = true;
+  try {
+    const response = await fetch(
+      `/api/journey/${currentRideData.id}/reservations/${reservationId}/picked-up/`,
+      {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+        },
+      }
+    );
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'No se pudo confirmar el abordaje.');
+    }
+
+    currentRideData.seats = currentRideData.seats.map(seat => (
+      seat.reservationId === Number(reservationId)
+        ? { ...seat, isPickedUp: true }
+        : seat
+    ));
+    renderSeatsGrid(currentRideData.seats, 'driver');
+    renderDriverPassengersList(currentRideData.seats);
+    showReportToast('Abordaje confirmado. El pasajero aparecerá junto a tu vehículo.', 'success');
+  } catch (error) {
+    console.error('Error al confirmar que el pasajero abordó:', error);
+    showReportToast(error.message || 'No se pudo confirmar el abordaje. Intenta de nuevo.', 'error');
+    button.disabled = false;
+  }
 }
 
 function startDriverGpsWatch(rideId) {

@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
-<body>
+<body class="register-page">
   <div class="wrapper register-wrapper">
     <form id="registerForm" data-register-url="{% url 'register_api' %}" data-csrf="{{ csrf_token }}">
       <h2>Registro</h2>
@@ -70,6 +70,13 @@
         <div id="registerUserImgPreviewContainer" style="display: none; margin-top: 12px; text-align: center;">
           <img id="registerUserImgPreview" src="" alt="Vista previa rostro" style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); object-fit: cover; display: inline-block;">
         </div>
+      </div>
+
+      <div class="terms-consent" style="margin: 10px;">
+        <label>
+          <input type="checkbox" id="accept_terms" required>
+          <span>Acepto los <a href="{% url 'terms' %}" target="_blank" rel="noopener noreferrer">términos y condiciones</a>.</span>
+        </label>
       </div>
 
       <button type="submit">Registrarse</button>

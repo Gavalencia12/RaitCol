@@ -8,7 +8,7 @@
   <title>UniRide - Mi Perfil</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-  <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+  <link rel="stylesheet" href="{% static 'css/profile.css' %}?v=moderation-profile-green-2">
   <!-- Iconos de FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -59,6 +59,62 @@
           </div>
 
           <div class="profile-card-body">
+            {% if is_conductor %}
+            <section class="moderation-profile-card" aria-labelledby="moderationProfileTitle">
+              <div class="moderation-profile-heading">
+                <span class="moderation-profile-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                <div>
+                  <h3 id="moderationProfileTitle">Estado de reportes de tus viajes</h3>
+                  <p>Los reportes pendientes no cuentan como advertencias hasta que sean revisados.</p>
+                </div>
+              </div>
+
+              <div class="moderation-profile-counts">
+                <span><strong>{{ confirmed_reports_count }}</strong> confirmado{{ confirmed_reports_count|pluralize:"s" }}</span>
+                <span><strong>{{ pending_reports_count }}</strong> en revisión</span>
+              </div>
+
+              {% if publication_permanently_blocked %}
+              <p class="moderation-profile-alert moderation-profile-alert-blocked">
+                <i class="fa-solid fa-ban"></i> Alcanzaste el límite de reportes confirmados y no puedes publicar nuevos viajes. Puedes seguir reservando.
+              </p>
+              {% elif publication_suspended_until %}
+              <p class="moderation-profile-alert moderation-profile-alert-suspended">
+                <i class="fa-solid fa-clock"></i> Tu publicación de viajes está suspendida hasta {{ publication_suspended_until|date:"d/m/Y H:i" }}.
+              </p>
+              {% elif confirmed_reports_count %}
+              <p class="moderation-profile-alert moderation-profile-alert-warning">
+                <i class="fa-solid fa-triangle-exclamation"></i> Tus viajes activos muestran las advertencias confirmadas para que los usuarios puedan identificarlas.
+              </p>
+              {% endif %}
+
+              {% if received_reports %}
+              <details class="moderation-profile-history">
+                <summary>Ver actividad reciente de reportes</summary>
+                <ul>
+                  {% for report in received_reports %}
+                  <li>
+                    <span>
+                      Viaje: {{ report.id_journey_report_i.id_route_journey_i.id_address_origin_i.name_address_v }}
+                      <i class="fa-solid fa-arrow-right"></i>
+                      {{ report.id_journey_report_i.id_route_journey_i.id_address_destiny_i.name_address_v }}
+                      <small>{{ report.date_create_t|date:"d/m/Y H:i" }}</small>
+                    </span>
+                    {% if report.status == 'confirmed' %}
+                    <strong class="moderation-history-status is-confirmed">Confirmado</strong>
+                    {% elif report.status == 'dismissed' %}
+                    <strong class="moderation-history-status is-dismissed">Descartado</strong>
+                    {% else %}
+                    <strong class="moderation-history-status is-pending">En revisión</strong>
+                    {% endif %}
+                  </li>
+                  {% endfor %}
+                </ul>
+              </details>
+              {% endif %}
+            </section>
+            {% endif %}
+
             <form method="POST" action="{% url 'profile' %}" enctype="multipart/form-data" class="profile-form">
               {% csrf_token %}
 

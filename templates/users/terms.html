@@ -1,0 +1,318 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#16a34a">
+  <title>Términos y condiciones | UniRide</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    body.terms-page {
+      position: relative;
+      display: block;
+      min-height: 100vh;
+      min-height: 100svh;
+      padding: clamp(16px, 4vw, 40px) 14px;
+      overflow-x: hidden;
+      background: #16a34a;
+    }
+
+    .terms-page::before {
+      position: fixed;
+      z-index: -1;
+      inset: 0;
+      width: auto;
+      height: auto;
+      background:
+        radial-gradient(ellipse at 10% 5%, rgba(74, 222, 128, 0.55), transparent 34%),
+        radial-gradient(ellipse at 95% 90%, rgba(20, 83, 45, 0.24), transparent 36%),
+        #16a34a;
+    }
+
+    .terms-card {
+      width: min(900px, 100%);
+      margin: 0 auto;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      color: #1f2937;
+      box-shadow: 0 22px 55px rgba(20, 83, 45, 0.26);
+    }
+
+    .terms-header {
+      padding: clamp(24px, 5vw, 42px);
+      background: linear-gradient(135deg, #15803d, #16a34a 62%, #22c55e);
+      color: #fff;
+    }
+
+    .terms-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 22px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .terms-brand-mark {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .terms-header h1 {
+      max-width: 700px;
+      margin-bottom: 12px;
+      font-size: clamp(1.7rem, 5vw, 2.45rem);
+      line-height: 1.15;
+    }
+
+    .terms-header p {
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.6;
+    }
+
+    .terms-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 20px;
+      margin-top: 20px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.9rem;
+    }
+
+    .terms-body {
+      padding: clamp(22px, 5vw, 42px);
+    }
+
+    .terms-intro {
+      margin-bottom: 28px;
+      color: #475569;
+      font-size: 1.02rem;
+      line-height: 1.75;
+    }
+
+    .terms-section {
+      padding: 21px 0;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .terms-section h2 {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: #166534;
+      font-size: clamp(1.05rem, 3vw, 1.2rem);
+      line-height: 1.45;
+    }
+
+    .terms-section h2 span {
+      flex: 0 0 auto;
+      color: #16a34a;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .terms-section p,
+    .terms-section li {
+      color: #475569;
+      font-size: 0.96rem;
+      line-height: 1.75;
+    }
+
+    .terms-section ul,
+    .terms-section ol {
+      display: grid;
+      gap: 10px;
+      padding-left: 23px;
+    }
+
+    .terms-section li {
+      padding-left: 4px;
+    }
+
+    .terms-section li::marker {
+      color: #16a34a;
+      font-weight: 700;
+    }
+
+    .terms-section strong {
+      color: #334155;
+    }
+
+    .terms-section code {
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #f0fdf4;
+      color: #166534;
+      font-size: 0.9em;
+    }
+
+    .terms-footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px clamp(22px, 5vw, 42px);
+      border-top: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .terms-footer p {
+      color: #64748b;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .terms-footer a {
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 18px;
+      border-radius: 9px;
+      background: #16a34a;
+      color: #fff;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 180ms ease, transform 180ms ease;
+    }
+
+    .terms-footer a:hover {
+      transform: translateY(-1px);
+      background: #15803d;
+      color: #fff;
+    }
+
+    .terms-footer a:focus-visible {
+      outline: 3px solid #86efac;
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 520px) {
+      .terms-header {
+        padding: 24px 20px;
+      }
+
+      .terms-brand {
+        margin-bottom: 17px;
+      }
+
+      .terms-body {
+        padding: 22px 20px;
+      }
+
+      .terms-section {
+        padding: 18px 0;
+      }
+
+      .terms-footer {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body class="terms-page">
+  <main class="terms-card">
+    <header class="terms-header">
+      <div class="terms-brand">
+        <span class="terms-brand-mark" aria-hidden="true">U</span>
+        <span>UniRide</span>
+      </div>
+      <h1>Términos y condiciones de uso</h1>
+      <p>Plataforma de Movilidad Estudiantil — Universidad de Colima</p>
+      <div class="terms-meta">
+        <span><strong>Última actualización:</strong> Noviembre de 2026</span>
+        <span>Lee este documento antes de completar tu registro.</span>
+      </div>
+    </header>
+
+    <div class="terms-body">
+      <p class="terms-intro">Bienvenido/a a <strong>UniRide</strong>. Antes de completar tu registro, lee detenidamente los presentes Términos y Condiciones. Al crear una cuenta y acceder a nuestros servicios, declaras haber leído, comprendido y aceptado en su totalidad las disposiciones que se detallan a continuación.</p>
+
+      <section class="terms-section">
+        <h2><span>01</span> Naturaleza y Propósito del Servicio</h2>
+        <p>UniRide es una plataforma web desarrollada de forma exclusiva para la comunidad de la Universidad de Colima. Su único propósito es <strong>facilitar el contacto y la coordinación de viajes compartidos (<em>carpooling</em>)</strong> entre estudiantes, docentes y personal institucional, promoviendo la movilidad sustentable, la seguridad comunitaria y la división equitativa de gastos de traslado. UniRide <strong>no es un servicio de transporte público ni privado de pasajeros con fines de lucro</strong>, ni actúa como empresa de taxi o chofer privado.</p>
+      </section>
+
+      <section class="terms-section">
+        <h2><span>02</span> Elegibilidad y Cuentas de Usuario</h2>
+        <ul>
+          <li><strong>Acceso Institucional:</strong> El uso de UniRide está estrictamente restringido a miembros activos de la Universidad de Colima. El usuario debe registrarse obligatoriamente utilizando su correo electrónico institucional (<code>@ucol.mx</code>).</li>
+          <li><strong>Verificación de Identidad:</strong> Para habilitar las funciones operativas, el usuario debe proporcionar información veraz, incluyendo su número de cuenta, credencial universitaria vigente y fotografía de perfil. UniRide se reserva el derecho de suspender cuentas no verificadas o con datos falsos.</li>
+          <li><strong>Custodia de Credenciales:</strong> El usuario es el único responsable de mantener la confidencialidad de sus claves de acceso y de toda la actividad realizada desde su cuenta. Queda estrictamente prohibida la transferencia, venta o préstamo de cuentas a terceros.</li>
+        </ul>
+      </section>
+
+      <section class="terms-section">
+        <h2><span>03</span> Normas de Convivencia y Uso Responsable</h2>
+        <p>Todos los miembros de UniRide se comprometen a mantener un ambiente seguro, respetuoso y colaborativo. Queda estrictamente prohibido:</p>
+        <ol>
+          <li>Usar la plataforma para fines ilícitos, comerciales o con afán de lucro desmedido.</li>
+          <li>Publicar viajes, horarios o rutas falsas que entorpezcan la logística de otros estudiantes.</li>
+          <li>Incurrir en conductas de acoso, discriminación, faltas de respeto o violencia verbal/física hacia cualquier miembro de la comunidad.</li>
+          <li>Conducir sin licencia vigente, sin tarjeta de circulación o bajo los efectos del alcohol, drogas o cualquier sustancia psicoactiva.</li>
+        </ol>
+      </section>
+
+      <section class="terms-section">
+        <h2><span>04</span> Publicación, Reserva y Coordinación de Viajes</h2>
+        <ul>
+          <li><strong>Conductores:</strong> Garantizan que el vehículo registrado cuenta con las condiciones mecánicas óptimas, documentación legal al día y la capacidad de asientos declarada en el sistema. Deben respetar los puntos de encuentro y horarios fijados.</li>
+          <li><strong>Pasajeros:</strong> Deben acudir puntualmente a los puntos de encuentro acordados a través del mapa interactivo y notificar con suficiente anticipación en caso de requerir la cancelación de su reserva.</li>
+          <li><strong>Aportación voluntaria:</strong> Los costos calculados por la plataforma corresponden a una estimación justa para compartir gastos operativos del viaje (combustible y peajes). En ningún caso constituyen una tarifa de cobro por servicio comercial.</li>
+        </ul>
+      </section>
+
+      <section class="terms-section">
+        <h2><span>05</span> Deslinde de Responsabilidad y Gestión de Riesgos</h2>
+        <p>UniRide actúa únicamente como una herramienta tecnológica de enlace entre particulares universitarios:</p>
+        <ul>
+          <li>Cada conductor y pasajero asume de manera voluntaria y responsable las decisiones de movilidad y los riesgos inherentes al traslado en vía pública.</li>
+          <li>UniRide no se hace responsable por retrasos, cancelaciones de última hora, pérdida de objetos personales, fallas mecánicas de los vehículos o accidentes de tránsito ocurridos durante el trayecto.</li>
+          <li>Se exhorta a todos los participantes a respetar las leyes y reglamentos de tránsito vigentes en el estado y municipio correspondiente.</li>
+        </ul>
+      </section>
+
+      <section class="terms-section">
+        <h2><span>06</span> Sistema de Reportes, Calificaciones y Sanciones</h2>
+        <p>UniRide cuenta con mecanismos de moderación comunitaria (reportes de incidencias y evaluaciones mutuas) para preservar la seguridad de la plataforma:</p>
+        <ul>
+          <li>UniRide se reserva la facultad de <strong>suspender temporal o permanentemente</strong> a cualquier usuario que acumule reportes de mala conducta, cancele viajes de forma recurrente sin justificación, ponga en riesgo la integridad de otros alumnos o incumpla los presentes Términos y Condiciones.</li>
+        </ul>
+      </section>
+
+      <section class="terms-section">
+        <h2><span>07</span> Protección de Datos Personales</h2>
+        <p>La información recabada (fotografías, coordenadas GPS de punto de encuentro, número de cuenta y correo) se utilizará exclusivamente para la operación técnica del sistema, la verificación de seguridad y la optimización de rutas. UniRide no comercializará ni compartirá tus datos personales con terceros sin tu consentimiento expreso, salvo por requerimiento de autoridades competentes.</p>
+      </section>
+
+      <section class="terms-section">
+        <h2><span>08</span> Modificaciones a los Términos</h2>
+        <p>UniRide se reserva el derecho de actualizar o modificar los presentes Términos y Condiciones para adaptarlos a mejoras en el software o cambios en la normativa institucional. Las modificaciones serán notificadas a través de la plataforma. El uso continuado del sistema tras una actualización constituye la aceptación implícita de los nuevos términos.</p>
+      </section>
+
+      <section class="terms-section">
+        <h2><span>09</span> Aceptación Expresa</h2>
+        <p>Al marcar la casilla <strong>“Acepto los Términos y Condiciones”</strong> durante la fase de registro y verificación OTP, confirmas que eres mayor de edad o estudiante universitario acreditado, que has leído íntegramente este documento y que te comprometes a cumplir con cada una de sus cláusulas para la seguridad de la comunidad de la Universidad de Colima.</p>
+      </section>
+    </div>
+
+    <footer class="terms-footer">
+      <p>¿Ya revisaste las condiciones? Puedes volver al formulario de registro cuando quieras.</p>
+      <a href="{% url 'register' %}">Volver al registro</a>
+    </footer>
+  </main>
+</body>
+</html>

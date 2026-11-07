@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 class Address(models.Model):
     id_address_i = models.AutoField(primary_key=True, db_column='id_address_i')
@@ -91,6 +92,7 @@ class Reservation(models.Model):
     pickup_lat = models.DecimalField(max_digits=18, decimal_places=12, null=True, blank=True, db_column='pickup_lat_d')
     pickup_lng = models.DecimalField(max_digits=18, decimal_places=12, null=True, blank=True, db_column='pickup_lng_d')
     pickup_name_v = models.CharField(max_length=150, null=True, blank=True, db_column='pickup_name_v')
+    picked_up_b = models.BooleanField(default=False, db_column='picked_up_b')
     date_create_t = models.DateTimeField(auto_now_add=True, db_column='date_create_t')
     date_update_t = models.DateTimeField(auto_now=True, db_column='date_update_t')
     is_active_b = models.BooleanField(default=True, db_column='is_active_b')
@@ -119,6 +121,15 @@ class Rating(models.Model):
 
 
 class Report(models.Model):
+    STATUS_PENDING = 'pending'
+    STATUS_CONFIRMED = 'confirmed'
+    STATUS_DISMISSED = 'dismissed'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pendiente'),
+        (STATUS_CONFIRMED, 'Confirmado'),
+        (STATUS_DISMISSED, 'Descartado'),
+    ]
+
     REASON_CHOICES = [
         (1, 'Incumplimiento de ruta'),
         (2, 'Comportamiento irrespetuoso'),
@@ -134,6 +145,16 @@ class Report(models.Model):
     reason_i = models.IntegerField(choices=REASON_CHOICES, db_column='reason_i')
     description_v = models.TextField(blank=True, db_column='description_v')
     date_create_t = models.DateTimeField(auto_now_add=True, db_column='date_create_t')
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=STATUS_PENDING, db_column='status_v')
+    reviewed_at = models.DateTimeField(null=True, blank=True, db_column='reviewed_at_t')
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reports_reviewed',
+        db_column='reviewed_by_i',
+    )
 
     class Meta:
         db_table = 'report'
@@ -142,3 +163,21 @@ class Report(models.Model):
     def __str__(self):
         return f"Reporte {self.id_report_i} - Viaje {self.id_journey_report_i_id} - Razón: {self.get_reason_i_display()}"
 
+
+class DriverModerationStatus(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='driver_moderation_status',
+        db_column='user_id',
+    )
+    publish_suspended_until = models.DateTimeField(null=True, blank=True, db_column='publish_suspended_until_t')
+
+    class Meta:
+        db_table = 'driver_moderation_status'
+
+    def is_publish_suspended(self, at=None):
+        return bool(self.publish_suspended_until and self.publish_suspended_until > (at or timezone.now()))
+
+    def __str__(self):
+        return f"Estado de moderación de {self.user}"
