@@ -99,7 +99,16 @@ async function submitReport(event) {
 
         if (data.success) {
             closeReportUserModal();
-            showReportToast(data.message || 'Reporte enviado exitosamente.', 'success');
+            const moderatorMessage = data.moderators_notified
+                ? 'El personal moderador recibió un aviso para revisarlo dentro de UniRide.'
+                : 'No hay cuentas de personal con permiso de moderación y correo configuradas; el reporte quedó guardado para revisión en UniRide.';
+            const driverMessage = data.driver_notified
+                ? ''
+                : ' No se pudo enviar el aviso al conductor.';
+            showReportToast(
+                `${data.message || 'Reporte enviado exitosamente.'} ${moderatorMessage}${driverMessage}`,
+                data.moderators_notified ? 'success' : 'warning'
+            );
         } else {
             showReportToast(data.message || 'No se pudo enviar el reporte.', 'error');
         }

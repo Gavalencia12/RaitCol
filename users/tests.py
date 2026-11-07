@@ -1,8 +1,10 @@
+import re
+from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
-from .models import User, EmailVerification
+from .models import User, EmailVerification, PasswordResetVerification
 
 # Create your tests here.
 
@@ -320,3 +322,83 @@ class UserTestCase(TestCase):
         self.assertEqual(self.user.credential_udc_base64, dummy_base64)
         self.assertEqual(self.user.get_credential_display(), dummy_base64)
 
+
+class PasswordResetFlowTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='password_reset_user',
+            email='passwordreset@ucol.mx',
+            password='OriginalPassword123!',
+            first_name='Password',
+            last_name='Reset',
+            no_cuenta_v='20998877',
+            user_udc_img='profile-image',
+        )
+
+    @patch('users.views.send_custom_email')
+    def test_password_reset_code_verifies_and_changes_password(self, send_email):
+        request_response = self.client.post(
+            reverse('forgot_user_api'),
+            data={'email': self.user.email},
+            content_type='application/json',
+        )
+        self.assertEqual(request_response.status_code, 200)
+        self.assertTrue(request_response.json()['success'])
+        send_email.assert_called_once()
+
+        code = re.search(r'\b\d{6}\b', send_email.call_args.kwargs['message']).group()
+        verify_response = self.client.post(
+            reverse('forgot_verify_code_api'),
+            data={'email': self.user.email, 'code': code},
+            content_type='application/json',
+        )
+        self.assertEqual(verify_response.status_code, 200)
+
+        new_password = 'Zp7!vQ4#nR8xL2'
+        reset_response = self.client.post(
+            reverse('forgot_reset_password_api'),
+            data={
+                'password': new_password,
+                'password_confirmation': new_password,
+            },
+            content_type='application/json',
+        )
+        self.assertEqual(reset_response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(new_password))
+        self.assertFalse(PasswordResetVerification.objects.filter(user=self.user).exists())
+
+    @patch('users.views.send_custom_email')
+    def test_password_reset_rejects_code_after_five_attempts(self, send_email):
+        self.client.post(
+            reverse('forgot_user_api'),
+            data={'email': self.user.email},
+            content_type='application/json',
+        )
+        code = re.search(r'\b\d{6}\b', send_email.call_args.kwargs['message']).group()
+
+        for _ in range(5):
+            response = self.client.post(
+                reverse('forgot_verify_code_api'),
+                data={'email': self.user.email, 'code': '000000' if code != '000000' else '999999'},
+                content_type='application/json',
+            )
+            self.assertEqual(response.status_code, 400)
+
+        response = self.client.post(
+            reverse('forgot_verify_code_api'),
+            data={'email': self.user.email, 'code': code},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(self.client.session.get('password_reset_user_id'))
+
+    def test_password_reset_request_does_not_disclose_unknown_accounts(self):
+        response = self.client.post(
+            reverse('forgot_user_api'),
+            data={'email': 'unknown@ucol.mx'},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['success'])
+        self.assertIn('Si la cuenta existe', response.json()['message'])

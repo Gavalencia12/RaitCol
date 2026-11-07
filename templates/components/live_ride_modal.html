@@ -137,6 +137,10 @@
             </div>
           </div>
 
+          <div id="passengerPickupStatus" class="passenger-pickup-status" role="status" aria-live="polite">
+            Esperando la confirmación de abordaje del conductor.
+          </div>
+
           <button class="btn-cancel-reservation" id="btnCancelReservationAction" type="button"
             style="width: 100%; margin-top: 12px; padding: 10px; background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;">
             <i class="fas fa-ban"></i> Cancelar mi Reserva
@@ -175,6 +179,7 @@
               <span id="driverSeatsSubtitle" style="font-size: 11px; color: #0284c7; font-weight: 600;">Ocupación
                 actual</span>
             </h5>
+            <p class="driver-pickup-help">Cuando suba un pasajero, toca <strong>Marcar recogido</strong> junto a su nombre.</p>
             <div class="driver-seats-list" id="driverSeatsContainer"
               style="display: flex; flex-direction: column; gap: 8px;">
             </div>

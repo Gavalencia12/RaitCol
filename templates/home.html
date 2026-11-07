@@ -12,8 +12,8 @@
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
 
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-  <link rel="stylesheet" href="{% static 'css/live_ride.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=driver-reservations-2">
+  <link rel="stylesheet" href="{% static 'css/live_ride.css' %}?v=pickup-confirm-2">
   <link rel="stylesheet" href="{% static 'css/profile.css' %}">
   <link rel="stylesheet" href="{% static 'css/reportuser.css' %}">
   <link rel="stylesheet" href="{% static 'css/calificacion_modal.css' %}">
@@ -29,21 +29,39 @@
 
   <main class="main-container">
     <div class="welcome-header">
-      {% if request.user.groups.all.0.name == 'Conductor' %}
+      {% if is_driver %}
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
           <div>
-            <h1>{{ title|default:"¡Bienvenido a UniRide!" }}</h1>
+            <h1>{{ title|default:"¡UniRide les da la Bienvenida!" }}</h1>
             <p>{{ description|default:"Encuentra o publica tu viaje universitario de forma segura." }}</p>
           </div>
-          <!-- Botón para Conductor -->
-            <button type="button" class="btn-submit" id="myBtn" style="width: auto; padding: 10px 20px;">
-              <i class="fas fa-car"></i> Publicar viaje
-            </button>
+          <div class="driver-publish-actions">
+            {% if can_publish %}
+              <button type="button" class="btn-submit" id="myBtn" style="width: auto; padding: 10px 20px;">
+                <i class="fas fa-car"></i> Publicar viaje
+              </button>
+            {% endif %}
+          </div>
         </div>
+        
+        {% if can_publish %}
+          <p class="driver-reservation-hint">
+            <i class="fas fa-circle-info"></i> Las reservaciones se confirman automáticamente. Abre <strong>Ver reservas y viaje</strong> para consultar a tus pasajeros.
+          </p>
+        {% elif publish_block_reason == 'permanent' %}
+          <p class="publish-restriction-alert">
+            <i class="fas fa-ban"></i> No puedes publicar nuevos viajes por tus reportes confirmados. Puedes seguir reservando.
+          </p>
+        {% elif publish_block_reason == 'temporary' %}
+          <p class="publish-restriction-alert">
+            <i class="fas fa-clock"></i> Publicación suspendida hasta {{ publish_suspended_until|date:"d/m/Y H:i" }}. Puedes seguir reservando.
+          </p>
+        {% endif %}
+
       {% else %}
         <div style="display: block; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
           <div>
-            <h1>{{ title|default:"¡Bienvenido a UniRide!" }}</h1>
+            <h1>{{ title|default:"¡UniRide les da la Bienvenida!" }}</h1>
             <p>{{ description|default:"Encuentra o publica tu viaje universitario de forma segura." }}</p>
           </div>
         </div>
@@ -58,7 +76,7 @@
             <span class="close">&times;</span>
           </div>
 
-          {% if has_car %}
+          {% if has_car and can_publish %}
           <form method="POST" action="{% url 'home' %}" id="ViajeForm">
             {% csrf_token %}
             <input type="hidden" id="origen_lat" name="origen_lat" value="">
@@ -200,7 +218,7 @@
               </button>
             </div>
           </form>
-          {% else %}
+          {% elif not has_car %}
           <!-- Estado alternativo: El usuario no tiene vehículos registrados -->
           <div class="alert alert-warning" style="text-align: center; padding: 20px;">
             <h3 style="margin-bottom: 10px;"><i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
@@ -211,6 +229,15 @@
               style="display: inline-block; width: auto; padding: 10px 20px; text-decoration: none;">
               <i class="fas fa-car"></i> Registrar un Vehículo ahora
             </a>
+          </div>
+          {% else %}
+          <div class="alert alert-warning" style="text-align: center; padding: 20px;">
+            <h3 style="margin-bottom: 10px;"><i class="fas fa-ban" style="color: #dc2626;"></i> Publicación temporalmente restringida</h3>
+            {% if publish_block_reason == 'permanent' %}
+            <p>No puedes publicar nuevos viajes porque tienes 6 o más reportes confirmados. Puedes seguir reservando viajes.</p>
+            {% else %}
+            <p>Tu permiso para publicar viajes está suspendido hasta {{ publish_suspended_until|date:"d/m/Y H:i" }}. Puedes seguir reservando viajes.</p>
+            {% endif %}
           </div>
           {% endif %}
         </div>
@@ -340,10 +367,20 @@
             <div class="ride-badges">
               {% if viaje.is_driver %}
               <span class="badge badge-role-driver"><i class="fas fa-crown"></i> Tu Viaje</span>
+              <span class="badge badge-reservation-count"><i class="fas fa-users"></i> {{ viaje.active_reservation_count }} reserv{{ viaje.active_reservation_count|pluralize:"a,as" }}</span>
               {% elif viaje.is_passenger %}
               <span class="badge badge-role-passenger"><i class="fas fa-check-circle"></i> Reserva Confirmada</span>
               {% else %}
               <span class="badge badge-success">{{ viaje.available_seats_i }} Lugares libres</span>
+              {% endif %}
+              {% if viaje.confirmed_report_count >= 6 %}
+              <span class="badge badge-moderation-blocked"><i class="fas fa-ban"></i> No puede publicar</span>
+              {% elif viaje.confirmed_report_count >= 4 and viaje.driver_publish_suspended %}
+              <span class="badge badge-moderation-suspended"><i class="fas fa-triangle-exclamation"></i> Publicación suspendida</span>
+              {% elif viaje.confirmed_report_count >= 4 %}
+              <span class="badge badge-moderation-history"><i class="fas fa-circle-exclamation"></i> Historial: {{ viaje.confirmed_report_count }} reportes</span>
+              {% elif viaje.confirmed_report_count > 0 %}
+              <span class="badge badge-moderation-warning"><i class="fas fa-triangle-exclamation"></i> {{ viaje.confirmed_report_count }} advertencia{{ viaje.confirmed_report_count|pluralize:"s" }}</span>
               {% endif %}
               <span class="badge badge-secondary">${{ viaje.cost_journey_d }}</span>
             </div>
@@ -378,14 +415,14 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
 
   <script src="{% static 'js/dashboard.js' %}"></script>
-  <script src="{% static 'js/modules/live_config.js' %}"></script>
-  <script src="{% static 'js/modules/live_mapbox.js' %}"></script>
+  <script src="{% static 'js/modules/live_config.js' %}?v=pickup-confirm-2"></script>
+  <script src="{% static 'js/modules/live_mapbox.js' %}?v=pickup-confirm-2"></script>
   <script src="{% static 'js/modules/live_visitor.js' %}"></script>
-  <script src="{% static 'js/modules/live_passenger.js' %}"></script>
-  <script src="{% static 'js/modules/live_driver.js' %}"></script>
+  <script src="{% static 'js/modules/live_passenger.js' %}?v=pickup-confirm-2"></script>
+  <script src="{% static 'js/modules/live_driver.js' %}?v=pickup-confirm-2"></script>
   <script src="{% static 'js/modules/proximity_filter.js' %}"></script>
   <script src="{% static 'js/live_map.js' %}"></script>
-  <script src="{% static 'js/modules/live_report.js' %}"></script>
+  <script src="{% static 'js/modules/live_report.js' %}?v=pickup-confirm-2"></script>
 </body>
 
 </html>

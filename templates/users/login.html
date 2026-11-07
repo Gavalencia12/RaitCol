@@ -10,28 +10,48 @@
   <!-- Iconos de FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-  <div class="wrapper">
-    <form id="loginForm" data-login-url="{% url 'login' %}" data-home-url="{% url 'home' %}" data-csrf="{{ csrf_token }}">
+<body class="login-page">
+  <div class="wrapper login-wrapper">
+    <form id="loginForm" class="login-form" data-login-url="{% url 'login' %}" data-home-url="{% url 'home' %}" data-csrf="{{ csrf_token }}">
+      <section class="login-hero" aria-label="UniRide conecta viajes universitarios">
+        <span class="scene-cloud scene-cloud-one"></span>
+        <span class="scene-cloud scene-cloud-two"></span>
+        <span class="scene-hill scene-hill-back"></span>
+        <span class="scene-hill scene-hill-front"></span>
+        <span class="scene-tree scene-tree-one"></span>
+        <span class="scene-tree scene-tree-two"></span>
+        <span class="scene-tree scene-tree-three"></span>
+        <span class="scene-road"></span>
+        <div class="hero-copy">
+          <span class="hero-kicker">MOVILIDAD UNIVERSITARIA</span>
+          <h1>¡UniRide!</h1>
+          <p>Comparte el camino con UniRide</p>
+        </div>
+        <img class="login-illustration" src="{% static 'images/shared-ride.png' %}" alt="Personas compartiendo un viaje">
+        <span class="scene-sparkle sparkle-one"></span>
+        <span class="scene-sparkle sparkle-two"></span>
+      </section>
+
+      <div class="login-content">
       <h1>UniRide</h1>
       <p class="register">Inicia sesión para continuar</p>
-      
-      <div id="error-message" style="color: #ef4444; font-weight: 500; font-size: 14px; margin-top: 15px; display: none; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.2);"></div>
+
+      <div id="error-message" role="alert" style="color: #ef4444; font-weight: 500; font-size: 14px; margin-top: 15px; display: none; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.2);"></div>
 
       <div class="input-field">
-        <input type="text" id="email" required>
-        <label><i class="fa-solid fa-user"></i>  Correo universitario</label>
+        <input type="email" id="email" autocomplete="username" required>
+        <label for="email"><i class="fa-solid fa-user"></i>  Correo universitario</label>
       </div>
       <div class="input-field">
-        <input type="password"  id="password"required>
-        <label><i class="fa-solid fa-key"></i>  Contraseña</label>
+        <input type="password" id="password" autocomplete="current-password" required>
+        <label for="password"><i class="fa-solid fa-key"></i>  Contraseña</label>
       </div>
-      
+
       <button type="submit">Entrar</button>
       <div class="register">
         <p><a href="{% url 'register' %}">¿No tienes una cuenta?</a></p>
-      </br>
-        <a href="#">Olvidaste tu contraseña</a>
+        <a href="{% url 'forgot_password' %}">Olvidaste tu contraseña</a>
+      </div>
       </div>
     </form>
   </div>

@@ -1,5 +1,6 @@
 let liveMapInstance = null;
 let liveDriverMarker = null;
+let livePassengerMarker = null;
 let currentRideData = {};
 let originMarkerInstance = null;
 let destinationMarkerInstance = null;

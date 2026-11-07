@@ -1,12 +1,19 @@
 import base64
 import logging
 from datetime import date, datetime, time as dtime
-from django.shortcuts import render, redirect,get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib import messages
-from .models import Journey, Car, Reservation, Address, Route, Report, Rating
+from django.db import IntegrityError
+from django.db.models import Count, Q
+from django.utils.html import escape
+from django.utils import timezone
+from .models import Journey, Car, Reservation, Address, Route, Report, Rating, DriverModerationStatus
 from .forms import CarForm, RatingForm
+from .moderation import get_publication_restriction
 
 from django.conf import settings
 from django.http import JsonResponse
@@ -22,8 +29,23 @@ def home(request):
     user_cars = Car.objects.filter(id_user_car_i=request.user, is_active_b=True)
     has_car = user_cars.exists()
     is_driver = request.user.groups.filter(name='Conductor').exists() or has_car
+    publication_restriction = get_publication_restriction(request.user)
 
     if request.method == 'POST':
+        if publication_restriction['blocked']:
+            if publication_restriction['reason'] == 'permanent':
+                messages.error(
+                    request,
+                    'No puedes publicar nuevos viajes porque tienes 6 o más reportes confirmados. Puedes seguir reservando viajes.',
+                )
+            else:
+                suspension_end = timezone.localtime(publication_restriction['suspended_until'])
+                messages.error(
+                    request,
+                    f'Tu permiso para publicar viajes está suspendido hasta el {suspension_end:%d/%m/%Y a las %H:%M}. Puedes seguir reservando viajes.',
+                )
+            return redirect('home')
+
         if not has_car:
             messages.error(request, "Lo sentimos, necesitas registrar un vehículo en tu perfil antes de publicar un viaje.")
             return redirect('profile')
@@ -154,7 +176,24 @@ def home(request):
         'id_user_car_journey_i__id_user_car_i',
         'id_route_journey_i__id_address_origin_i', 
         'id_route_journey_i__id_address_destiny_i'
+    ).annotate(
+        confirmed_report_count=Count(
+            'id_user_car_journey_i__id_user_car_i__reports_received',
+            filter=Q(id_user_car_journey_i__id_user_car_i__reports_received__status=Report.STATUS_CONFIRMED),
+            distinct=True,
+        ),
+        active_reservation_count=Count(
+            'reservation',
+            filter=Q(reservation__is_active_b=True),
+            distinct=True,
+        ),
     )
+    driver_ids = viajes_qs.values_list('id_user_car_journey_i__id_user_car_i_id', flat=True).distinct()
+    suspensions_by_driver = {
+        status.user_id: status.publish_suspended_until
+        for status in DriverModerationStatus.objects.filter(user_id__in=driver_ids)
+    }
+    now = timezone.now()
 
     user_reservations = set(
         Reservation.objects.filter(
@@ -176,10 +215,14 @@ def home(request):
         driver_user = viaje.id_user_car_journey_i.id_user_car_i
         viaje.is_driver = (request.user.id == driver_user.id)
         viaje.is_passenger = (viaje.id_journey_i in user_reservations)
+        viaje.driver_publish_suspended_until = suspensions_by_driver.get(driver_user.id)
+        viaje.driver_publish_suspended = bool(
+            viaje.driver_publish_suspended_until and viaje.driver_publish_suspended_until > now
+        )
 
         if viaje.is_driver:
             viaje.role_btn_class = 'btn-role-driver'
-            viaje.role_btn_text = 'Gestionar mi Viaje'
+            viaje.role_btn_text = 'Ver reservas y viaje'
             viaje.role_icon = 'fas fa-sliders'
         elif viaje.is_passenger:
             viaje.role_btn_class = 'btn-role-passenger'
@@ -218,6 +261,9 @@ def home(request):
         'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', ''),
         'has_car': has_car,
         'is_driver': is_driver,
+        'can_publish': is_driver and not publication_restriction['blocked'],
+        'publish_block_reason': publication_restriction['reason'],
+        'publish_suspended_until': publication_restriction['suspended_until'],
         'user_cars': user_cars,
         'p_lat': p_lat or '',
         'p_lng': p_lng or '',
@@ -287,24 +333,28 @@ def journey_detail_api(request, journey_id):
             seats_list.append({
                 'seatNumber': s,
                 'isTaken': True,
+                'reservationId': res.id_reservation_i,
                 'passengerId': passenger.id,
                 'passengerName': p_name,
                 'passengerAccount': getattr(passenger, 'no_cuenta_v', '') or '',
                 'pickupName': getattr(res, 'pickup_name_v', None) or 'Punto de encuentro asignado',
                 'pickupLat': float(res.pickup_lat) if getattr(res, 'pickup_lat', None) else None,
                 'pickupLng': float(res.pickup_lng) if getattr(res, 'pickup_lng', None) else None,
+                'isPickedUp': res.picked_up_b,
                 'isCurrentUser': (passenger.id == request.user.id)
             })
         else:
             seats_list.append({
                 'seatNumber': s,
                 'isTaken': False,
+                'reservationId': None,
                 'passengerId': None,
                 'passengerName': None,
                 'passengerAccount': None,
                 'pickupName': None,
                 'pickupLat': None,
                 'pickupLng': None,
+                'isPickedUp': False,
                 'isCurrentUser': False
             })
 
@@ -323,12 +373,14 @@ def journey_detail_api(request, journey_id):
                 seats_sanitized.append({
                     'seatNumber': seat['seatNumber'],
                     'isTaken': True,
+                    'reservationId': None,
                     'passengerId': None,
                     'passengerName': 'Ocupado',
                     'passengerAccount': None,
                     'pickupName': None,
                     'pickupLat': None,
                     'pickupLng': None,
+                    'isPickedUp': False,
                     'isCurrentUser': False
                 })
         else:
@@ -744,6 +796,37 @@ def update_ride_location_api(request, journey_id):
     else:
         return JsonResponse({'success': False, 'message': 'No se enviaron coordenadas o datos válidos'}, status=400)
 
+
+@login_required(login_url='login_page')
+@require_http_methods(["POST"])
+def mark_passenger_picked_up_api(request, journey_id, reservation_id):
+    reservation = Reservation.objects.filter(
+        pk=reservation_id,
+        id_journey_reservation_i_id=journey_id,
+        is_active_b=True,
+        id_journey_reservation_i__is_active_b=True,
+        id_journey_reservation_i__status_v='active',
+    ).select_related(
+        'id_journey_reservation_i__id_user_car_journey_i__id_user_car_i',
+    ).first()
+    if not reservation:
+        return JsonResponse({'success': False, 'message': 'No se encontró una reserva activa para este viaje.'}, status=404)
+
+    driver = reservation.id_journey_reservation_i.id_user_car_journey_i.id_user_car_i
+    if request.user.pk != driver.pk:
+        return JsonResponse({'success': False, 'message': 'Solo el conductor puede confirmar que recogió al pasajero.'}, status=403)
+
+    if not reservation.picked_up_b:
+        reservation.picked_up_b = True
+        reservation.save(update_fields=['picked_up_b', 'date_update_t'])
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Pasajero marcado como recogido.',
+        'reservationId': reservation.pk,
+        'isPickedUp': True,
+    })
+
 #------------------------------------
 
 @login_required(login_url='login_page')
@@ -839,6 +922,8 @@ def report_user_api(request):
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'message': 'Datos inválidos'}, status=400)
+    if not isinstance(data, dict):
+        return JsonResponse({'success': False, 'message': 'Datos inválidos'}, status=400)
 
     journey_id = data.get('report_ride_id')
     reported_user_id = data.get('report_user_id')
@@ -848,21 +933,122 @@ def report_user_api(request):
     if not all([journey_id, reported_user_id, reason]):
         return JsonResponse({'success': False, 'message': 'Faltan campos requeridos'}, status=400)
 
-    if Report.objects.filter(id_journey_report_i_id=journey_id, id_reporter_i=request.user).exists():
-        return JsonResponse({'success': False, 'message': 'Ya has reportado este viaje anteriormente'})
+    try:
+        journey_id = int(journey_id)
+        reported_user_id = int(reported_user_id)
+        reason = int(reason)
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'message': 'El viaje, el conductor o el motivo no son válidos'}, status=400)
+
+    journey = Journey.objects.filter(pk=journey_id).select_related(
+        'id_user_car_journey_i__id_user_car_i',
+    ).first()
+    if not journey:
+        return JsonResponse({'success': False, 'message': 'El viaje indicado no existe'}, status=404)
+
+    driver = journey.id_user_car_journey_i.id_user_car_i
+    if reported_user_id != driver.pk:
+        return JsonResponse({'success': False, 'message': 'Solo puedes reportar al conductor de este viaje'}, status=400)
+    if driver.pk == request.user.pk:
+        return JsonResponse({'success': False, 'message': 'No puedes reportarte a ti mismo'}, status=400)
+    if reason not in dict(Report.REASON_CHOICES):
+        return JsonResponse({'success': False, 'message': 'El motivo del reporte no es válido'}, status=400)
+    if not Reservation.objects.filter(
+        id_journey_reservation_i=journey,
+        id_user_passenger_reservation_i=request.user,
+    ).exists():
+        return JsonResponse({'success': False, 'message': 'Solo los pasajeros de este viaje pueden reportar al conductor'}, status=403)
+
+    if Report.objects.filter(id_journey_report_i=journey, id_reporter_i=request.user).exists():
+        return JsonResponse({'success': False, 'message': 'Ya has reportado este viaje anteriormente'}, status=409)
 
     try:
-        Report.objects.create(
-            id_journey_report_i_id=journey_id,
+        report = Report.objects.create(
+            id_journey_report_i=journey,
             id_reporter_i=request.user,
-            id_reported_user_i_id=reported_user_id,
-            reason_i=int(reason),
-            description_v=description,
+            id_reported_user_i=driver,
+            reason_i=reason,
+            description_v=description if isinstance(description, str) else '',
         )
-        return JsonResponse({'success': True, 'message': 'Reporte enviado exitosamente'})
-    except Exception as e:
-        logger.error(f"Error al crear reporte: {e}")
-        return JsonResponse({'success': False, 'message': 'Error interno al procesar el reporte. Inténtalo de nuevo.'}, status=500)
+    except IntegrityError:
+        return JsonResponse({'success': False, 'message': 'Ya has reportado este viaje anteriormente'}, status=409)
+
+    driver_email_sent = True
+    try:
+        from users.utils import send_custom_email
+
+        subject = 'Aviso de reporte recibido - UniRide'
+        message = (
+            f'Hola {driver.first_name},\n\n'
+            f'Recibimos un reporte relacionado con uno de tus viajes en UniRide. '
+            'El reporte está pendiente de revisión y todavía no cuenta como una advertencia confirmada. '
+            'Puedes consultar el estado desde tu perfil.\n\n'
+            'Por privacidad, no incluimos en este correo la identidad de quien reportó ni los detalles del reporte.'
+        )
+        html_content = f"""
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#1e293b">
+          <h2 style="color:#15803d">Aviso de reporte recibido</h2>
+          <p>Hola {escape(driver.first_name)},</p>
+          <p>Recibimos un reporte relacionado con uno de tus viajes en UniRide. Está pendiente de revisión y todavía no cuenta como una advertencia confirmada.</p>
+          <p>Consulta el estado desde tu perfil. Por privacidad, este correo no incluye la identidad de quien reportó ni los detalles del reporte.</p>
+          <p>UniRide · Universidad de Colima</p>
+        </div>
+        """
+        send_custom_email(subject, message, [driver.email], html_content=html_content)
+    except Exception:
+        driver_email_sent = False
+        logger.exception('El reporte se guardó, pero no se pudo enviar el aviso al conductor %s', driver.pk)
+
+    staff_user = get_user_model()
+    moderator_emails = list(
+        staff_user.objects.filter(is_active=True, is_staff=True).filter(
+            Q(is_superuser=True)
+            | Q(
+                user_permissions__codename='change_report',
+                user_permissions__content_type__app_label='rides',
+            )
+            | Q(
+                groups__permissions__codename='change_report',
+                groups__permissions__content_type__app_label='rides',
+            )
+        )
+        .exclude(email='')
+        .values_list('email', flat=True)
+        .distinct()
+    )
+    moderators_notified = False
+    if moderator_emails:
+        try:
+            admin_url = request.build_absolute_uri(reverse('admin:rides_report_changelist'))
+            moderator_message = (
+                f'Se recibió el reporte #{report.id_report_i} del viaje #{journey.id_journey_i}. '
+                'Revisa los detalles y confirma o descarta el reporte desde el panel de administración de UniRide.'
+            )
+            moderator_html = f"""
+            <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#1e293b">
+              <h2 style="color:#15803d">Nuevo reporte pendiente de revisión</h2>
+              <p>Se recibió un reporte para el viaje <strong>#{journey.id_journey_i}</strong>.</p>
+              <p>Inicia sesión con una cuenta autorizada de personal y revisa el reporte dentro de UniRide:</p>
+              <p><a href="{admin_url}" style="display:inline-block;padding:12px 18px;background:#15803d;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Revisar reportes en UniRide</a></p>
+              <p>Desde el panel puedes confirmar o descartar el reporte. El enlace requiere autenticación y permisos de personal.</p>
+            </div>
+            """
+            send_custom_email(
+                'Reporte pendiente de revisión - UniRide',
+                moderator_message,
+                moderator_emails,
+                html_content=moderator_html,
+            )
+            moderators_notified = True
+        except Exception:
+            logger.exception('El reporte %s se guardó, pero no se pudo notificar al personal moderador', report.pk)
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Reporte enviado y pendiente de revisión.',
+        'driver_notified': driver_email_sent,
+        'moderators_notified': moderators_notified,
+    })
 
 
 @login_required

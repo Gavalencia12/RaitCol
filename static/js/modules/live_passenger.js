@@ -24,6 +24,18 @@ function startPassengerPolling() {
           currentRideData.seats = freshData.seats;
           const activeRole = currentRideData.isDriver ? 'driver' : (currentRideData.isPassenger ? 'passenger' : 'visitor');
           renderSeatsGrid(currentRideData.seats, activeRole);
+          if (currentRideData.isPassenger) {
+            updatePassengerRideMarker();
+            const mySeat = currentRideData.seats.find(seat => seat.isCurrentUser && seat.isTaken);
+            const statusElement = document.getElementById('passengerPickupStatus');
+            if (statusElement) {
+              const isPickedUp = Boolean(mySeat?.isPickedUp);
+              statusElement.classList.toggle('is-picked-up', isPickedUp);
+              statusElement.textContent = isPickedUp
+                ? 'Abordaje confirmado. Tu marcador se mantiene junto al vehículo mientras viajan.'
+                : 'Cuando el conductor confirme que te recogió, tu marcador aparecerá junto al vehículo.';
+            }
+          }
         }
 
         if (freshData.availableSeats !== undefined) {
